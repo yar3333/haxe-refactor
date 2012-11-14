@@ -226,14 +226,36 @@ class Refactor
 		return null;
 	}
 	
+	public function checkRules(rules:Array<{ search:String, replacement:String }>)
+	{
+		log.start("Check rules");
+		for (rule in rules)
+		{
+			log.start(rule.search + " => " + rule.replacement);
+			try
+			{
+				new EReg(rule.search, "g");
+				log.finishOk();
+			}
+			catch (e:Dynamic)
+			{
+				log.finishFail();
+				log.trace(e);
+				return false;
+			}
+		}
+		log.finishOk();
+		return true;
+	}
+	
 	/**
 	 * Find and replace in file.
 	 * @param	path		Path to file.
 	 * @param	rules		Regular expression to find and replacement string. In replacements use $1-$9 to specify groups. Use '^' and 'v' between '$' and number to make uppercase/lowercase (for example, "x $^1 $v2 $3").
 	 */
-	public function replaceInFile(path:String, rules:Array<{ search:String, replacement:String }>, ?localPath:String)
+	public function replaceInFile(path:String, rules:Array<{ search:String, replacement:String }>)
 	{
-		log.start("Replace in file '" + path + "'");
+		log.start("Search in '" + path + "'");
 		
 		var original = File.getContent(path);
 		
@@ -245,10 +267,6 @@ class Refactor
 		
 		if (text != original)
 		{
-			if (localPath != null)
-			{
-				log.trace("Fixed: " + localPath);
-			}
 			saveFileText(path, text);
 		}
 		
@@ -266,7 +284,7 @@ class Refactor
 				var localPath = path.substr(baseDir.length + 1);
 				if (filter.match(localPath))
 				{
-					replaceInFile(path, rules, localPath);
+					replaceInFile(path, rules);
 				}
 			});
 			
@@ -292,7 +310,9 @@ class Refactor
 	{
 		if (replacement == "$-") replacement = "";
 		
-		return new EReg(search, "g").customReplace(text, function(re)
+		var counter = 0;
+		
+		var r = new EReg(search, "g").customReplace(text, function(re)
 		{
 			var s = "";
 			var i = 0;
@@ -329,7 +349,12 @@ class Refactor
 					}
 				}
 			}
+			
+			log.trace(re.matched(0).replace("\r", "").replace("\n", "\\n") + " => " + s);
+			
 			return s;
 		});
+		
+		return r;
 	}
 }
