@@ -1,5 +1,5 @@
 
-import hant.Hant;
+import hant.FileSystemTools;
 import hant.Log;
 import hant.PathTools;
 import haxe.io.Path;
@@ -10,13 +10,13 @@ using StringTools;
 class Refactor
 {
 	var log : Log;
-	var hant : Hant;
+	var fs : FileSystemTools;
 	var baseDirs : Array<String>;
 	
-	public function new(log:Log, hant:Hant, baseDir:String)
+	public function new(log:Log, fs:FileSystemTools, baseDir:String)
 	{
 		this.log = log;
-		this.hant = hant;
+		this.fs = fs;
 		
 		log.start("Prepare paths");
 		
@@ -68,14 +68,14 @@ class Refactor
 	{
 		for (baseDir in baseDirs)
 		{
-			log.start("Rename package: " + srcPack + " => " + destPack);
+			log.start("Rename package '" + srcPack + "' => '" + destPack + "'");
 			
 			var srcPath = baseDir + "/" + srcPack.replace(".", "/");
 			var destPath = baseDir + "/" + destPack.replace(".", "/");
 			
 			if (FileSystem.exists(srcPath) && FileSystem.isDirectory(srcPath))
 			{
-				hant.findFiles(srcPath, function(path)
+				fs.findFiles(srcPath, function(path)
 				{
 					if (path.endsWith(".hx"))
 					{
@@ -91,23 +91,22 @@ class Refactor
 				});
 			}
 			
-			log.trace("Replace in all *.hx and *.xml files: " + srcPack + " => " + destPack);
+			log.trace("Replace in all *.hx and *.xml files '" + srcPack + "' => '" + destPack + "'");
 			
-			hant.findFiles(baseDir, function(path:String)
+			fs.findFiles(baseDir, function(path:String)
 			{
 				if (path.endsWith(".hx") || path.endsWith(".xml"))
 				{
 					var localPath = path.substr(baseDir.length + 1);
-					
+					log.start("Process file '" + localPath + "'");
 					var original = File.getContent(path);
-					
 					var text = original;
 					text = replaceText(text, "(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b", "$1" + destPack);
-					
 					if (text != original)
 					{
 						saveFileText(path, text);
 					}
+					log.finishOk();
 				}
 			});
 			
@@ -137,7 +136,7 @@ class Refactor
 			}
 			
 			log.start("Replace in all haXe files: " + src.full + " => " + dest.full);
-			hant.findFiles(baseDir, function(path:String)
+			fs.findFiles(baseDir, function(path:String)
 			{
 				if (path.endsWith(".hx"))
 				{
@@ -279,7 +278,7 @@ class Refactor
 		{
 			log.start("Replace in '" + baseDir + "'");
 			
-			hant.findFiles(baseDir, function(path)
+			fs.findFiles(baseDir, function(path)
 			{
 				var localPath = path.substr(baseDir.length + 1);
 				if (filter.match(localPath))
@@ -294,15 +293,15 @@ class Refactor
 	
 	function saveFileText(path:String, text:String)
 	{
-		if (hant.getHiddenFileAttribute(path) == false)
+		if (fs.getHiddenFileAttribute(path) == false)
 		{
 			File.saveContent(path, text);
 		}
 		else
 		{
-			hant.setHiddenFileAttribute(path, false);
+			fs.setHiddenFileAttribute(path, false);
 			File.saveContent(path, text);
-			hant.setHiddenFileAttribute(path, true);
+			fs.setHiddenFileAttribute(path, true);
 		}
 	}
 	

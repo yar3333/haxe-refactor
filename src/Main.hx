@@ -1,5 +1,5 @@
 
-import hant.Hant;
+import hant.FileSystemTools;
 import hant.Log;
 import hant.PathTools;
 import neko.Lib;
@@ -31,7 +31,7 @@ class Main
 		if (args.length > 0)
 		{
 			var log = new Log(5);
-			var hant = new Hant(log, exeDir + "/hant-" + Sys.systemName().toLowerCase());
+			var fs = new FileSystemTools(log, exeDir + "/hant-" + Sys.systemName().toLowerCase());
 			
 			switch (args.shift())
 			{
@@ -41,7 +41,7 @@ class Main
 						var baseDir = args.shift();
 						var filter = args.shift();
 						
-						var refactor = new Refactor(log, hant, baseDir);
+						var refactor = new Refactor(log, fs, baseDir);
 						
 						var rules = [];
 						while (args.length > 0)
@@ -70,12 +70,12 @@ class Main
 						
 						if (~/^[a-z]/.match(packs[packs.length - 1]))
 						{
-							new Refactor(log, hant, baseDir).renamePackage(src, dest);
+							new Refactor(log, fs, baseDir).renamePackage(src, dest);
 						}
 						else
 						if (~/^[A-Z]/.match(packs[packs.length - 1]))
 						{
-							new Refactor(log, hant, baseDir).renameClass(new ClassPath(src), new ClassPath(dest));
+							new Refactor(log, fs, baseDir).renameClass(new ClassPath(src), new ClassPath(dest));
 						}
 						else
 						{
