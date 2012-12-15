@@ -178,6 +178,7 @@ class Refactor
 		{
 			log.start("Rename file " + src + " => " + dest);
 
+			/*
 			var srcVersionControlFolder = findVersionControlFolder(src);
 			if (srcVersionControlFolder != null && findVersionControlFolder(dest) == srcVersionControlFolder)
 			{
@@ -185,22 +186,23 @@ class Refactor
 				Sys.setCwd(Path.directory(src));
 				if (srcVersionControlFolder.endsWith(".svn"))
 				{
-					Sys.command("svn", [ "mv", src, dest ]);
+					Sys.command("svn", [ "mv", Path.withoutDirectory(src), dest ]);
 				}
 				else
 				if (srcVersionControlFolder.endsWith(".hg"))
 				{
-					Sys.command("hg", [ "mv", src, dest ]);
+					Sys.command("hg", [ "mv", Path.withoutDirectory(src), dest ]);
 				}
 				else
 				if (srcVersionControlFolder.endsWith(".git"))
 				{
-					Sys.command("git", [ "mv", src, dest ]);
+					Sys.command("git", [ "mv", Path.withoutDirectory(src), dest ]);
 				}
 				Sys.setCwd(saveDir);
 			}
-			else
+			else*/
 			{
+				fs.createDirectory(Path.directory(dest));
 				FileSystem.rename(src, dest);
 			}
 			
@@ -209,6 +211,12 @@ class Refactor
 			return true;
 		}
 		return false;
+	}
+	
+	function getRelatedPath(base:String, dest:String) : String
+	{
+		// TODO: getRelatedPath
+		return null;
 	}
 	
 	function findVersionControlFolder(path:String) : String
