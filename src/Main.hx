@@ -93,12 +93,13 @@ class Main
 		}
 		else
 		{
-			Lib.println("Refactor is a search and replace tool.");
-			Lib.println("Usage: refactor <command>");
+			Lib.println("hxRefactor is a refactoring and search/replace tool.");
+			Lib.println("Usage: haxelib run hxRefactor <command>");
 			Lib.println("where <command>:");
 			Lib.println("");
 			Lib.println("    replace                         Recursive find and replace in files.");
-			Lib.println("        <baseDir>                   Path to base folder.");
+			Lib.println("        <baseDirs>                  Paths to base folders. Use ';' as delimiter.");
+			Lib.println("                                    Use '*' to specify 'any folder' in path.");
 			Lib.println("        <filter>                    File path's filter (regular expression).");
 			Lib.println("        <search> <replacement>      Regex to find and string to replace.");
 			Lib.println("                                    In <replacement> use $1-$9 to substitute groups.");
