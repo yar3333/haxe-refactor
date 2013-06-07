@@ -112,6 +112,30 @@ class Main
 			Lib.println("        <baseDir>                   Path to source folder.");
 			Lib.println("        <src>                       Source package or full class name.");
 			Lib.println("        <dest>                      Destination package or full class name.");
+			Lib.println("");
+			Lib.println("Examples:");
+			Lib.println("");
+			Lib.println("    haxelib run hxRefactor replace \"src\" \"[.]hx$\" \"abc\" \"def\"");
+			Lib.println("        Files will be recursively found in 'src' folder.");
+			Lib.println("        Only haxe code files will be processed.");
+			Lib.println("        String 'abc' will be replaced to 'def'.");
+			Lib.println("");
+			Lib.println("    haxelib run hxRefactor replace \"*/src;*/library\" \"[.](hx|xml)$\" \"(.)bc\" \"$^1ef\"");
+			Lib.println("        Files will be recursively found in 'anydir/src' and 'anydir/library' folders.");
+			Lib.println("        Haxe code and xml files will be processed.");
+			Lib.println("        Next strings will be replaced:");
+			Lib.println("            abc => Aef");
+			Lib.println("            .bc => .ef");
+			Lib.println("            ...");
+			Lib.println("");
+			Lib.println("    haxelib run hxRefactor rename \"src\" \"mypackA.mypackB\" \"mypackC.mypackD\"");
+			Lib.println("        Files will be recursively found in 'src' folder.");
+			Lib.println("        All classes found in the package 'mypackA.mypackB' will be moved to the package 'mypackC.mypackD'.");
+			Lib.println("");
+			Lib.println("    haxelib run hxRefactor rename \"src\" \"mypackA.MyClass1\" \"mypackB.MyClass2\"");
+			Lib.println("        Files will be recursively found in 'src' folder.");
+			Lib.println("        Class 'mypackA.MyClass1' will be renamed to 'mypackB.MyClass2'.");
+			Lib.println("");
 		}
 		
 		Sys.exit(0);

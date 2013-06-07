@@ -1,7 +1,8 @@
 <project name='hxRefactor' url='https://code.google.com/p/hxrefactor' license='LGPL'>
     <user name='yar3333'/>
     <tag v='refactoring'/>
+    <tag v='refactor'/>
     <tag v='haxe'/>
-    <description>HaXe source code refactoring tool.</description>
-	<version name='1.0'>Basic version.</version>
+    <description>Haxe source code refactoring tool.</description>
+	<version name='1.1'>*Import detection bugfix. +Examples.</version>
 </project>

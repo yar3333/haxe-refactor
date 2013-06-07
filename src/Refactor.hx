@@ -123,8 +123,6 @@ class Refactor
 			var srcFile = baseDir + "/" + src.getFilePath();
 			var destFile = baseDir + "/" + dest.getFilePath();
 			
-			//log.trace("Rename file: "+ srcFile + " => " + destFile);
-			
 			if (renameFile(srcFile, destFile))
 			{
 				replaceInFile(destFile, [ 
@@ -146,17 +144,16 @@ class Refactor
 					
 					var text = original;
 					
+					var packageOrImport = 
+						    new EReg("\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;", "").match(text)
+						 || new EReg("\\bimport\\s+" + src.full.replace(".", "[.]") + "\\s*;", "").match(text);
+					
 					text = replaceText(text, "(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b", "$1" + dest.full);
 					
-					if (src.name != dest.name)
+					if (packageOrImport && src.name != dest.name)
 					{
-						if (new EReg("\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;", "").match(text)
-						 || new EReg("\\bimport\\s+" + src.full.replace(".", "[.]") + "\\s*;", "").match(text)
-						) {
-							
-							log.trace(localPath + ": " + src.name + " => " + dest.name);
-							text = replaceText(text, "(^|[^._a-zA-Z0-9])" + src.name + "\\b", "$1" + dest.name);
-						}
+						log.trace(localPath + ": " + src.name + " => " + dest.name);
+						text = replaceText(text, "(^|[^._a-zA-Z0-9])" + src.name + "\\b", "$1" + dest.name);
 					}
 					
 					if (text != original)
