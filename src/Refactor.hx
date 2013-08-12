@@ -12,13 +12,15 @@ class Refactor
 	var log : Log;
 	var fs : FileSystemTools;
 	var baseDirs : Array<String>;
+	var verbose : Bool;
 	
-	public function new(log:Log, fs:FileSystemTools, baseDir:String)
+	public function new(log:Log, fs:FileSystemTools, baseDir:String, verbose:Bool)
 	{
 		this.log = log;
 		this.fs = fs;
+		this.verbose = verbose;
 		
-		log.start("Prepare paths");
+		if (verbose) log.start("Prepare paths");
 		
 		baseDirs = [];
 		for (vdir in baseDir.split(";"))
@@ -28,7 +30,7 @@ class Refactor
 			{
 				if (FileSystem.exists(vdir) && FileSystem.isDirectory(vdir))
 				{
-					log.trace(vdir);
+					if (verbose) log.trace(vdir);
 					baseDirs.push(vdir);
 				}
 				else
@@ -49,7 +51,7 @@ class Refactor
 						var path = basePath + "/" + dir + addPath;
 						if (FileSystem.exists(path) && FileSystem.isDirectory(path))
 						{
-							log.trace(path);
+							if (verbose) log.trace(path);
 							baseDirs.push(path);
 						}
 					}
@@ -61,7 +63,7 @@ class Refactor
 			}
 		}
 		
-		log.finishOk();
+		if (verbose) log.finishOk();
 	}
 	
 	public function renamePackage(srcPack:String, destPack:String)
@@ -98,15 +100,16 @@ class Refactor
 				if (path.endsWith(".hx") || path.endsWith(".xml"))
 				{
 					var localPath = path.substr(baseDir.length + 1);
-					log.start("Process file '" + localPath + "'");
+					if (verbose) log.start("Process file '" + localPath + "'");
 					var original = File.getContent(path);
 					var text = original;
 					text = replaceText(text, "(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b", "$1" + destPack);
 					if (text != original)
 					{
 						saveFileText(path, text);
+						log.trace("Fixed: " + localPath);
 					}
-					log.finishOk();
+					if (verbose) log.finishOk();
 				}
 			});
 			
@@ -152,7 +155,7 @@ class Refactor
 					
 					if (packageOrImport && src.name != dest.name)
 					{
-						log.trace(localPath + ": " + src.name + " => " + dest.name);
+						if (verbose) log.trace(localPath + ": " + src.name + " => " + dest.name);
 						text = replaceText(text, "(^|[^._a-zA-Z0-9])" + src.name + "\\b", "$1" + dest.name);
 					}
 					
@@ -232,23 +235,23 @@ class Refactor
 	
 	public function checkRules(rules:Array<{ search:String, replacement:String }>)
 	{
-		log.start("Check rules");
+		if (verbose) log.start("Check rules");
 		for (rule in rules)
 		{
-			log.start(rule.search + " => " + rule.replacement);
+			if (verbose) log.start(rule.search + " => " + rule.replacement);
 			try
 			{
 				new EReg(rule.search, "g");
-				log.finishOk();
+				if (verbose) log.finishOk();
 			}
 			catch (e:Dynamic)
 			{
-				log.finishFail();
+				if (verbose) log.finishFail();
 				log.trace(e);
 				return false;
 			}
 		}
-		log.finishOk();
+		if (verbose) log.finishOk();
 		return true;
 	}
 	
@@ -259,7 +262,7 @@ class Refactor
 	 */
 	public function replaceInFile(path:String, rules:Array<{ search:String, replacement:String }>)
 	{
-		log.start("Search in '" + path + "'");
+		if (verbose) log.start("Search in '" + path + "'");
 		
 		var original = File.getContent(path);
 		
@@ -272,9 +275,10 @@ class Refactor
 		if (text != original)
 		{
 			saveFileText(path, text);
+			if (!verbose) log.trace("Fixed: " + path);
 		}
 		
-		log.finishOk();
+		if (verbose) log.finishOk();
 	}
 	
 	public function replaceInFiles(filter:EReg, rules:Array<{ search:String, replacement:String }>)
@@ -354,7 +358,7 @@ class Refactor
 				}
 			}
 			
-			log.trace(re.matched(0).replace("\r", "").replace("\n", "\\n") + " => " + s);
+			if (verbose) log.trace(re.matched(0).replace("\r", "").replace("\n", "\\n") + " => " + s);
 			
 			return s;
 		});
