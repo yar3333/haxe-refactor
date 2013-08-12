@@ -33,7 +33,16 @@ class Main
 			var log = new Log(5);
 			var fs = new FileSystemTools(log, exeDir + "/hant-" + Sys.systemName().toLowerCase());
 			
-			switch (args.shift())
+			var verbose = false;
+			
+			var k = args.shift();
+			if (k == "-v")
+			{
+				verbose = true;
+				k = args.shift();
+			}
+			
+			switch (k)
 			{
 				case "replace":
 					if (args.length >= 4 && args.length % 2 == 0)
@@ -41,7 +50,7 @@ class Main
 						var baseDir = args.shift();
 						var filter = args.shift();
 						
-						var refactor = new Refactor(log, fs, baseDir);
+						var refactor = new Refactor(log, fs, baseDir, verbose);
 						
 						var rules = [];
 						while (args.length > 0)
@@ -70,12 +79,12 @@ class Main
 						
 						if (~/^[a-z]/.match(packs[packs.length - 1]))
 						{
-							new Refactor(log, fs, baseDir).renamePackage(src, dest);
+							new Refactor(log, fs, baseDir, verbose).renamePackage(src, dest);
 						}
 						else
 						if (~/^[A-Z]/.match(packs[packs.length - 1]))
 						{
-							new Refactor(log, fs, baseDir).renameClass(new ClassPath(src), new ClassPath(dest));
+							new Refactor(log, fs, baseDir, verbose).renameClass(new ClassPath(src), new ClassPath(dest));
 						}
 						else
 						{
@@ -94,8 +103,8 @@ class Main
 		else
 		{
 			Lib.println("hxRefactor is a refactoring and search/replace tool.");
-			Lib.println("Usage: haxelib run hxRefactor <command>");
-			Lib.println("where <command>:");
+			Lib.println("Usage: haxelib run hxRefactor [-v] <command>");
+			Lib.println("where '-v' is the verbose key and <command> may be:");
 			Lib.println("");
 			Lib.println("    replace                         Recursive find and replace in files.");
 			Lib.println("        <baseDirs>                  Paths to base folders. Use ';' as delimiter.");

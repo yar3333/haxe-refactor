@@ -4,5 +4,5 @@
     <tag v='refactor'/>
     <tag v='haxe'/>
     <description>Haxe source code refactoring tool.</description>
-	<version name='1.1'>*Import detection bugfix. +Examples.</version>
+	<version name='1.2'>* Verbose output now off by default. Use '-v' key to turn that on.</version>
 </project>
