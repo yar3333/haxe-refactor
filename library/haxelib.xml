@@ -1,8 +1,0 @@
-<project name='hxRefactor' url='https://code.google.com/p/hxrefactor' license='LGPL'>
-    <user name='yar3333'/>
-    <tag v='refactoring'/>
-    <tag v='refactor'/>
-    <tag v='haxe'/>
-    <description>Haxe source code refactoring tool.</description>
-	<version name='1.2'>* Verbose output now off by default. Use '-v' key to turn that on.</version>
-</project>

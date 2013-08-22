@@ -320,7 +320,7 @@ class Refactor
 		
 		var counter = 0;
 		
-		var r = new EReg(search, "g").customReplace(text, function(re)
+		var r = new EReg(search, "g").map(text, function(re)
 		{
 			var s = "";
 			var i = 0;
