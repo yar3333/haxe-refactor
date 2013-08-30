@@ -1,5 +1,5 @@
 {
-  "name": "hxRefactor",
+  "name": "refactor",
   "license": "LGPL",
   "tags": ["refactoring","refactor","haxe"],
   "description": "Haxe source code refactoring tool.",
