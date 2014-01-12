@@ -270,6 +270,7 @@ class Refactor
 		if (isHidden) fs.setHiddenFileAttribute(path, false);
 		if (!FileSystem.exists(path) || File.getContent(path) != text)
 		{
+			FileSystem.createDirectory(Path.directory(path));
 			File.saveContent(path, text);
 		}
 		if (isHidden) fs.setHiddenFileAttribute(path, true);
