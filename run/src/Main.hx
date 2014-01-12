@@ -14,7 +14,7 @@ class Main
 	{
         var args = Sys.args();
 		
-		var exeDir = PathTools.path2normal(Sys.getCwd());
+		var exeDir = PathTools.normalize(Sys.getCwd());
 		if (args.length > 0)
 		{
 			var dir = args.pop();
@@ -50,17 +50,17 @@ class Main
 						var baseDir = args.shift();
 						var filter = args.shift();
 						
-						var refactor = new Refactor(log, fs, baseDir, verbose);
+						var refactor = new Refactor(log, fs, baseDir, null, verbose);
 						
 						var rules = [];
 						while (args.length > 0)
 						{
-							rules.push( { search:args.shift(), replacement:args.shift() } );
+							rules.push(new Rule(args.shift()));
 						}
 						
 						if (refactor.checkRules(rules))
 						{
-							refactor.replaceInFiles(new EReg(filter, "i"), rules);
+							refactor.replaceInFiles(new EReg(filter, "i"), new Rule("///"), rules);
 						}
 					}
 					else
@@ -79,12 +79,12 @@ class Main
 						
 						if (~/^[a-z]/.match(packs[packs.length - 1]))
 						{
-							new Refactor(log, fs, baseDir, verbose).renamePackage(src, dest);
+							new Refactor(log, fs, baseDir, null, verbose).renamePackage(src, dest);
 						}
 						else
 						if (~/^[A-Z]/.match(packs[packs.length - 1]))
 						{
-							new Refactor(log, fs, baseDir, verbose).renameClass(new ClassPath(src), new ClassPath(dest));
+							new Refactor(log, fs, baseDir, null, verbose).renameClass(new ClassPath(src), new ClassPath(dest));
 						}
 						else
 						{
@@ -95,7 +95,38 @@ class Main
 					{
 						fail("Wrong arguments count.");
 					}
-				
+					
+				case "convert":
+					if (args.length == 5)
+					{
+						var baseDir = args.shift();
+						var filter = args.shift();
+						var outDir = args.shift();
+						var changeFileName = new Rule(args.shift());
+						var rulesFile = args.shift();
+						
+						if (FileSystem.exists(rulesFile))
+						{
+							var refactor = new Refactor(log, fs, baseDir, outDir, verbose);
+							var rules = File.getContent(rulesFile).replace("\r", "").split("\n")
+								.map(function(s) return s.trim())
+								.filter(function(s) return s != "")
+								.map(function(s) return new Rule(s));
+							if (refactor.checkRules(rules))
+							{
+								refactor.replaceInFiles(new EReg(filter, "i"), changeFileName, rules);
+							}
+						}
+						else
+						{
+							fail("File '" + rulesFile + "' is not found.");
+						}
+					}
+					else
+					{
+						fail("Wrong arguments count.");
+					}
+					
 				default:
 					fail("Unknow command.");
 			}
@@ -110,26 +141,33 @@ class Main
 			Lib.println("        <baseDirs>                  Paths to base folders. Use ';' as delimiter.");
 			Lib.println("                                    Use '*' to specify 'any folder' in path.");
 			Lib.println("        <filter>                    File path's filter (regular expression).");
-			Lib.println("        <search> <replacement>      Regex to find and string to replace.");
+			Lib.println("        /search/replacement/flags   Regex to find and replace.");
 			Lib.println("                                    In <replacement> use $1-$9 to substitute groups.");
 			Lib.println("                                    Use '^' and 'v' between '$' and number to make uppercase/lowercase (like '$^1').");
-			Lib.println("                                    Use '$-' as <replacement> to specify empty string.");
-			Lib.println("        [ <search> <replacement> ]  ...");
-			Lib.println("        ...                         ...");
+			Lib.println("        ...                         More regexs.");
 			Lib.println("");
 			Lib.println("    rename                          Rename package or class.");
 			Lib.println("        <baseDir>                   Path to source folder.");
 			Lib.println("        <src>                       Source package or full class name.");
 			Lib.println("        <dest>                      Destination package or full class name.");
 			Lib.println("");
+			Lib.println("    convert                         Recursive find and replace in files using rules file.");
+			Lib.println("        <baseDir>                   Path to source folder.");
+			Lib.println("        <filter>                    File path's filter (regular expression).");
+			Lib.println("        <outDir>                    Output directory.");
+			Lib.println("        /search/replacement/flags   Regex to find and replace in file name.");
+			Lib.println("                                    Used to produce output file name.");
+			Lib.println("        <regexFile>                 Path to regular expressions file, one per line:");
+			Lib.println("                                    /search/replacement/flags");
+			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
-			Lib.println("    haxelib run hxRefactor replace \"src\" \"[.]hx$\" \"abc\" \"def\"");
+			Lib.println("    haxelib run hxRefactor replace \"src\" \"[.]hx$\" \"/abc/def/\"");
 			Lib.println("        Files will be recursively found in 'src' folder.");
 			Lib.println("        Only haxe code files will be processed.");
 			Lib.println("        String 'abc' will be replaced to 'def'.");
 			Lib.println("");
-			Lib.println("    haxelib run hxRefactor replace \"*/src;*/library\" \"[.](hx|xml)$\" \"(.)bc\" \"$^1ef\"");
+			Lib.println("    haxelib run hxRefactor replace \"*/src;*/library\" \"[.](hx|xml)$\" \"/(.)bc/$^1ef/\"");
 			Lib.println("        Files will be recursively found in 'anydir/src' and 'anydir/library' folders.");
 			Lib.println("        Haxe code and xml files will be processed.");
 			Lib.println("        Next strings will be replaced:");
