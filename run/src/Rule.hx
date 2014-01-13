@@ -8,6 +8,7 @@ class Rule
 	public var search : String;
 	public var replacement : String;
 	public var flags : String;
+	public var excepts : String;
 	
 	public function new(re:String)
 	{
@@ -73,7 +74,18 @@ class Rule
 			i++;
 		}
 		
-		flags = re.substr(i);
+		var tail = re.substr(i);
+		var n = tail.indexOf(delimiter);
+		if (n < 0)
+		{
+			flags = tail;
+		}
+		else
+		{
+			flags = tail.substr(0, n).trim();
+			excepts = unescape(tail.substr(n + 1).trim());
+			trace("excepts = " + excepts);
+		}
 	}
 	
 	public function apply(text:String, ?log:Log) : String
@@ -84,6 +96,8 @@ class Rule
 		
 		var r = new EReg(search, "g" + flags.replace("g", "")).map(text, function(re)
 		{
+			if (excepts != null && new EReg(excepts, "g").match(re.matched(0))) return re.matched(0);
+			
 			var s = "";
 			var i = 0;
 			while (i < replacement.length)
@@ -128,6 +142,32 @@ class Rule
 		});
 		
 		return r;
-		
+	}
+	
+	function unescape(s:String) : String
+	{
+		var r = "";
+		var i = 0; while (i < s.length)
+		{
+			var c = s.substr(i, 1);
+			if (c == "\\") 
+			{
+				i++;
+				c = s.substr(i, 1);
+				if (c == "r") r += "\r";
+				else
+				if (c == "n") r += "\n";
+				else
+				if (c == "t") r += "\t";
+				else
+				r += c;
+			}
+			else
+			{
+				r += c;
+			}
+			i++;
+		}
+		return r;
 	}
 }
