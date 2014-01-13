@@ -103,13 +103,15 @@ class Rule
 					else
 					{
 						var command = "";
-						if ("0123456789".indexOf(c) < 0)
+						if ("d0123456789".indexOf(c) < 0)
 						{
 							command = c;
 							c = replacement.charAt(i++);
 						}
+						if (c == "d") { c = replacement.substr(i, 2); i += 2; }
 						var number = Std.parseInt(c);
 						var t = re.matched(number);
+						if (t == null) t = "";
 						switch(command)
 						{
 							case "^": t = t.toUpperCase();
