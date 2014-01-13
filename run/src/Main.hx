@@ -115,7 +115,7 @@ class Main
 							for (line in lines)
 							{
 								var n = line.indexOf("=");
-								if (n > 0)
+								if (n > 0 && ~/\s*[_a-zA-Z][_a-zA-Z0-9]*\s*[=]/.match(line))
 								{
 									var name = line.substr(0, n).trim();
 									var value = line.substr(n + 1).trim();
