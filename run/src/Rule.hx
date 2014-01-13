@@ -84,7 +84,6 @@ class Rule
 		{
 			flags = tail.substr(0, n).trim();
 			excepts = unescape(tail.substr(n + 1).trim());
-			trace("excepts = " + excepts);
 		}
 	}
 	

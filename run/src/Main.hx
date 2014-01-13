@@ -114,6 +114,8 @@ class Main
 							var rules = new Array<Rule>();
 							for (line in lines)
 							{
+								if (~/^\s*\/\//.match(line)) continue;
+								
 								var n = line.indexOf("=");
 								if (n > 0 && ~/\s*[_a-zA-Z][_a-zA-Z0-9]*\s*[=]/.match(line))
 								{
