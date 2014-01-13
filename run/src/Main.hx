@@ -7,6 +7,7 @@ import sys.FileSystem;
 import sys.io.File;
 import sys.io.Process;
 using StringTools;
+using Lambda;
 
 class Main 
 {
@@ -108,10 +109,45 @@ class Main
 						if (FileSystem.exists(rulesFile))
 						{
 							var refactor = new Refactor(log, fs, baseDir, outDir, verbose);
-							var rules = File.getContent(rulesFile).replace("\r", "").split("\n")
-								.map(function(s) return s.trim())
-								.filter(function(s) return s != "")
-								.map(function(s) return new Rule(s));
+							var lines = File.getContent(rulesFile).replace("\r", "").split("\n");
+							var consts = new Array<{ name:String, value:String }>();
+							var rules = new Array<Rule>();
+							for (line in lines)
+							{
+								var n = line.indexOf("=");
+								if (n > 0)
+								{
+									var name = line.substr(0, n).trim();
+									var value = line.substr(n + 1).trim();
+									if (name.length > 0 && value.length > 0)
+									{
+										for (const in consts)
+										{
+											value = value.replace(const.name, const.value);
+										}
+										consts.push({ name:name, value:value });
+									}
+									else
+									{
+										if (line.trim().length > 0)
+										{
+											fail("Error in line '" + line + "'.");
+										}
+									}
+								}
+								else
+								{
+									line = line.trim();
+									if (line.length > 0)
+									{
+										for (const in consts)
+										{
+											line = line.replace(const.name, const.value);
+										}
+										rules.push(new Rule(line));
+									}
+								}
+							}
 							if (refactor.checkRules(rules))
 							{
 								refactor.replaceInFiles(new EReg(filter, "i"), changeFileName, rules);

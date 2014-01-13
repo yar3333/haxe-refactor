@@ -146,12 +146,12 @@ class Refactor
 						    new EReg("\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;", "").match(text)
 						 || new EReg("\\bimport\\s+" + src.full.replace(".", "[.]") + "\\s*;", "").match(text);
 					
-					text = new Rule("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").apply(text, verbose != null ? log : null);
+					text = new Rule("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").apply(text, verbose ? log : null);
 					
 					if (packageOrImport && src.name != dest.name)
 					{
 						if (verbose) log.trace(localPath + ": " + src.name + " => " + dest.name);
-						text = new Rule("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").apply(text, verbose != null ? log : null);
+						text = new Rule("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").apply(text, verbose ? log : null);
 					}
 					
 					if (text != original)
@@ -228,7 +228,7 @@ class Refactor
 		var text = original;
 		for (rule in rules)
 		{
-			text = rule.apply(text, verbose != null ? log : null);
+			text = rule.apply(text, verbose ? log : null);
 		}
 		
 		saveFileText(outPath, text);
