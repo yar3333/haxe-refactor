@@ -26,19 +26,6 @@ class Rule
 				break;
 			}
 			else
-			if (c == "\\") 
-			{
-				i++;
-				c = re.substr(i, 1);
-				if (c == "r") search += "\r";
-				else
-				if (c == "n") search += "\n";
-				else
-				if (c == "t") search += "\t";
-				else
-				search += c;
-			}
-			else
 			{
 				search += c;
 			}
@@ -64,6 +51,8 @@ class Rule
 				if (c == "n") replacement += "\n";
 				else
 				if (c == "t") replacement += "\t";
+				else
+				if (c == "\\") replacement += "\\";
 				else
 				replacement += c;
 			}
@@ -123,7 +112,7 @@ class Rule
 						}
 						if (c == "d") { c = replacement.substr(i, 2); i += 2; }
 						var number = Std.parseInt(c);
-						var t = re.matched(number);
+						var t = try re.matched(number) catch (_:Dynamic) "";
 						if (t == null) t = "";
 						switch(command)
 						{
