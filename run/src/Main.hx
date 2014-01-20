@@ -171,8 +171,8 @@ class Main
 		}
 		else
 		{
-			Lib.println("hxRefactor is a refactoring and search/replace tool.");
-			Lib.println("Usage: haxelib run hxRefactor [-v] <command>");
+			Lib.println("Refactor is a refactoring and search/replace tool.");
+			Lib.println("Usage: haxelib run refactor [-v] <command>");
 			Lib.println("where '-v' is the verbose key and <command> may be:");
 			Lib.println("");
 			Lib.println("    replace                         Recursive find and replace in files.");
@@ -195,17 +195,19 @@ class Main
 			Lib.println("        <outDir>                    Output directory.");
 			Lib.println("        /search/replacement/flags   Regex to find and replace in file name.");
 			Lib.println("                                    Used to produce output file name.");
-			Lib.println("        <regexFile>                 Path to regular expressions file, one per line:");
-			Lib.println("                                    /search/replacement/flags");
+			Lib.println("        <rulesFile>                 Path to rules file, one rule per line:");
+			Lib.println("                                    VAR = regexp");
+			Lib.println("                                    or");
+			Lib.println("                                    /search_can_contain_VAR/replacement/flags");
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
-			Lib.println("    haxelib run hxRefactor replace \"src\" \"[.]hx$\" \"/abc/def/\"");
+			Lib.println("    haxelib run refactor replace src [.]hx$ /abc/def/");
 			Lib.println("        Files will be recursively found in 'src' folder.");
 			Lib.println("        Only haxe code files will be processed.");
 			Lib.println("        String 'abc' will be replaced to 'def'.");
 			Lib.println("");
-			Lib.println("    haxelib run hxRefactor replace \"*/src;*/library\" \"[.](hx|xml)$\" \"/(.)bc/$^1ef/\"");
+			Lib.println("    haxelib run refactor replace */src;*/library [.](hx|xml)$ /(.)bc/$^1ef/");
 			Lib.println("        Files will be recursively found in 'anydir/src' and 'anydir/library' folders.");
 			Lib.println("        Haxe code and xml files will be processed.");
 			Lib.println("        Next strings will be replaced:");
@@ -213,13 +215,21 @@ class Main
 			Lib.println("            .bc => .ef");
 			Lib.println("            ...");
 			Lib.println("");
-			Lib.println("    haxelib run hxRefactor rename \"src\" \"mypackA.mypackB\" \"mypackC.mypackD\"");
+			Lib.println("    haxelib run refactor rename src mypackA.mypackB mypackC.mypackD");
 			Lib.println("        Files will be recursively found in 'src' folder.");
 			Lib.println("        All classes found in the package 'mypackA.mypackB' will be moved to the package 'mypackC.mypackD'.");
 			Lib.println("");
-			Lib.println("    haxelib run hxRefactor rename \"src\" \"mypackA.MyClass1\" \"mypackB.MyClass2\"");
+			Lib.println("    haxelib run refactor rename src mypackA.MyClass1 mypackB.MyClass2");
 			Lib.println("        Files will be recursively found in 'src' folder.");
 			Lib.println("        Class 'mypackA.MyClass1' will be renamed to 'mypackB.MyClass2'.");
+			Lib.println("");
+			Lib.println("    haxelib run refactor convert native [.]js$ src /[.]js$/.hx/ convert.rules");
+			Lib.println("        Search for *.js files in the 'native' folder.");
+			Lib.println("        Put output files as '*.hx' into the 'src' folder.");
+			Lib.println("        Read rules from rules.txt, for example:");
+			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
+			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)?");
+			Lib.println("            /^(SPACE)\\bvar\\s+_(ID)\\s*=\\s*function\\s*[(](ARGS)[)]\\s*$/$1function _$2($3)/m");
 			Lib.println("");
 		}
 		
