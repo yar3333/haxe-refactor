@@ -46,7 +46,7 @@ class Main
 			switch (k)
 			{
 				case "replace":
-					if (args.length >= 4 && args.length % 2 == 0)
+					if (args.length >= 3)
 					{
 						var baseDir = args.shift();
 						var filter = args.shift();
