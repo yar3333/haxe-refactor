@@ -250,7 +250,7 @@ class Refactor
 				{
 					if (outDir == null)
 					{
-						replaceInFile(path, rules, Path.directory(path) + changeFileName.apply(Path.withoutDirectory(path)));
+						replaceInFile(path, rules, Path.directory(path) + "/" + changeFileName.apply(Path.withoutDirectory(path)));
 					}
 					else
 					{

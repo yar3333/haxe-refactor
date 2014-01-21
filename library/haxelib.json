@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe", "utility"],
   "description": "Haxe source code refactoring tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Add convert command.",
-  "version": "1.3.0",
+  "releasenote": "Fix replace command.",
+  "version": "1.3.1",
   "url": "https://code.google.com/p/hxrefactor/",
   "dependencies": {}
 }
