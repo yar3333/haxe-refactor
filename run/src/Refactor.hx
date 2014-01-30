@@ -231,8 +231,10 @@ class Refactor
 			text = rule.apply(text, verbose ? log : null);
 		}
 		
-		saveFileText(outPath, text);
-		if (!verbose) log.trace("Fixed: " + inpPath);
+		if (saveFileText(outPath, text))
+		{
+			if (verbose) log.trace("Fixed: " + outPath);
+		}
 		
 		if (verbose) log.finishOk();
 	}
@@ -264,15 +266,18 @@ class Refactor
 		}
 	}
 	
-	function saveFileText(path:String, text:String)
+	function saveFileText(path:String, text:String) : Bool
 	{
+		var r = false;
 		var isHidden = fs.getHiddenFileAttribute(path);
 		if (isHidden) fs.setHiddenFileAttribute(path, false);
 		if (!FileSystem.exists(path) || File.getContent(path) != text)
 		{
 			FileSystem.createDirectory(Path.directory(path));
 			File.saveContent(path, text);
+			r = true;
 		}
 		if (isHidden) fs.setHiddenFileAttribute(path, true);
+		return r;
 	}
 }
