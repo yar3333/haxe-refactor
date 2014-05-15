@@ -3,6 +3,7 @@ import hant.FileSystemTools;
 import hant.Log;
 import hant.PathTools;
 import haxe.io.Path;
+import stdlib.Regex;
 import sys.FileSystem;
 import sys.io.File;
 using StringTools;
@@ -106,7 +107,7 @@ class Refactor
 					var localPath = path.substr(baseDir.length + 1);
 					if (verbose) log.start("Process file '" + localPath + "'");
 					var original = File.getContent(path);
-					var text = new Rule("/(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b/$1" + destPack + "/").apply(original, verbose ? log : null);
+					var text = new Regex("/(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b/$1" + destPack + "/").apply(original, verbose ? function(s) log.trace(s) : null);
 					saveFileText(path, text);
 					log.trace("Fixed: " + localPath);
 					if (verbose) log.finishOk();
@@ -128,7 +129,7 @@ class Refactor
 			
 			if (renameFile(srcFile, destFile))
 			{
-				replaceInFile(destFile, [ new Rule("/\\bpackage\\s+" + src.full.replace(".", "[.]") + "\\s*;/package " + dest.full + ";/") ], destFile);
+				replaceInFile(destFile, [ new Regex("/\\bpackage\\s+" + src.full.replace(".", "[.]") + "\\s*;/package " + dest.full + ";/") ], destFile);
 			}
 			
 			log.start("Replace in all haXe files: " + src.full + " => " + dest.full);
@@ -146,12 +147,12 @@ class Refactor
 						    new EReg("\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;", "").match(text)
 						 || new EReg("\\bimport\\s+" + src.full.replace(".", "[.]") + "\\s*;", "").match(text);
 					
-					text = new Rule("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").apply(text, verbose ? log : null);
+					text = new Regex("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").apply(text, verbose ? function(s) log.trace(s) : null);
 					
 					if (packageOrImport && src.name != dest.name)
 					{
 						if (verbose) log.trace(localPath + ": " + src.name + " => " + dest.name);
-						text = new Rule("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").apply(text, verbose ? log : null);
+						text = new Regex("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").apply(text, verbose ? function(s) log.trace(s) : null);
 					}
 					
 					if (text != original)
@@ -197,7 +198,7 @@ class Refactor
 		return null;
 	}
 	
-	public function checkRules(rules:Array<Rule>)
+	public function checkRules(rules:Array<Regex>)
 	{
 		if (verbose) log.start("Check rules");
 		for (rule in rules)
@@ -219,7 +220,7 @@ class Refactor
 		return true;
 	}
 	
-	public function replaceInFile(inpPath:String, rules:Array<Rule>, outPath:String)
+	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String)
 	{
 		if (verbose) log.start("Search in '" + inpPath + "'");
 		
@@ -228,7 +229,7 @@ class Refactor
 		var text = original;
 		for (rule in rules)
 		{
-			text = rule.apply(text, verbose ? log : null);
+			text = rule.apply(text, verbose ? function(s) log.trace(s) : null);
 		}
 		
 		if (saveFileText(outPath, text))
@@ -239,7 +240,7 @@ class Refactor
 		if (verbose) log.finishOk();
 	}
 	
-	public function replaceInFiles(filter:EReg, changeFileName:Rule, rules:Array<Rule>)
+	public function replaceInFiles(filter:EReg, changeFileName:Regex, rules:Array<Regex>)
 	{
 		for (baseDir in baseDirs)
 		{
