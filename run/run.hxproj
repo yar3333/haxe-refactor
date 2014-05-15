@@ -28,6 +28,7 @@
   </build>
   <!-- haxelib libraries -->
   <haxelib>
+    <library name="stdlib" />
     <library name="hant" />
   </haxelib>
   <!-- Class files to compile (other referenced classes will automatically be included) -->

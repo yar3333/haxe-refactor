@@ -3,9 +3,9 @@ import hant.FileSystemTools;
 import hant.Log;
 import hant.PathTools;
 import neko.Lib;
+import stdlib.Regex;
 import sys.FileSystem;
 import sys.io.File;
-import sys.io.Process;
 using StringTools;
 using Lambda;
 
@@ -56,12 +56,12 @@ class Main
 						var rules = [];
 						while (args.length > 0)
 						{
-							rules.push(new Rule(args.shift()));
+							rules.push(new Regex(args.shift()));
 						}
 						
 						if (refactor.checkRules(rules))
 						{
-							refactor.replaceInFiles(new EReg(filter, "i"), new Rule("///"), rules);
+							refactor.replaceInFiles(new EReg(filter, "i"), new Regex("///"), rules);
 						}
 					}
 					else
@@ -103,7 +103,7 @@ class Main
 						var baseDir = args.shift();
 						var filter = args.shift();
 						var outDir = args.shift();
-						var changeFileName = new Rule(args.shift());
+						var changeFileName = new Regex(args.shift());
 						var rulesFile = args.shift();
 						
 						if (FileSystem.exists(rulesFile))
@@ -111,7 +111,7 @@ class Main
 							var refactor = new Refactor(log, fs, baseDir, outDir, verbose);
 							var lines = File.getContent(rulesFile).replace("\r", "").split("\n");
 							var consts = new Array<{ name:String, value:String }>();
-							var rules = new Array<Rule>();
+							var rules = new Array<Regex>();
 							for (line in lines)
 							{
 								if (~/^\s*\/\//.match(line)) continue;
@@ -146,7 +146,7 @@ class Main
 										{
 											line = line.replace(const.name, const.value);
 										}
-										rules.push(new Rule(line));
+										rules.push(new Regex(line));
 									}
 								}
 							}
