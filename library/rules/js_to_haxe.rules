@@ -1,0 +1,50 @@
+ID = [_a-zA-Z][_a-zA-Z0-9]*
+FUNC = ID(?:<\s*ID(?:\s*,\s*ID)*\s*>)?\s*
+TYPE = ID\s*
+INT = [0-9]+(?:e[-+][0-9]+)?
+FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
+NUMBER = (?:INT|FLOAT)
+VALUE = (?:ID|NUMBER)
+ARGS = (?:\s*ID\s*(?:,\s*ID\s*)*)?
+KEYWORDS = \b(?:new|return|var|class|package|if|else|import|using)\b
+SPACE = (?:[ ]|\t)*
+
+// trim end spaces ============================================
+/(?:[ ]|\t)+$//m
+
+// new line before brackets ===================================
+/^(SPACE)([^\n]+)\s*{\s*$/$1$2\n$1{/m
+
+// reserved keywords ==========================================
+/\binline\b/inlin/
+
+/^(SPACE)\bvar\s+_(ID)\s*=\s*function\s*[(](ARGS)[)]\s*$/$1function _$2($3)/m
+/^(SPACE)\bvar\s+(ID)\s*=\s*function\s*[(](ARGS)[)]\s*$/$1public function $2($3)/m
+/^ID[.]prototype[.]_(ID)\s*[=]\s*function[(](ARGS)[)]\s*$/function _$1($2)/m
+/^ID[.]prototype[.](ID)\s*[=]\s*function[(](ARGS)[)]\s*$/public function $1($2)/m
+/^ID[.]_(ID)\s*[=]\s*function[(](ARGS)[)]\s*$/static function _$1($2)/m
+/^ID[.](ID)\s*[=]\s*function[(](ARGS)[)]\s*$/public static function $1($2)/m
+
+/^var\s+prototype\s*\=\s*$/class TODO/m
+/^(SPACE)(ID):\s*function[(](ARGS)[)]\s*$/$1function $2($3)/m
+/^exports.(ID)\s*=\s* function[(](ARGS)[)]\s*$/public static function $1($2)/m
+
+/^ID[.]prototype[.][_](ID)\s*=/var _$1 =/m
+/^ID[.]prototype[.](ID)\s*=/public var $1 =/m
+
+
+/^/import stdlib.Exception;\n\n/
+/^var\s+([a-zA-Z])(ID)\s*[=]\s*require[(][^)]+[)]\s*;\s*$/import $^1$2;/m
+/:\s*{\s*value\s*:\s*(VALUE)\s*}\s*,/: $1;/
+/^(SPACE)}\s*else\b/$1}\n$1else/m
+/^(SPACE)}\s*catch\b/$1}\n$1catch/m
+/^(SPACE)else\s+if\b/$1else\n$1if/m
+/^exports[.](ID)\s*[=]/var $1 =/m
+
+/!==/!=/
+/===/==/
+
+/\bthrow new Error\b/throw new Exception/
+
+// trim end spaces ============================================
+/(?:[ ]|\t)+$//m

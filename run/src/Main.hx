@@ -1,4 +1,4 @@
-
+import hant.CmdOptions;
 import hant.FileSystemTools;
 import hant.Log;
 import hant.PathTools;
@@ -61,7 +61,7 @@ class Main
 						
 						if (refactor.checkRules(rules))
 						{
-							refactor.replaceInFiles(new EReg(filter, "i"), new Regex("///"), rules);
+							refactor.replaceInFiles(new EReg(filter, "i"), new Regex("///"), rules, false);
 						}
 					}
 					else
@@ -98,72 +98,42 @@ class Main
 					}
 					
 				case "convert":
-					if (args.length == 5)
+					var options = new CmdOptions();
+					
+					options.add("baseDir", "");
+					options.add("filter", "");
+					options.add("outDir", "");
+					options.add("changeFileName", "");
+					options.add("rulesFile", "");
+					options.add("excludeStrings", false, [ "--exclude-string-literals" ]);
+					
+					options.parse(args);
+					
+					var baseDir = options.get("baseDir");
+					var filter = options.get("filter");
+					var outDir = options.get("outDir");
+					var changeFileName = options.get("changeFileName") != "" ? new Regex(options.get("changeFileName")) : null;
+					var rulesFile = options.get("rulesFile");
+					var excludeStrings = options.get("excludeStrings");
+					
+					if (baseDir == "") fail("<baseDir> arg must be specified.");
+					if (filter == "") fail("<filter> arg must be specified.");
+					if (outDir == "") fail("<outDir> arg must be specified.");
+					if (changeFileName == null) fail("<changeFileName> arg must be specified.");
+					if (rulesFile == "") fail("<rulesFile> arg must be specified.");
+					
+					if (!FileSystem.exists(rulesFile))
 					{
-						var baseDir = args.shift();
-						var filter = args.shift();
-						var outDir = args.shift();
-						var changeFileName = new Regex(args.shift());
-						var rulesFile = args.shift();
-						
-						if (FileSystem.exists(rulesFile))
+						var altRulesFile = haxe.io.Path.join([ exeDir, "rules", rulesFile ]);
+						if (FileSystem.exists(altRulesFile) && !FileSystem.isDirectory(altRulesFile))
 						{
-							var refactor = new Refactor(log, fs, baseDir, outDir, verbose);
-							var lines = File.getContent(rulesFile).replace("\r", "").split("\n");
-							var consts = new Array<{ name:String, value:String }>();
-							var rules = new Array<Regex>();
-							for (line in lines)
-							{
-								if (~/^\s*\/\//.match(line)) continue;
-								
-								var n = line.indexOf("=");
-								if (n > 0 && ~/\s*[_a-zA-Z][_a-zA-Z0-9]*\s*[=]/.match(line))
-								{
-									var name = line.substr(0, n).trim();
-									var value = line.substr(n + 1).trim();
-									if (name.length > 0 && value.length > 0)
-									{
-										for (const in consts)
-										{
-											value = value.replace(const.name, const.value);
-										}
-										consts.push({ name:name, value:value });
-									}
-									else
-									{
-										if (line.trim().length > 0)
-										{
-											fail("Error in line '" + line + "'.");
-										}
-									}
-								}
-								else
-								{
-									line = line.trim();
-									if (line.length > 0)
-									{
-										for (const in consts)
-										{
-											line = line.replace(const.name, const.value);
-										}
-										rules.push(new Regex(line));
-									}
-								}
-							}
-							if (refactor.checkRules(rules))
-							{
-								refactor.replaceInFiles(new EReg(filter, "i"), changeFileName, rules);
-							}
-						}
-						else
-						{
-							fail("File '" + rulesFile + "' is not found.");
+							rulesFile = altRulesFile;
 						}
 					}
-					else
-					{
-						fail("Wrong arguments count.");
-					}
+					
+					if (!FileSystem.exists(rulesFile)) fail("Could't find rulesFile '" + rulesFile + "'.");
+					
+					new Convert(log, fs, verbose, rulesFile).process(baseDir, filter, outDir, changeFileName, excludeStrings);
 					
 				default:
 					fail("Unknow command.");
@@ -190,6 +160,7 @@ class Main
 			Lib.println("        <dest>                      Destination package or full class name.");
 			Lib.println("");
 			Lib.println("    convert                         Recursive find and replace in files using rules file.");
+			Lib.println("        --exclude-string-literals   Exclude C-like strings from process.");
 			Lib.println("        <baseDir>                   Path to source folder.");
 			Lib.println("        <filter>                    File path's filter (regular expression).");
 			Lib.println("        <outDir>                    Output directory.");
