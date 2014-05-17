@@ -1,4 +1,3 @@
-
 import hant.FileSystemTools;
 import hant.Log;
 import hant.PathTools;
@@ -129,7 +128,7 @@ class Refactor
 			
 			if (renameFile(srcFile, destFile))
 			{
-				replaceInFile(destFile, [ new Regex("/\\bpackage\\s+" + src.full.replace(".", "[.]") + "\\s*;/package " + dest.full + ";/") ], destFile);
+				replaceInFile(destFile, [ new Regex("/\\bpackage\\s+" + src.full.replace(".", "[.]") + "\\s*;/package " + dest.full + ";/") ], destFile, true);
 			}
 			
 			log.start("Replace in all haXe files: " + src.full + " => " + dest.full);
@@ -220,16 +219,35 @@ class Refactor
 		return true;
 	}
 	
-	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String)
+	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool)
 	{
 		if (verbose) log.start("Search in '" + inpPath + "'");
 		
-		var original = File.getContent(inpPath);
+		var text = File.getContent(inpPath);
 		
-		var text = original;
-		for (rule in rules)
+		if (!excludeStrings)
 		{
-			text = rule.apply(text, verbose ? function(s) log.trace(s) : null);
+			for (rule in rules)
+			{
+				text = rule.apply(text, verbose ? function(s) log.trace(s) : null);
+			}
+		}
+		else
+		{
+			for (rule in rules)
+			{
+				var r = "";
+				var re = ~/("|')(\\.|.)*?\1/;
+				var i = 0; while (re.matchSub(text, i))
+				{
+					var p = re.matchedPos();
+					r += rule.apply(text.substr(i, p.pos - i), verbose ? function(s) log.trace(s) : null);
+					r += re.matched(0);
+					i = p.pos + p.len;
+				}
+				r += rule.apply(text.substr(i), verbose ? function(s) log.trace(s) : null);
+				text = r;
+			}
 		}
 		
 		if (saveFileText(outPath, text))
@@ -240,7 +258,7 @@ class Refactor
 		if (verbose) log.finishOk();
 	}
 	
-	public function replaceInFiles(filter:EReg, changeFileName:Regex, rules:Array<Regex>)
+	public function replaceInFiles(filter:EReg, changeFileName:Regex, rules:Array<Regex>, excludeStrings:Bool)
 	{
 		for (baseDir in baseDirs)
 		{
@@ -253,12 +271,12 @@ class Refactor
 				{
 					if (outDir == null)
 					{
-						replaceInFile(path, rules, Path.directory(path) + "/" + changeFileName.apply(Path.withoutDirectory(path)));
+						replaceInFile(path, rules, Path.directory(path) + "/" + changeFileName.apply(Path.withoutDirectory(path)), excludeStrings);
 					}
 					else
 					{
 						var localDir = Path.directory(localPath);
-						replaceInFile(path, rules, outDir + (localDir != "" ? Path.addTrailingSlash(localDir) : "") + changeFileName.apply(Path.withoutDirectory(localPath)));
+						replaceInFile(path, rules, outDir + (localDir != "" ? Path.addTrailingSlash(localDir) : "") + changeFileName.apply(Path.withoutDirectory(localPath)), excludeStrings);
 					}
 				}
 			});

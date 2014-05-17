@@ -1,0 +1,87 @@
+ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
+LONGID = ID(?:[.]ID)*
+INT = [0-9]+(?:e[-+][0-9]+)?
+FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
+NUMBER = (?:INT|FLOAT)
+VALUE = (?:LONGID|NUMBER)
+SPACE = (?:[ ]|\t)*
+
+KEYWORDS = \b(?:new|return|var|class|enum|struct|namespace|if|else|using|foreach|for)\b
+//static|public|protected|private
+
+FORMAL_ARG = \s*ID\s*:\s*TYPE\s*
+FORMAL_ARGS = (?:FORMAL_ARG(?:,FORMAL_ARG)*)?
+FUNC_CALL = ID(?:<\s*ID(?:\s*,\s*ID)*\s*>)?\s*
+
+ACCESS = (?:static\s+)?(?:public|private|ptotected)(?:\s+static)?
+BASETYPE = LONGID(?:[<]\s*LONGID(?:\s*,\s*LONGID)*\s*[>])?
+TYPE = BASETYPE[?]?
+
+// trim end spaces ============================================
+/(?:[ ]|\t)+$//m
+
+// new line before brackets ===================================
+/^(SPACE)([^\n]+)\s*{\s*$/$1$2\n$1{/m
+
+// remove spaces before ")"
+/[ ]+[)]/)
+
+// ============================================================
+// ============================================================
+
+// change "T[]" => "Array<T>"
+/(TYPE)\s*\[\s*\]/Array<$1>
+
+// change: "T v" => "var v:T"
+/(TYPE)\s+(ID)(\s*.)/var $2:$1$3//KEYWORDS|[(]|(?:\b(?:static|public|protected|private|switch|case)\b)
+
+// private int     m_iServerID
+/(ACCESS)\s+(TYPE)\s+(ID)(\s*.)/$1 var $3:$2$4//KEYWORDS|[(]
+
+// fix: "(var v:T" => "(v:T" and ",var v:T" => ",v:T"
+/([(,]\s*)var (ID)[:](TYPE)/$1$2:$3//
+
+/(ACCESS)\s+(TYPE)\s+(ID)[(](FORMAL_ARGS)[)]/$1 function $3($4):$2/
+
+/\busing\b/import
+/\bnamespace\b/package
+
+/\breadonly var\b/inline var
+
+// dtStart:DateTime?
+/(ID):(BASETYPE)[?]/?$1:$2
+
+// simplify: ":T = new T" => " = new T"
+/:(TYPE)\s*[=]\s*new\s*\1/ = new $1
+
+// simplify: ":T = T." => " = T."
+/:(TYPE)\s*[=]\s*\1[.]/ = $1.
+
+//foreach (item:RssOperations.RssItem in rssReader.RssItems)
+/\bforeach\s*[(](LONGID):TYPE\s+in\s+/for ($1 in /
+
+/:bool\s*[=]\s*(true|false)/ = $1
+
+// change std types
+/:int\b/:Int
+/:string\b/:String
+/:bool\b/:Bool
+/:void\b/:Void
+
+/\bDateTime\b/Date
+/\bDate.Now\b/Date.now()
+
+// change: "var v:T" => "var a : T"
+/\bvar (LONGID):(TYPE)/var $1 : $2
+
+// "):T" => ") : T"
+/[)]:(TYPE)/) : $1
+
+/\bprivate\s+//
+
+// ============================================================
+// ============================================================
+
+
+// trim end spaces ============================================
+/(?:[ ]|\t)+$//m
