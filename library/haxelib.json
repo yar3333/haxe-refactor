@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe", "utility"],
   "description": "Haxe source code refactoring amd converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Minor bugfixes",
-  "version": "1.3.3",
+  "releasenote": "Smart line ends.",
+  "version": "1.3.4",
   "url": "https://code.google.com/p/hxrefactor/",
   "dependencies": {}
 }
