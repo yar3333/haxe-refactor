@@ -70,9 +70,13 @@ TYPE = BASETYPE[?]?
 
 /\bDateTime\b/Date
 /\bDate.Now\b/Date.now()
+/\bRegex\b/EReg
 
 // change: "var v:T" => "var a : T"
-/\bvar (LONGID):(TYPE)/var $1 : $2
+/\bvar\s+(ID)\s*:\s*(TYPE)/var $1 : $2/
+
+// simplify '/s : String = "' => 's = "'
+/(ID)\s*[:]\s*String\s*[=]\s*"/$1 = "/
 
 // "):T" => ") : T"
 /[)]:(TYPE)/) : $1
@@ -84,4 +88,4 @@ TYPE = BASETYPE[?]?
 
 
 // trim end spaces ============================================
-/(?:[ ]|\t)+$//m
+//(?:[ ]|\t)+$//m

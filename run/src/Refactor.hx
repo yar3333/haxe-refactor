@@ -241,9 +241,9 @@ class Refactor
 				var i = 0; while (re.matchSub(text, i))
 				{
 					var p = re.matchedPos();
-					r += rule.apply(text.substr(i, p.pos - i), verbose ? function(s) log.trace(s) : null);
-					r += re.matched(0);
-					i = p.pos + p.len;
+					r += rule.apply(text.substr(i, p.pos - i + 1), verbose ? function(s) log.trace(s) : null);
+					r += re.matched(0).substr(1, p.len - 2);
+					i = p.pos + p.len - 1;
 				}
 				r += rule.apply(text.substr(i), verbose ? function(s) log.trace(s) : null);
 				text = r;
