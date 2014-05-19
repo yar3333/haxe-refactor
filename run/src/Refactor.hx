@@ -225,6 +225,12 @@ class Refactor
 		
 		var text = File.getContent(inpPath);
 		
+		var isWinLineEndStyle = text.indexOf("\r\n") >= 0;
+		if (isWinLineEndStyle) text = text.replace("\r\n", "\n");
+		
+		var isMacLineEndStyle = !isWinLineEndStyle && text.indexOf("\r") >= 0;
+		if (isMacLineEndStyle) text = text.replace("\r", "\n");
+		
 		if (!excludeStrings)
 		{
 			for (rule in rules)
@@ -249,6 +255,10 @@ class Refactor
 				text = r;
 			}
 		}
+		
+		if (isMacLineEndStyle) text = text.replace("\n", "\r");
+		else
+		if (isWinLineEndStyle) text = text.replace("\n", "\r\n");
 		
 		if (saveFileText(outPath, text))
 		{
