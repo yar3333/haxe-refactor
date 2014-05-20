@@ -57,7 +57,7 @@ TYPE = BASETYPE[?]?
 // simplify: ":T = T." => " = T."
 /:(TYPE)\s*[=]\s*\1[.]/ = $1.
 
-//foreach (item:RssOperations.RssItem in rssReader.RssItems)
+// foreach (i:T in a)
 /\bforeach\s*[(](LONGID):TYPE\s+in\s+/for ($1 in /
 
 /:bool\s*[=]\s*(true|false)/ = $1
@@ -71,6 +71,7 @@ TYPE = BASETYPE[?]?
 /\bDateTime\b/Date
 /\bDate.Now\b/Date.now()
 /\bRegex\b/EReg
+/\bToString\b/toString
 
 // change: "var v:T" => "var a : T"
 /\bvar\s+(ID)\s*:\s*(TYPE)/var $1 : $2/
@@ -82,6 +83,8 @@ TYPE = BASETYPE[?]?
 /[)]:(TYPE)/) : $1
 
 /\bprivate\s+//
+
+/\bpublic\s+class\b/class
 
 // ============================================================
 // ============================================================
