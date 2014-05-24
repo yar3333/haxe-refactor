@@ -1,1 +1,0 @@
-haxelib run refactor convert inp [.js]$ out /[.]js$/.hx/ js_to_haxe.rules
