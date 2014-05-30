@@ -5,7 +5,6 @@ import hant.PathTools;
 import neko.Lib;
 import stdlib.Regex;
 import sys.FileSystem;
-import sys.io.File;
 using StringTools;
 using Lambda;
 
@@ -32,7 +31,7 @@ class Main
 		if (args.length > 0)
 		{
 			var log = new Log(5);
-			var fs = new FileSystemTools(log, exeDir + "/hant-" + Sys.systemName().toLowerCase());
+			var fs = new FileSystemTools(log);
 			
 			var verbose = false;
 			
