@@ -42,8 +42,12 @@
   <!-- Executed before build -->
   <preBuildCommand />
   <!-- Executed after build -->
-  <postBuildCommand alwaysRun="False">cmd /C IF EXIST ..\..\hant\library\ndll\Windows\hant.ndll copy /B /Y ..\..\hant\library\ndll\Windows\hant.ndll ..\library\hant-windows.ndll
-cmd /C IF EXIST ..\..\hant\library\ndll\Linux\hant.ndll copy /B /Y ..\..\hant\library\ndll\Linux\hant.ndll ..\library\hant-linux.ndll</postBuildCommand>
+  <postBuildCommand alwaysRun="False">
+cmd /C IF EXIST ..\..\hant\library\ndll\Windows\hant.ndll copy /B /Y ..\..\hant\library\ndll\Windows\hant.ndll ..\library\hant-windows.ndll
+cmd /C IF EXIST ..\..\hant\library\ndll\Windows64\hant.ndll copy /B /Y ..\..\hant\library\ndll\Windows64\hant.ndll ..\library\hant-windows64.ndll
+cmd /C IF EXIST ..\..\hant\library\ndll\Linux\hant.ndll copy /B /Y ..\..\hant\library\ndll\Linux\hant.ndll ..\library\hant-linux.ndll
+cmd /C IF EXIST ..\..\hant\library\ndll\Linux64\hant.ndll copy /B /Y ..\..\hant\library\ndll\Linux64\hant.ndll ..\library\hant-linux64.ndll
+  </postBuildCommand>
   <!-- Other project options -->
   <options>
     <option showHiddenPaths="False" />
