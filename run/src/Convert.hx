@@ -25,40 +25,28 @@ class Convert
 		var consts = new Array<{ name:String, value:String }>();
 		for (line in lines)
 		{
-			if (~/^\s*\/\//.match(line)) continue;
+			line = line.trim();
 			
-			var n = line.indexOf("=");
-			if (n > 0 && ~/\s*[_a-zA-Z][_a-zA-Z0-9]*\s*[=]/.match(line))
+			if (line == "" || ~/^\/\//.match(line)) continue;
+			
+			var reConst = ~/^([_a-zA-Z][_a-zA-Z0-9]*)\s*[=]\s*(.+?)$/;
+			
+			if (reConst.match(line))
 			{
-				var name = line.substr(0, n).trim();
-				var value = line.substr(n + 1).trim();
-				if (name.length > 0 && value.length > 0)
+				var value = reConst.matched(2);
+				for (const in consts)
 				{
-					for (const in consts)
-					{
-						value = replaceWord(value, const.name, const.value);
-					}
-					consts.push({ name:name, value:value });
+					value = replaceWord(value, const.name, const.value);
 				}
-				else
-				{
-					if (line.trim().length > 0)
-					{
-						throw new Exception("Error in line '" + line + "'.");
-					}
-				}
+				consts.push({ name:reConst.matched(1), value:value });
 			}
 			else
 			{
-				line = line.trim();
-				if (line.length > 0)
+				for (const in consts)
 				{
-					for (const in consts)
-					{
-						line = replaceWord(line, const.name, const.value);
-					}
-					rules.push(new Regex(line));
+					line = replaceWord(line, const.name, const.value);
 				}
+				rules.push(new Regex(line));
 			}
 		}
 	}

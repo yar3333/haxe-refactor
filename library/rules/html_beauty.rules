@@ -1,0 +1,28 @@
+ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
+VALUE = (?:LONGID|NUMBER)
+SPACE = [ \t]+
+OPTSPACE = [ \t]*
+
+// ==================== regular expressions ========================
+
+// trim end spaces 
+/([^ \t\n])[ \t]+$/$1/m
+
+// style="a;b;" => style="a;b"
+/\bstyle\s*[=]\s*'([^']*?)[ ]*;'/style='$1'
+/\bstyle\s*[=]\s*"([^"]*?)[ ]*;"/style="$1"
+
+// "<a/>" => "<a />"
+/<(ID)\/>/<$1 \/>
+
+/\bstyle[=]'([^']*?)\s+;/style='$1;
+/\bstyle[=]"([^"]*?)\s+;/style="$1;
+
+/\bstyle[=]'([^']*?);([^ ])/style='$1; $2
+/\bstyle[=]"([^"]*?);([^ ])/style="$1; $2
+
+/\bstyle[=]'([^']*?)[ ]+:/style='$1:
+/\bstyle[=]"([^"]*?)[ ]+:/style="$1:
+
+/\bstyle[=]'([^']*?):\s+/style='$1:
+/\bstyle[=]"([^"]*?):\s+/style="$1:
