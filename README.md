@@ -1,6 +1,6 @@
 # refactor #
 
-A tool to search&replace by regex in many files and refactor haxe code.
+A tool to search&replace by regex in many files, refactor haxe code and convert source code to/from haxe.
 
 Features:
 
@@ -9,6 +9,14 @@ Features:
 * Rename class
 * Move class to another package
 * Apply set of regex search&replace rules to files
+
+Rule files:
+
+* c# to haxe
+* js to haxe
+* haxe to c++
+* beauty html
+* beauty haxe
 
 ### Simple search & replace ###
 Replace aaa to bbb in *.hx files found in mydirA and mydirB folders:
@@ -29,3 +37,6 @@ Apply file cs_to_haxe.rules to the \*.cs files found in csharp_src folder and sa
 haxelib run refactor convert --exclude-string-literals csharp_src [.]cs$ haxe_src /[.]cs$/.hx/ cs_to_haxe.rules
 ```
 Examples of the rule files you can see in rules folder.
+
+Also library folder contain *.cmd helpers to quickly run predefined conversions.
+
