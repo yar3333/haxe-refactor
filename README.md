@@ -2,7 +2,7 @@
 
 A tool to search&replace by regex in many files, refactor haxe code and convert source code to/from haxe.
 
-Features:
+### Features ###
 
 * Massive search&replace in files
 * Rename package
@@ -10,7 +10,7 @@ Features:
 * Move class to another package
 * Apply set of regex search&replace rules to files
 
-Rule files:
+### Rule files ###
 
 * c# to haxe
 * js to haxe
@@ -39,4 +39,3 @@ haxelib run refactor convert --exclude-string-literals csharp_src [.]cs$ haxe_sr
 Examples of the rule files you can see in rules folder.
 
 Also library folder contain *.cmd helpers to quickly run predefined conversions.
-
