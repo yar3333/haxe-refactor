@@ -20,7 +20,7 @@ haxelib run refactor replace mydirA;mydirB [.]hx$ /aaa/bbb/
 Move class MyClass from oldpack to newpack (src is a source project folder to search class files):
 ```
 #!bash
-haxelib run rename src oldpack.MyClass newpack.MyClass
+haxelib run refactor rename src oldpack.MyClass newpack.MyClass
 ```
 ### Apply many regex rules to files ###
 Apply file cs_to_haxe.rules to the *.cs files found in csharp_src folder and save changed files as *.hx into haxe_src folder:
