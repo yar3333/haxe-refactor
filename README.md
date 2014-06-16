@@ -23,9 +23,9 @@ Move class MyClass from oldpack to newpack (src is a source project folder to se
 haxelib run refactor rename src oldpack.MyClass newpack.MyClass
 ```
 ### Apply many regex rules to files ###
-Apply file cs_to_haxe.rules to the *.cs files found in csharp_src folder and save changed files as *.hx into haxe_src folder:
+Apply file cs_to_haxe.rules to the \*.cs files found in csharp_src folder and save changed files as \*.hx into haxe_src folder:
 ```
 #!bash
 haxelib run refactor convert --exclude-string-literals csharp_src [.]cs$ haxe_src /[.]cs$/.hx/ cs_to_haxe.rules
 ```
-Examples of the rule files you can see at rules folder.
+Examples of the rule files you can see in rules folder.
