@@ -1,6 +1,5 @@
 import hant.FileSystemTools;
 import hant.Log;
-import stdlib.Exception;
 import stdlib.Regex;
 import sys.io.File;
 using StringTools;
