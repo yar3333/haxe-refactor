@@ -72,18 +72,24 @@ class Main
 					if (args.length == 3)
 					{
 						var baseDir = args.shift();
-						var src = args.shift();
-						var dest = args.shift();
+						var src = pathToPack(baseDir, args.shift());
+						var dest = pathToPack(baseDir, args.shift());
 						
-						var packs = src.split(".");
-						
-						if (~/^[a-z]/.match(packs[packs.length - 1]))
+						var srcPacks = src.split(".");
+						if (~/^[a-z]/.match(srcPacks[srcPacks.length - 1]))
 						{
 							new Refactor(log, fs, baseDir, null, verbose).renamePackage(src, dest);
 						}
 						else
-						if (~/^[A-Z]/.match(packs[packs.length - 1]))
+						if (~/^[A-Z]/.match(srcPacks[srcPacks.length - 1]))
 						{
+							var destPacks = dest.split(".");
+							if (!(~/^[A-Z]/.match(destPacks[destPacks.length - 1])))
+							{
+								var n = src.lastIndexOf(".");
+								n = n < 0 ? 0 : n + 1;
+								dest += "." + src.substr(n);
+							}
 							new Refactor(log, fs, baseDir, null, verbose).renameClass(new ClassPath(src), new ClassPath(dest));
 						}
 						else
@@ -210,5 +216,24 @@ class Main
 	{
 		Lib.println("ERROR: " + message);
 		Sys.exit(1);
+	}
+	
+	static function pathToPack(srcDirs:String, path:String) : String
+	{
+		path = PathTools.normalize(path);
+		if (path.indexOf("/") < 0 && !path.endsWith(".hx")) return path;
+		
+		if (path.endsWith(".hx")) path = path.substr(0, path.length - ".hx".length);
+		
+		for (srcDir in srcDirs.split(";").map(function(e) return PathTools.normalize(e)))
+		{
+			if (path.startsWith(srcDir + "/"))
+			{
+				return path.substr(srcDir.length + 1).replace("/", ".");
+			}
+		}
+		
+		fail("Path '" + path + "' is not in source directories.");
+		return null;
 	}
 }
