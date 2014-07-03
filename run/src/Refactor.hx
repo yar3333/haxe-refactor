@@ -97,8 +97,6 @@ class Refactor
 			
 			log.trace("Replace in all *.hx and *.xml files '" + srcPack + "' => '" + destPack + "'");
 			
-			
-			
 			fs.findFiles(baseDir, function(path:String)
 			{
 				if (path.endsWith(".hx") || path.endsWith(".xml"))
