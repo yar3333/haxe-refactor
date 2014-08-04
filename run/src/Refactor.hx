@@ -22,50 +22,7 @@ class Refactor
 		this.outDir = outDir != null && outDir != "" ? Path.addTrailingSlash(outDir) : outDir;
 		this.verbose = verbose;
 		
-		if (verbose) log.start("Prepare paths");
-		
-		baseDirs = [];
-		for (vdir in baseDir.split(";"))
-		{
-			vdir = PathTools.normalize(vdir);
-			if (vdir.indexOf("*") < 0)
-			{
-				if (FileSystem.exists(vdir) && FileSystem.isDirectory(vdir))
-				{
-					if (verbose) log.trace(vdir);
-					baseDirs.push(vdir);
-				}
-				else
-				{
-					log.trace("Directory '" + vdir + "' is not found.");
-				}
-			}
-			else
-			{
-				var n = vdir.indexOf("*");
-				var basePath = PathTools.normalize(vdir.substr(0, n));
-				var addPath = n + 1 < vdir.length ? vdir.substr(n + 1) : "";
-				
-				if (FileSystem.exists(basePath) && FileSystem.isDirectory(basePath))
-				{
-					for (dir in FileSystem.readDirectory(basePath))
-					{
-						var path = basePath + "/" + dir + addPath;
-						if (FileSystem.exists(path) && FileSystem.isDirectory(path))
-						{
-							if (verbose) log.trace(path);
-							baseDirs.push(path);
-						}
-					}
-				}
-				else
-				{
-					log.trace("Directory '" + basePath + "' is not found.");
-				}
-			}
-		}
-		
-		if (verbose) log.finishOk();
+		baseDirs = DirTools.parse(baseDir, log, verbose);
 	}
 	
 	public function renamePackage(srcPack:String, destPack:String)
@@ -306,5 +263,70 @@ class Refactor
 		}
 		if (isHidden) fs.setHiddenFileAttribute(path, true);
 		return r;
+	}
+	
+	public function reindent(filter:EReg, oldTabSize:Int, oldIndentSize:Int, newTabSize:Int, newIndentSize:Int)
+	{
+		for (baseDir in baseDirs)
+		{
+			log.start("Reindent in '" + baseDir + "'");
+			
+			fs.findFiles(baseDir, function(path)
+			{
+				var localPath = path.substr(baseDir.length + 1);
+				if (filter.match(localPath))
+				{
+					reindentFile(path, oldTabSize, oldIndentSize, newTabSize, newIndentSize);
+				}
+			});
+			
+			log.finishOk();
+		}
+	}
+	
+	public function reindentFile(path:String, oldTabSize:Int, oldIndentSize:Int, newTabSize:Int, newIndentSize:Int) : Void
+	{
+		if (!FileSystem.exists(path) || FileSystem.isDirectory(path))
+		{
+			log.start("Reindent in '" + path + "'");
+			log.finishFail("File not found.");
+		}
+		
+		var oldText = File.getContent(path);
+		oldText = oldText.replace("\r\n", "\n").replace("\r", "\n");
+		
+		var lines = oldText.split("\n");
+		for (i in 0...lines.length)
+		{
+			var oldLine = lines[i];
+			var newLine = "";
+			var oldPos = 0;
+			var j = 0; while (j < oldLine.length)
+			{
+				if      (oldLine.charAt(j) == " ")  oldPos++;
+				else if (oldLine.charAt(j) == "\t") oldPos = (Std.int(oldPos / oldTabSize) + 1) * oldTabSize;
+				else                                { newLine = oldLine.substr(j); break; }
+				j++;
+			}
+			
+			var oldIndents = Std.int(oldPos / oldIndentSize);
+			var oldIndentAdditionalSpaces = oldPos % oldIndentSize;
+			
+			oldPos = oldIndents * newIndentSize + oldIndentAdditionalSpaces;
+			
+			var newPos = 0;
+			var spaces = "";
+			while (newTabSize > 0 && newPos + newTabSize <= oldPos) { newPos += newTabSize; spaces += "\t"; }
+			while (newPos < oldPos) { newPos++; spaces += " "; }
+			
+			lines[i] = spaces + newLine;
+		}
+		
+		var newText = lines.join("\n");
+		if (newText != oldText)
+		{
+			File.saveContent(path, newText);
+			if (verbose) log.trace("Fixed: " + path);
+		}
 	}
 }

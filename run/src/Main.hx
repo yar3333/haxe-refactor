@@ -48,7 +48,7 @@ class Main
 					if (args.length >= 3)
 					{
 						var baseDir = args.shift();
-						var filter = args.shift();
+						var filter = filterToRegex(args.shift());
 						
 						var refactor = new Refactor(log, fs, baseDir, null, verbose);
 						
@@ -115,7 +115,7 @@ class Main
 					options.parse(args);
 					
 					var baseDir = options.get("baseDir");
-					var filter = options.get("filter");
+					var filter = filterToRegex(options.get("filter"));
 					var outDir = options.get("outDir");
 					var changeFileName = options.get("changeFileName") != "" ? new Regex(options.get("changeFileName")) : null;
 					var rulesFile = options.get("rulesFile");
@@ -140,6 +140,40 @@ class Main
 					
 					new Convert(log, fs, verbose, rulesFile).process(baseDir, filter, outDir, changeFileName, excludeStrings);
 					
+				case "reindent":
+					if (args.length == 6)
+					{
+						var baseDir = args.shift();
+						var filter = filterToRegex(args.shift());
+						
+						var oldTabSize = Std.parseInt(args.shift());
+						var oldIndentSize = Std.parseInt(args.shift());
+						
+						var newTabSize = Std.parseInt(args.shift());
+						var newIndentSize = Std.parseInt(args.shift());
+						
+						var refactor = new Refactor(log, fs, baseDir, null, verbose);
+						refactor.reindent(new EReg(filter, "i"), oldTabSize, oldIndentSize, newTabSize, newIndentSize);
+					}
+					else
+					if (args.length == 5)
+					{
+						var filePath = args.shift();
+						
+						var oldTabSize = Std.parseInt(args.shift());
+						var oldIndentSize = Std.parseInt(args.shift());
+						
+						var newTabSize = Std.parseInt(args.shift());
+						var newIndentSize = Std.parseInt(args.shift());
+						
+						var refactor = new Refactor(log, fs, null, null, verbose);
+						refactor.reindentFile(filePath, oldTabSize, oldIndentSize, newTabSize, newIndentSize);
+					}
+					else
+					{
+						fail("Wrong arguments count.");
+					}
+					
 				default:
 					fail("Unknow command.");
 			}
@@ -153,7 +187,7 @@ class Main
 			Lib.println("    replace                         Recursive find and replace in files.");
 			Lib.println("        <baseDirs>                  Paths to base folders. Use ';' as delimiter.");
 			Lib.println("                                    Use '*' to specify 'any folder' in path.");
-			Lib.println("        <filter>                    File path's filter (regular expression).");
+			Lib.println("        <filter>                    File path's filter (regex or '*.ext;*.ext').");
 			Lib.println("        /search/replacement/flags   Regex to find and replace.");
 			Lib.println("                                    In <replacement> use $1-$9 to substitute groups.");
 			Lib.println("                                    Use '^' and 'v' between '$' and number to make uppercase/lowercase (like '$^1').");
@@ -167,7 +201,7 @@ class Main
 			Lib.println("    convert                         Recursive find and replace in files using rules file.");
 			Lib.println("        --exclude-string-literals   Exclude C-like strings from process.");
 			Lib.println("        <baseDir>                   Path to source folder.");
-			Lib.println("        <filter>                    File path's filter (regular expression).");
+			Lib.println("        <filter>                    File path's filter (regex or '*.ext;*.ext').");
 			Lib.println("        <outDir>                    Output directory.");
 			Lib.println("        /search/replacement/flags   Regex to find and replace in file name.");
 			Lib.println("                                    Used to produce output file name.");
@@ -176,9 +210,19 @@ class Main
 			Lib.println("                                    or");
 			Lib.println("                                    /search_can_contain_VAR/replacement/flags");
 			Lib.println("");
+			Lib.println("    reindent                        Change indentation in the files.");
+			Lib.println("        <baseDirs>                  Paths to source folders.");
+			Lib.println("        <filter>                    File path's filter (regex or '*.ext;*.ext').");
+			Lib.println("                                    If you want quickly process only one file");
+			Lib.println("                                    then specify <filePath> instead of <baseDirs> and <filter>.");
+			Lib.println("        <oldTabSize>                Spaces per tab in old style.");
+			Lib.println("        <oldIndentSize>             Spaces per indent in old style.");
+			Lib.println("        <newTabSize>                Spaces per tab in new style.");
+			Lib.println("        <newIndentSize>             Spaces per indent in new style.");
+			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
-			Lib.println("    haxelib run refactor replace src [.]hx$ /abc/def/");
+			Lib.println("    haxelib run refactor replace src *.hx /abc/def/");
 			Lib.println("        Files will be recursively found in 'src' folder.");
 			Lib.println("        Only haxe code files will be processed.");
 			Lib.println("        String 'abc' will be replaced to 'def'.");
@@ -199,7 +243,7 @@ class Main
 			Lib.println("        Files will be recursively found in 'src' folder.");
 			Lib.println("        Class 'mypackA.MyClass1' will be renamed to 'mypackB.MyClass2'.");
 			Lib.println("");
-			Lib.println("    haxelib run refactor convert native [.]js$ src /[.]js$/.hx/ convert.rules");
+			Lib.println("    haxelib run refactor convert native *.js src /[.]js$/.hx/ convert.rules");
 			Lib.println("        Search for *.js files in the 'native' folder.");
 			Lib.println("        Put output files as '*.hx' into the 'src' folder.");
 			Lib.println("        Read rules from rules.txt, for example:");
@@ -235,5 +279,15 @@ class Main
 		
 		fail("Path '" + path + "' is not in source directories.");
 		return null;
+	}
+	
+	static function filterToRegex(s:String) : String
+	{
+		if (~/^[*][.][a-z0-9_-]+(?:\s*;\s*[*][.][a-z0-9_-]+)*$/i.match(s))
+		{
+			var exts = s.split(";").map(function(s) return s.trim().substr("*.".length));
+			return "[.](?:" + exts.join("|") + ")$";
+		}
+		return s;
 	}
 }
