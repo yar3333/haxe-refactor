@@ -32,8 +32,6 @@ SPACE = (?:[ ]|\t)*
 /^ID[.]prototype[.][_](ID)\s*=/var _$1 =/m
 /^ID[.]prototype[.](ID)\s*=/public var $1 =/m
 
-
-/^/import stdlib.Exception;\n\n/
 /^var\s+([a-zA-Z])(ID)\s*[=]\s*require[(][^)]+[)]\s*;\s*$/import $^1$2;/m
 /:\s*{\s*value\s*:\s*(VALUE)\s*}\s*,/: $1;/
 /^(SPACE)}\s*else\b/$1}\n$1else/m
