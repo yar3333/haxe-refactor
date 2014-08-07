@@ -67,6 +67,28 @@ class Main
 					{
 						fail("Wrong arguments count.");
 					}
+				case "replaceInFile":
+					if (args.length >= 2)
+					{
+						var filePath = args.shift();
+						
+						var refactor = new Refactor(log, fs, null, null, verbose);
+						
+						var rules = [];
+						while (args.length > 0)
+						{
+							rules.push(new Regex(args.shift()));
+						}
+						
+						if (refactor.checkRules(rules))
+						{
+							refactor.replaceInFile(filePath, rules, filePath, false);
+						}
+					}
+					else
+					{
+						fail("Wrong arguments count.");
+					}
 				
 				case "rename":
 					if (args.length == 3)
@@ -191,6 +213,11 @@ class Main
 			Lib.println("        /search/replacement/flags   Regex to find and replace.");
 			Lib.println("                                    In <replacement> use $1-$9 to substitute groups.");
 			Lib.println("                                    Use '^' and 'v' between '$' and number to make uppercase/lowercase (like '$^1').");
+			Lib.println("        ...                         More regexs.");
+			Lib.println("");
+			Lib.println("    replaceInFile                   Find and replace in file.");
+			Lib.println("        <filePath>                  Path to file.");
+			Lib.println("        /search/replacement/flags   Regex to find and replace.");
 			Lib.println("        ...                         More regexs.");
 			Lib.println("");
 			Lib.println("    rename                          Rename package or class.");
