@@ -270,12 +270,14 @@ class Main
 			Lib.println("        Files will be recursively found in 'src' folder.");
 			Lib.println("        Class 'mypackA.MyClass1' will be renamed to 'mypackB.MyClass2'.");
 			Lib.println("");
-			Lib.println("    haxelib run refactor convert native *.js src /[.]js$/.hx/ convert.rules");
+			Lib.println("    haxelib run refactor convert native *.js src /[.]js$/.hx/ js_to_haxe.rules");
 			Lib.println("        Search for *.js files in the 'native' folder.");
 			Lib.println("        Put output files as '*.hx' into the 'src' folder.");
-			Lib.println("        Read rules from rules.txt, for example:");
-			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
-			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)?");
+			Lib.println("        Read rules from file 'js_to_haxe.rules'. Rules example:");
+			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*        # define a var");
+			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)? # define a var");
+			Lib.println("            SPACE = [ \\t\\r\\n]                  # define a var");
+			Lib.println("            # regex to find&replace");
 			Lib.println("            /^(SPACE)\\bvar\\s+_(ID)\\s*=\\s*function\\s*[(](ARGS)[)]\\s*$/$1function _$2($3)/m");
 			Lib.println("");
 		}
