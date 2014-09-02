@@ -83,7 +83,7 @@ class Refactor
 			
 			if (renameFile(srcFile, destFile))
 			{
-				replaceInFile(destFile, [ new Regex("/\\bpackage\\s+" + src.full.replace(".", "[.]") + "\\s*;/package " + dest.full + ";/") ], destFile, true);
+				replaceInFile(destFile, [ new Regex("/\\bpackage\\s+" + src.full.replace(".", "[.]") + "\\s*;/package " + dest.full + ";/") ], destFile, true, true);
 			}
 			
 			log.start("Replace in all haXe files: " + src.full + " => " + dest.full);
@@ -174,7 +174,7 @@ class Refactor
 		return true;
 	}
 	
-	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool)
+	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool, excludeComments:Bool)
 	{
 		if (verbose) log.start("Search in '" + inpPath + "'");
 		
@@ -186,7 +186,7 @@ class Refactor
 		var isMacLineEndStyle = !isWinLineEndStyle && text.indexOf("\r") >= 0;
 		if (isMacLineEndStyle) text = text.replace("\r", "\n");
 		
-		if (!excludeStrings)
+		if (!excludeStrings && !excludeComments)
 		{
 			for (rule in rules)
 			{
@@ -198,13 +198,27 @@ class Refactor
 			for (rule in rules)
 			{
 				var r = "";
-				var re = ~/("|')(\\.|.)*?\1/;
+				
+				var reStr = (excludeStrings ? "(\"|')(?:\\\\.|.)*?\\1" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})")
+						  + "|"
+						  + (excludeComments ? "(/\\*.*?\\*/|^//.*?$)" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})");
+				var re = new EReg(reStr, "m");
 				var i = 0; while (re.matchSub(text, i))
 				{
 					var p = re.matchedPos();
-					r += rule.apply(text.substr(i, p.pos - i + 1), verbose ? function(s) log.trace(s) : null);
-					r += re.matched(0).substr(1, p.len - 2);
-					i = p.pos + p.len - 1;
+					
+					if (excludeStrings && re.matched(1) != null)
+					{
+						r += rule.apply(text.substr(i, p.pos - i + 1), verbose ? function(s) log.trace(s) : null);
+						r += re.matched(0).substr(1, p.len - 2);
+						i = p.pos + p.len - 1;
+					}
+					else
+					{
+						r += rule.apply(text.substr(i, p.pos - i), verbose ? function(s) log.trace(s) : null);
+						r += re.matched(0);
+						i = p.pos + p.len;
+					}
 				}
 				r += rule.apply(text.substr(i), verbose ? function(s) log.trace(s) : null);
 				text = r;
@@ -223,7 +237,7 @@ class Refactor
 		if (verbose) log.finishOk();
 	}
 	
-	public function replaceInFiles(filter:EReg, changeFileName:Regex, rules:Array<Regex>, excludeStrings:Bool)
+	public function replaceInFiles(filter:EReg, changeFileName:Regex, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool)
 	{
 		for (baseDir in baseDirs)
 		{
@@ -236,12 +250,12 @@ class Refactor
 				{
 					if (outDir == null)
 					{
-						replaceInFile(path, rules, Path.directory(path) + "/" + changeFileName.apply(Path.withoutDirectory(path)), excludeStrings);
+						replaceInFile(path, rules, Path.directory(path) + "/" + changeFileName.apply(Path.withoutDirectory(path)), excludeStrings, excludeComments);
 					}
 					else
 					{
 						var localDir = Path.directory(localPath);
-						replaceInFile(path, rules, outDir + (localDir != "" ? Path.addTrailingSlash(localDir) : "") + changeFileName.apply(Path.withoutDirectory(localPath)), excludeStrings);
+						replaceInFile(path, rules, outDir + (localDir != "" ? Path.addTrailingSlash(localDir) : "") + changeFileName.apply(Path.withoutDirectory(localPath)), excludeStrings, excludeComments);
 					}
 				}
 			});

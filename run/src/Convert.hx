@@ -50,12 +50,12 @@ class Convert
 		}
 	}
 	
-	public function process(baseDir:String, filter:String, outDir:String, changeFileName:Regex, excludeStrings:Bool)
+	public function process(baseDir:String, filter:String, outDir:String, changeFileName:Regex, excludeStrings:Bool, excludeComments:Bool)
 	{
 		var refactor = new Refactor(log, fs, baseDir, outDir, verbose);
 		if (refactor.checkRules(rules))
 		{
-			refactor.replaceInFiles(new EReg(filter, "i"), changeFileName, rules, excludeStrings);
+			refactor.replaceInFiles(new EReg(filter, "i"), changeFileName, rules, excludeStrings, excludeComments);
 		}
 	}
 	

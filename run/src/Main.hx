@@ -60,7 +60,7 @@ class Main
 						
 						if (refactor.checkRules(rules))
 						{
-							refactor.replaceInFiles(new EReg(filter, "i"), new Regex("///"), rules, false);
+							refactor.replaceInFiles(new EReg(filter, "i"), new Regex("///"), rules, false, false);
 						}
 					}
 					else
@@ -82,7 +82,7 @@ class Main
 						
 						if (refactor.checkRules(rules))
 						{
-							refactor.replaceInFile(filePath, rules, filePath, false);
+							refactor.replaceInFile(filePath, rules, filePath, false, false);
 						}
 					}
 					else
@@ -133,6 +133,7 @@ class Main
 					options.add("changeFileName", "");
 					options.add("rulesFile", "");
 					options.add("excludeStrings", false, [ "--exclude-string-literals" ]);
+					options.add("excludeComments", false, [ "--exclude-comments" ]);
 					
 					options.parse(args);
 					
@@ -142,6 +143,7 @@ class Main
 					var changeFileName = options.get("changeFileName") != "" ? new Regex(options.get("changeFileName")) : null;
 					var rulesFile = options.get("rulesFile");
 					var excludeStrings = options.get("excludeStrings");
+					var excludeComments = options.get("excludeComments");
 					
 					if (baseDir == "") fail("<baseDir> arg must be specified.");
 					if (filter == "") fail("<filter> arg must be specified.");
@@ -160,7 +162,7 @@ class Main
 					
 					if (!FileSystem.exists(rulesFile)) fail("Could't find rulesFile '" + rulesFile + "'.");
 					
-					new Convert(log, fs, verbose, rulesFile).process(baseDir, filter, outDir, changeFileName, excludeStrings);
+					new Convert(log, fs, verbose, rulesFile).process(baseDir, filter, outDir, changeFileName, excludeStrings, excludeComments);
 					
 				case "reindent":
 					if (args.length == 6)
@@ -227,6 +229,7 @@ class Main
 			Lib.println("");
 			Lib.println("    convert                         Recursive find and replace in files using rules file.");
 			Lib.println("        --exclude-string-literals   Exclude C-like strings from process.");
+			Lib.println("        --exclude-comments          Exclude C-like comments from process.");
 			Lib.println("        <baseDir>                   Path to source folder.");
 			Lib.println("        <filter>                    File path's filter (regex or '*.ext;*.ext').");
 			Lib.println("        <outDir>                    Output directory.");
