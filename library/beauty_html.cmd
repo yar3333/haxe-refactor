@@ -2,7 +2,7 @@
 
 IF [%1]==[] GOTO :help
 
-haxelib run refactor convert --exclude-string-literals %1 [.]hx$ %1 /// haxe_beauty.rules
+haxelib run refactor convert "%1" *.html "%1" /// beauty_html.rules
 goto exit
 
 :help

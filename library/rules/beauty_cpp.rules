@@ -1,0 +1,40 @@
+ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
+LONGID = ID(?:[.]ID)*
+INT = [0-9]+(?:e[-+][0-9]+)?
+FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
+NUMBER = (?:INT|FLOAT)
+VALUE = (?:LONGID|NUMBER)
+SPACE = [ \t]+
+OPTSPACE = [ \t]*
+
+KEYWORDS = \b(?:new|return|var|class|enum|struct|namespace|if|else|using|foreach|for)\b
+
+// ==================== regular expressions ========================
+
+// trim end spaces 
+/([^ \t\n])[ \t]+$/$1/m
+
+// remove spaces after "("
+/[(][ ]+([^{])/($1
+
+// remove spaces before ")"
+/[ ]+[)]/)
+
+// "a==b" => "a == b"
+/[ ]*([=][=]|[!][=])[ ]*/ $1 /
+
+// "{a" => "{ a"
+/[{]([_a-zA-Z0-9('"-])/{ $1
+
+// "a}" => "a }"
+/([_a-zA-Z0-9)'";])[}]/$1 }
+
+
+// "if(" => "if ("
+/\b(if|for|switch)\s*[(]/$1 (/
+
+// " ," => ","
+/[ ]+[,]/,/
+
+// ",a" => ", a"
+/[,](\S)/, $1/
