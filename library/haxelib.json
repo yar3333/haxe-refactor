@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "js_to_haxe fix.\nAdd \"reindent\" command.\nAdd \"replaceInFile\" command.\nFile filter \"*.ext;*.ext\" form support.",
-  "version": "1.4.0",
+  "releasenote": "Added \"--exclude-comments\" option. Renamed some files.",
+  "version": "1.5.0",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
