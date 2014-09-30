@@ -15,7 +15,7 @@ SPACEOPT = [ \t]*
 /(enum\s+)(ID)(\s*{[^}]*)(?:export\s+)var\s+(ID)\s*[:]\s*\2;/$1$2$3\t$4;/r
 
 /\n(SPACEOPT)export(\s+(?:class|interface)[^\n{]+)\{/\n$1extern$2\n$1{/
-/\n(SPACEOPT)constructor\s*\(/\n$1function new(/
+/\n(SPACEOPT)constructor\s*\(([^)]*)\)/\n$1function new($2) : Void
 /\n(SPACEOPT)(ID)[?]\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1@:optional var $2 : $3;/
 /\n(SPACEOPT(?:\s*static\s+)?)(ID)\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1var $2 : $3;/
 /\n(SPACEOPT)(ID)\s*\(/\n$1function $2(/

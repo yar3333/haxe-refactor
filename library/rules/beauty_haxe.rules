@@ -22,6 +22,9 @@ STD_TYPE = \b(?:Int|Float|String|Dynamic|Bool)\b
 
 // ==================== regular expressions ========================
 
+// new line before { on class/interface definition
+/\n(OPTSPACE)((:?extern[ \t]+)?(?:class|interface)[^\n{]+)\{/\n$1$2\n$1{/
+
 // trim end spaces 
 /([^ \t\n])[ \t]+$/$1/m
 
