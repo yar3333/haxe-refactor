@@ -62,7 +62,7 @@ class Refactor
 					
 					if (verbose) log.start("Process file '" + localPath + "'");
 					
-					new TextFile(fs, path, verbose, log).process(function(text)
+					new TextFile(fs, path, path, verbose, log).process(function(text)
 					{
 						var re = new Regex("/(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b/$1" + destPack + "/");
 						return re.replace(text, verbose ? function(s) log.trace(s) : null);
@@ -97,7 +97,7 @@ class Refactor
 				{
 					var localPath = path.substr(baseDir.length + 1);
 					
-					new TextFile(fs, path, verbose, log).process(function(text)
+					new TextFile(fs, path, path, verbose, log).process(function(text)
 					{
 						var packageOrImport = 
 								new EReg("\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;", "").match(text)
@@ -177,7 +177,7 @@ class Refactor
 	{
 		if (verbose) log.start("Search in '" + inpPath + "'");
 		
-		new TextFile(fs, inpPath, verbose, log).process(function(text)
+		new TextFile(fs, inpPath, outPath, verbose, log).process(function(text)
 		{
 			if (!excludeStrings && !excludeComments)
 			{
