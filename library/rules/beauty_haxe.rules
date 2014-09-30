@@ -29,7 +29,10 @@ STD_TYPE = \b(?:Int|Float|String|Dynamic|Bool)\b
 /[(][ ]+([^{])/($1
 
 // remove spaces before ")"
-/([^}])[ ]+[)]/$1)
+/([^}] \t\n)[ ]+[)]/$1)
+
+// remove empty lines before }
+/(?:\n(?:OPTSPACE))+\n(OPTSPACE)}/\n$1}/
 
 // ":T = new T" => " = new T"
 /\s*[:][ ]*(TYPE)[ ]*[=][ ]*new[ ]*\1/ = new $1
@@ -61,7 +64,7 @@ STD_TYPE = \b(?:Int|Float|String|Dynamic|Bool)\b
 
 // (v : T => (v:T
 /[(]OPTSPACE(FORMAL_ARG_NAME)OPTSPACE[:]OPTSPACE(TYPE)/($1:$2
-/^([^\n])[,]OPTSPACE(FORMAL_ARG_NAME)OPTSPACE[:]OPTSPACE(TYPE)/$1, $2:$3//case
+/([^\n])[,]OPTSPACE(FORMAL_ARG_NAME)OPTSPACE[:]SPACE(TYPE)/$1, $2:$3/r/case
 
 // "(v = a" => "(v=a"
 /[(]OPTSPACE(FORMAL_ARG_NAME)OPTSPACE[=]OPTSPACE(VALUE)/($1=$2//new
