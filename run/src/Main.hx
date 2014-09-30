@@ -151,21 +151,34 @@ class Main
 					if (changeFileName == null) fail("<changeFileName> arg must be specified.");
 					if (rulesFile == "") fail("<rulesFile> arg must be specified.");
 					
-					if (!FileSystem.exists(rulesFile))
-					{
-						var altRulesFile = haxe.io.Path.join([ exeDir, "rules", rulesFile ]);
-						if (FileSystem.exists(altRulesFile) && !FileSystem.isDirectory(altRulesFile))
-						{
-							rulesFile = altRulesFile;
-						}
-					}
+					var processor = new RegexProcessor(log, fs, verbose, getRulesFilePath(exeDir, rulesFile));
+					processor.convert(baseDir, filter, outDir, changeFileName, excludeStrings, excludeComments);
 					
-					if (!FileSystem.exists(rulesFile)) fail("Could't find rulesFile '" + rulesFile + "'.");
+				case "extract":
+					var options = new CmdOptions();
 					
-					new Convert(log, fs, verbose, rulesFile).process(baseDir, filter, outDir, changeFileName, excludeStrings, excludeComments);
+					options.add("baseDir", "");
+					options.add("filter", "");
+					options.add("outDir", "");
+					options.add("rulesFile", "");
+					
+					options.parse(args);
+					
+					var baseDir = options.get("baseDir");
+					var filter = filterToRegex(options.get("filter"));
+					var outDir = options.get("outDir");
+					var rulesFile = options.get("rulesFile");
+					
+					if (baseDir == "") fail("<baseDir> arg must be specified.");
+					if (filter == "") fail("<filter> arg must be specified.");
+					if (outDir == "") fail("<outDir> arg must be specified.");
+					if (rulesFile == "") fail("<rulesFile> arg must be specified.");
+					
+					var processor = new RegexProcessor(log, fs, verbose, getRulesFilePath(exeDir, rulesFile));
+					processor.extract(baseDir, filter, outDir);
 					
 				case "reindent":
-					if (args.length == 6)
+					if (args.length == 6 || args.length == 7)
 					{
 						var baseDir = args.shift();
 						var filter = filterToRegex(args.shift());
@@ -176,11 +189,18 @@ class Main
 						var newTabSize = Std.parseInt(args.shift());
 						var newIndentSize = Std.parseInt(args.shift());
 						
+						var shiftSize = args.length > 0 ? Std.parseInt(args.shift()) : 0;
+						
 						var refactor = new Refactor(log, fs, baseDir, null, verbose);
-						refactor.reindent(new EReg(filter, "i"), oldTabSize, oldIndentSize, newTabSize, newIndentSize);
+						refactor.reindent(new EReg(filter, "i"), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 					}
 					else
-					if (args.length == 5)
+					{
+						fail("Wrong arguments count.");
+					}
+					
+				case "reindentInFile":
+					if (args.length == 5 || args.length == 6)
 					{
 						var filePath = args.shift();
 						
@@ -190,8 +210,10 @@ class Main
 						var newTabSize = Std.parseInt(args.shift());
 						var newIndentSize = Std.parseInt(args.shift());
 						
+						var shiftSize = args.length > 0 ? Std.parseInt(args.shift()) : 0;
+						
 						var refactor = new Refactor(log, fs, null, null, verbose);
-						refactor.reindentFile(filePath, oldTabSize, oldIndentSize, newTabSize, newIndentSize);
+						refactor.reindentFile(filePath, oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 					}
 					else
 					{
@@ -240,15 +262,29 @@ class Main
 			Lib.println("                                    or");
 			Lib.println("                                    /search_can_contain_VAR/replacement/flags");
 			Lib.println("");
-			Lib.println("    reindent                        Change indentation in the files.");
-			Lib.println("        <baseDirs>                  Paths to source folders.");
+			Lib.println("    extract                         Recursive find files and extract parts of them to separate files.");
+			Lib.println("        <baseDir>                   Path to folder.");
 			Lib.println("        <filter>                    File path's filter (regex or '*.ext;*.ext').");
-			Lib.println("                                    If you want quickly process only one file");
-			Lib.println("                                    then specify <filePath> instead of <baseDirs> and <filter>.");
+			Lib.println("        <outDir>                    Output directory.");
+			Lib.println("        <rulesFile>                 Path to rules file (see 'convert' command).");
+			Lib.println("                                    Each regex must be in form '/find_start_text/out_file_name/flags'.");
+			Lib.println("");
+			Lib.println("    reindent                        Change indentation in the files.");
+			Lib.println("        <baseDirs>                  Paths to folders.");
+			Lib.println("        <filter>                    File path's filter (regex or '*.ext;*.ext').");
 			Lib.println("        <oldTabSize>                Spaces per tab in old style.");
 			Lib.println("        <oldIndentSize>             Spaces per indent in old style.");
 			Lib.println("        <newTabSize>                Spaces per tab in new style.");
 			Lib.println("        <newIndentSize>             Spaces per indent in new style.");
+			Lib.println("        [shiftSize]                 Optional: shift to left(-) or right(+) to specified spaces.");
+			Lib.println("");
+			Lib.println("    reindentInFile                  Change indentation in the file.");
+			Lib.println("        <filePath>                  Path to file.");
+			Lib.println("        <oldTabSize>                Spaces per tab in old style.");
+			Lib.println("        <oldIndentSize>             Spaces per indent in old style.");
+			Lib.println("        <newTabSize>                Spaces per tab in new style.");
+			Lib.println("        <newIndentSize>             Spaces per indent in new style.");
+			Lib.println("        [shiftSize]                 Optional: shift to left(-) or right(+) to specified spaces.");
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
@@ -277,11 +313,18 @@ class Main
 			Lib.println("        Search for *.js files in the 'native' folder.");
 			Lib.println("        Put output files as '*.hx' into the 'src' folder.");
 			Lib.println("        Read rules from file 'js_to_haxe.rules'. Rules example:");
-			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*        # define a var");
+			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*            # define a var");
 			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)? # define a var");
-			Lib.println("            SPACE = [ \\t\\r\\n]                  # define a var");
+			Lib.println("            SPACE = [ \\t\\r\\n]                   # define a var");
 			Lib.println("            # regex to find&replace");
 			Lib.println("            /^(SPACE)\\bvar\\s+_(ID)\\s*=\\s*function\\s*[(](ARGS)[)]\\s*$/$1function _$2($3)/m");
+			Lib.println("");
+			Lib.println("    haxelib run refactor extract src *.hx out split_haxe.rules");
+			Lib.println("        This command extract classes to separate files.");
+			Lib.println("        Content of the 'split_haxe.rules' file:");
+			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
+			Lib.println("            SPACE = [ \\t\\r\\n]");
+			Lib.println("            /class(?:SPACE+)(ID)(?:SPACE+){/$1.hx/g");
 			Lib.println("");
 		}
 		
@@ -321,5 +364,21 @@ class Main
 			return "[.](?:" + exts.join("|") + ")$";
 		}
 		return s;
+	}
+	
+	static function getRulesFilePath(exeDir:String, path:String) : String
+	{
+		if (!FileSystem.exists(path))
+		{
+			var alt = haxe.io.Path.join([ exeDir, "rules", path ]);
+			if (FileSystem.exists(alt) && !FileSystem.isDirectory(alt))
+			{
+				path = alt;
+			}
+		}
+		
+		if (!FileSystem.exists(path)) fail("Could't find rulesFile '" + path + "'.");
+		
+		return path;
 	}
 }

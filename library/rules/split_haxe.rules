@@ -1,0 +1,3 @@
+ID = [_a-zA-Z][_a-zA-Z0-9]*
+
+/[ \t]*(?:extern\s*)(?:class|interface|enum)[ \t]*(ID)[ \t\n]*[^{]*{/$1.hx/

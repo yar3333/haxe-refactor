@@ -1,6 +1,5 @@
 import hant.FileSystemTools;
 import hant.Log;
-import hant.PathTools;
 import haxe.io.Path;
 import stdlib.Regex;
 import sys.FileSystem;
@@ -40,7 +39,8 @@ class Refactor
 				{
 					if (path.endsWith(".hx"))
 					{
-						renameClass(
+						renameClass
+						(
 							  ClassPath.fromFilePath(baseDir, path)
 							, ClassPath.fromFilePath(baseDir, destPath + path.substr(srcPath.length))
 						);
@@ -59,11 +59,15 @@ class Refactor
 				if (path.endsWith(".hx") || path.endsWith(".xml"))
 				{
 					var localPath = path.substr(baseDir.length + 1);
+					
 					if (verbose) log.start("Process file '" + localPath + "'");
-					var original = File.getContent(path);
-					var text = new Regex("/(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b/$1" + destPack + "/").apply(original, verbose ? function(s) log.trace(s) : null);
-					saveFileText(path, text);
-					log.trace("Fixed: " + localPath);
+					
+					new TextFile(fs, path, verbose, log).process(function(text)
+					{
+						var re = new Regex("/(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b/$1" + destPack + "/");
+						return re.replace(text, verbose ? function(s) log.trace(s) : null);
+					});
+					
 					if (verbose) log.finishOk();
 				}
 			});
@@ -93,27 +97,22 @@ class Refactor
 				{
 					var localPath = path.substr(baseDir.length + 1);
 					
-					var original = File.getContent(path);
-					
-					var text = original;
-					
-					var packageOrImport = 
-						    new EReg("\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;", "").match(text)
-						 || new EReg("\\bimport\\s+" + src.full.replace(".", "[.]") + "\\s*;", "").match(text);
-					
-					text = new Regex("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").apply(text, verbose ? function(s) log.trace(s) : null);
-					
-					if (packageOrImport && src.name != dest.name)
+					new TextFile(fs, path, verbose, log).process(function(text)
 					{
-						if (verbose) log.trace(localPath + ": " + src.name + " => " + dest.name);
-						text = new Regex("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").apply(text, verbose ? function(s) log.trace(s) : null);
-					}
-					
-					if (text != original)
-					{
-						log.trace("Fixed: " + localPath);
-						saveFileText(path, text);
-					}
+						var packageOrImport = 
+								new EReg("\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;", "").match(text)
+							 || new EReg("\\bimport\\s+" + src.full.replace(".", "[.]") + "\\s*;", "").match(text);
+						
+						text = new Regex("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").replace(text, verbose ? function(s) log.trace(s) : null);
+						
+						if (packageOrImport && src.name != dest.name)
+						{
+							if (verbose) log.trace(localPath + ": " + src.name + " => " + dest.name);
+							text = new Regex("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").replace(text, verbose ? function(s) log.trace(s) : null);
+						}
+						
+						return text;
+					});
 				}
 			});
 			log.finishOk();
@@ -178,61 +177,48 @@ class Refactor
 	{
 		if (verbose) log.start("Search in '" + inpPath + "'");
 		
-		var text = File.getContent(inpPath);
-		
-		var isWinLineEndStyle = text.indexOf("\r\n") >= 0;
-		if (isWinLineEndStyle) text = text.replace("\r\n", "\n");
-		
-		var isMacLineEndStyle = !isWinLineEndStyle && text.indexOf("\r") >= 0;
-		if (isMacLineEndStyle) text = text.replace("\r", "\n");
-		
-		if (!excludeStrings && !excludeComments)
+		new TextFile(fs, inpPath, verbose, log).process(function(text)
 		{
-			for (rule in rules)
+			if (!excludeStrings && !excludeComments)
 			{
-				text = rule.apply(text, verbose ? function(s) log.trace(s) : null);
-			}
-		}
-		else
-		{
-			for (rule in rules)
-			{
-				var r = "";
-				
-				var reStr = (excludeStrings ? "(\"|')(?:\\\\.|.)*?\\1" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})")
-						  + "|"
-						  + (excludeComments ? "(/\\*.*?\\*/|^//.*?$)" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})");
-				var re = new EReg(reStr, "m");
-				var i = 0; while (re.matchSub(text, i))
+				for (rule in rules)
 				{
-					var p = re.matchedPos();
-					
-					if (excludeStrings && re.matched(1) != null)
-					{
-						r += rule.apply(text.substr(i, p.pos - i + 1), verbose ? function(s) log.trace(s) : null);
-						r += re.matched(0).substr(1, p.len - 2);
-						i = p.pos + p.len - 1;
-					}
-					else
-					{
-						r += rule.apply(text.substr(i, p.pos - i), verbose ? function(s) log.trace(s) : null);
-						r += re.matched(0);
-						i = p.pos + p.len;
-					}
+					text = rule.replace(text, verbose ? function(s) log.trace(s) : null);
 				}
-				r += rule.apply(text.substr(i), verbose ? function(s) log.trace(s) : null);
-				text = r;
 			}
-		}
-		
-		if (isMacLineEndStyle) text = text.replace("\n", "\r");
-		else
-		if (isWinLineEndStyle) text = text.replace("\n", "\r\n");
-		
-		if (saveFileText(outPath, text))
-		{
-			if (verbose) log.trace("Fixed: " + outPath);
-		}
+			else
+			{
+				for (rule in rules)
+				{
+					var r = "";
+					
+					var reStr = (excludeStrings ? "(\"|')(?:\\\\.|.)*?\\1" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})")
+							  + "|"
+							  + (excludeComments ? "(/\\*.*?\\*/|^//.*?$)" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})");
+					var re = new EReg(reStr, "m");
+					var i = 0; while (re.matchSub(text, i))
+					{
+						var p = re.matchedPos();
+						
+						if (excludeStrings && re.matched(1) != null)
+						{
+							r += rule.replace(text.substr(i, p.pos - i + 1), verbose ? function(s) log.trace(s) : null);
+							r += re.matched(0).substr(1, p.len - 2);
+							i = p.pos + p.len - 1;
+						}
+						else
+						{
+							r += rule.replace(text.substr(i, p.pos - i), verbose ? function(s) log.trace(s) : null);
+							r += re.matched(0);
+							i = p.pos + p.len;
+						}
+					}
+					r += rule.replace(text.substr(i), verbose ? function(s) log.trace(s) : null);
+					text = r;
+				}
+			}
+			return text;
+		});
 		
 		if (verbose) log.finishOk();
 	}
@@ -250,12 +236,12 @@ class Refactor
 				{
 					if (outDir == null)
 					{
-						replaceInFile(path, rules, Path.directory(path) + "/" + changeFileName.apply(Path.withoutDirectory(path)), excludeStrings, excludeComments);
+						replaceInFile(path, rules, Path.directory(path) + "/" + changeFileName.replace(Path.withoutDirectory(path)), excludeStrings, excludeComments);
 					}
 					else
 					{
 						var localDir = Path.directory(localPath);
-						replaceInFile(path, rules, outDir + (localDir != "" ? Path.addTrailingSlash(localDir) : "") + changeFileName.apply(Path.withoutDirectory(localPath)), excludeStrings, excludeComments);
+						replaceInFile(path, rules, outDir + (localDir != "" ? Path.addTrailingSlash(localDir) : "") + changeFileName.replace(Path.withoutDirectory(localPath)), excludeStrings, excludeComments);
 					}
 				}
 			});
@@ -264,22 +250,7 @@ class Refactor
 		}
 	}
 	
-	function saveFileText(path:String, text:String) : Bool
-	{
-		var r = false;
-		var isHidden = fs.getHiddenFileAttribute(path);
-		if (isHidden) fs.setHiddenFileAttribute(path, false);
-		if (!FileSystem.exists(path) || File.getContent(path) != text)
-		{
-			FileSystem.createDirectory(Path.directory(path));
-			File.saveContent(path, text);
-			r = true;
-		}
-		if (isHidden) fs.setHiddenFileAttribute(path, true);
-		return r;
-	}
-	
-	public function reindent(filter:EReg, oldTabSize:Int, oldIndentSize:Int, newTabSize:Int, newIndentSize:Int)
+	public function reindent(filter:EReg, oldTabSize:Int, oldIndentSize:Int, newTabSize:Int, newIndentSize:Int, shiftSize:Int)
 	{
 		for (baseDir in baseDirs)
 		{
@@ -290,7 +261,7 @@ class Refactor
 				var localPath = path.substr(baseDir.length + 1);
 				if (filter.match(localPath))
 				{
-					reindentFile(path, oldTabSize, oldIndentSize, newTabSize, newIndentSize);
+					reindentFile(path, oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 				}
 			});
 			
@@ -298,7 +269,7 @@ class Refactor
 		}
 	}
 	
-	public function reindentFile(path:String, oldTabSize:Int, oldIndentSize:Int, newTabSize:Int, newIndentSize:Int) : Void
+	public function reindentFile(path:String, oldTabSize:Int, oldIndentSize:Int, newTabSize:Int, newIndentSize:Int, shiftSize:Int) : Void
 	{
 		if (!FileSystem.exists(path) || FileSystem.isDirectory(path))
 		{
@@ -328,7 +299,7 @@ class Refactor
 			
 			oldPos = oldIndents * newIndentSize + oldIndentAdditionalSpaces;
 			
-			var newPos = 0;
+			var newPos = -shiftSize;
 			var spaces = "";
 			while (newTabSize > 0 && newPos + newTabSize <= oldPos) { newPos += newTabSize; spaces += "\t"; }
 			while (newPos < oldPos) { newPos++; spaces += " "; }
