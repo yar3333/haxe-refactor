@@ -84,7 +84,7 @@ class RegexProcessor
 		if (verbose) log.start("Extract from '" + inpPath + "'");
 		
 		var file = new TextFile(fs, inpPath, null, verbose, log);
-		file.process(function(text)
+		file.process(function(text, fileApi)
 		{
 			for (rule in rules)
 			{
@@ -98,7 +98,7 @@ class RegexProcessor
 						: "";
 					
 					log.start("Save file " + destPath);
-					file.save(destPath, begText + endText);
+					fileApi.save(destPath, begText + endText);
 					log.finishOk();
 				}
 			}
