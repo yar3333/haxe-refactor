@@ -5,6 +5,11 @@ import sys.FileSystem;
 import sys.io.File;
 using StringTools;
 
+typedef FileApi =
+{
+	function save(outPath:String, text:String) : Bool;
+}
+
 class TextFile
 {
 	var fs:FileSystemTools;
@@ -12,6 +17,11 @@ class TextFile
 	var outPath : String;
 	var verbose : Bool;
 	var log : Log;
+	
+	var original : String;
+	var isWinLineEndStyle : Bool;
+	var isMacLineEndStyle : Bool;
+	
 	
 	public function new(fs:FileSystemTools, inpPath:String, outPath:String, verbose:Bool, log:Log)
 	{
@@ -22,45 +32,41 @@ class TextFile
 		this.log = log;
 	}
 	
-	public function process(f:String->String)
+	public function process(f:String->FileApi->String)
 	{
 		var text = File.getContent(inpPath);
-		var original = text;
 		
-		var isWinLineEndStyle = text.indexOf("\r\n") >= 0;
+		original = text;
+		
+		isWinLineEndStyle = text.indexOf("\r\n") >= 0;
 		if (isWinLineEndStyle) text = text.replace("\r\n", "\n");
 		
-		var isMacLineEndStyle = !isWinLineEndStyle && text.indexOf("\r") >= 0;
+		isMacLineEndStyle = !isWinLineEndStyle && text.indexOf("\r") >= 0;
 		if (isMacLineEndStyle) text = text.replace("\r", "\n");
 		
-		text = f(text);
+		text = f(text, cast this);
 		
 		if (text != null)
 		{
-			if (isMacLineEndStyle) text = text.replace("\n", "\r");
-			else
-			if (isWinLineEndStyle) text = text.replace("\n", "\r\n");
-		}
-		else
-		{
-			text = original;
-		}
-		
-		if (inpPath != outPath || text != original)
-		{
-			if (save(outPath, text, true))
+			if (save(outPath, text))
 			{
 				if (verbose) log.trace("Fixed: " + outPath);
 			}
 		}
 	}
 	
-	public function save(outPath:String, text:String, force=false) : Bool
+	function save(outPath:String, text:String) : Bool
 	{
+		if (isMacLineEndStyle) text = text.replace("\n", "\r");
+		else
+		if (isWinLineEndStyle) text = text.replace("\n", "\r\n");
+		
+		if (inpPath == outPath && text == original) return false;
+		
 		var r = false;
 		var isHidden = fs.getHiddenFileAttribute(outPath);
 		if (isHidden) fs.setHiddenFileAttribute(outPath, false);
-		if (force || !FileSystem.exists(outPath) || File.getContent(outPath) != text)
+		if (!FileSystem.exists(outPath) || File.getContent(outPath) != text)
 		{
 			FileSystem.createDirectory(Path.directory(outPath));
 			File.saveContent(outPath, text);
