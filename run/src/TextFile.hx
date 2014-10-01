@@ -40,8 +40,15 @@ class TextFile
 			if (isMacLineEndStyle) text = text.replace("\n", "\r");
 			else
 			if (isWinLineEndStyle) text = text.replace("\n", "\r\n");
-			
-			if (text != original && save(outPath, text, true))
+		}
+		else
+		{
+			text = original;
+		}
+		
+		if (inpPath != outPath || text != original)
+		{
+			if (save(outPath, text, true))
 			{
 				if (verbose) log.trace("Fixed: " + outPath);
 			}
