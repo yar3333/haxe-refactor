@@ -102,3 +102,6 @@ STD_TYPE = \b(?:Int|Float|String|Dynamic|Bool)\b
 
 // "):{" => ") : {"
 /[)][ ]*[:][ ]*[{]/) : {/
+
+// "> )" => ">)"
+/[>]SPACE\)/>)/
