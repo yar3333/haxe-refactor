@@ -54,7 +54,7 @@ class RegexProcessor
 	public function convert(baseDir:String, filter:String, outDir:String, changeFileName:Regex, excludeStrings:Bool, excludeComments:Bool)
 	{
 		var refactor = new Refactor(log, fs, baseDir, outDir, verbose);
-		if (refactor.checkRules(rules))
+		if (refactor.checkRules([changeFileName].concat(rules)))
 		{
 			refactor.replaceInFiles(new EReg(filter, "i"), changeFileName, rules, excludeStrings, excludeComments);
 		}
