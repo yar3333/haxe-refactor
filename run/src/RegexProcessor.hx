@@ -81,7 +81,7 @@ class RegexProcessor
 	
 	function extractFromFile(inpPath:String, rules:Array<Regex>, outDir:String)
 	{
-		if (verbose) log.start("Extract from '" + inpPath + "'");
+		log.start("Extract from '" + inpPath + "'");
 		
 		var file = new TextFile(fs, inpPath, null, verbose, log);
 		file.process(function(text, fileApi)
@@ -97,15 +97,16 @@ class RegexProcessor
 						? text.substr(pos, findCloseBracketIndex(text, pos - 1) - pos)
 						: "";
 					
-					log.start("Save file " + destPath);
-					fileApi.save(destPath, begText + endText);
-					log.finishOk();
+					if (fileApi.save(destPath, begText + endText))
+					{
+						log.trace(destPath);
+					}
 				}
 			}
 			return null;
 		});
 		
-		if (verbose) log.finishOk();
+		log.finishOk();
 	}
 	
 	static function findCloseBracketIndex(text:String, openBacketIndex:Int)
