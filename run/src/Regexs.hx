@@ -5,9 +5,10 @@ class Regexs
 	
 	public static inline var ID = "[_a-zA-Z][_a-zA-Z0-9]*";
 	
+	public static inline var TYPE = ID + "(?:[<]\\s*" + ID + "(?:\\s*,\\s*" + ID + ")*\\s*[>])?";
 	
 	public static inline var OVERLOADS = "(?:" + OVERLOAD + "[\n]+)*";
 	
 	//                                                   1            2                                           3=func name     4=(params):ret
-	public static inline var FULL_FUNC_DECL_TEMPLATE = "(" + OVERLOADS + ")([ \t]*)" + FUNC_PREFIX + "function\\s+({ID})(\\s*\\([^)]*\\)\\s*[:]\\s*" + ID + ")";
+	public static inline var FULL_FUNC_DECL_TEMPLATE = "(" + OVERLOADS + ")([ \t]*)" + FUNC_PREFIX + "function\\s+({ID})(\\s*\\([^)]*\\)\\s*[:]\\s*" + TYPE + ")";
 }
