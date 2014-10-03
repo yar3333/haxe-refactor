@@ -41,7 +41,7 @@ class RefactorOverride extends Refactor
 		filesProcessed.set(path, true);
 		
 		var localPath = path.substr(baseDir.length + 1);
-		new TextFile(fs, path, path, verbose, log).process(function(text, fileApi)
+		new TextFile(fs, path, path, true, log).process(function(text, fileApi)
 		{
 			var klass = getClassInfo(text);
 			if (klass != null)
@@ -95,7 +95,7 @@ class RefactorOverride extends Refactor
 				
 				if (baseIsClass)
 				{
-					log.trace("Found: var " + baseKlassWithDefine + "." + varName + " is redefined in " + klass);
+					if (verbose) log.trace("Found: var " + baseKlassWithDefine + "." + varName + " is redefined in " + klass);
 					return varIndent + "//" + varPrefix + varName + varTail;
 				}
 				else
@@ -104,7 +104,7 @@ class RefactorOverride extends Refactor
 					var baseSig = baseVarNameAndTail.replace(" ", "");
 					if (sig != baseSig)
 					{
-						log.trace("Found: var " + baseKlassWithDefine + "." + varName + " is defined with different type in " + klass);
+						if (verbose) log.trace("Found: var " + baseKlassWithDefine + "." + varName + " is defined with different type in " + klass);
 						return varIndent + "//" + varPrefix + varName + varTail 
 							 + "\n" + varIndent + "var " + baseVarNameAndTail;
 					}
@@ -136,7 +136,7 @@ class RefactorOverride extends Refactor
 					var baseFuncName = reBase.matched(3);
 					var baseFuncTail = reBase.matched(4);
 					
-					log.trace("Found: method " + baseKlassWithDefine + "." + baseFuncName + " is overriden by " + klass + "." + funcName);
+					if (verbose) log.trace("Found: method " + baseKlassWithDefine + "." + baseFuncName + " is overriden by " + klass + "." + funcName);
 					
 					var newOverload = ("@:overload(function" + funcTail + "{})").replace(" ", "");
 					if (overloads.indexOf(newOverload) < 0) overloads.push(newOverload);
