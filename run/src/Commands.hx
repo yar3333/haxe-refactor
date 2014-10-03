@@ -28,7 +28,7 @@ class Commands extends BaseCommands
 			var baseDir = args.shift();
 			var filter = filterToRegex(args.shift());
 			
-			var refactor = new Refactor(log, fs, baseDir, null, verbose);
+			var refactor = new RefactorReplace(log, fs, baseDir, null, verbose);
 			
 			var rules = [];
 			while (args.length > 0)
@@ -82,7 +82,7 @@ class Commands extends BaseCommands
 		{
 			var filePath = args.shift();
 			
-			var refactor = new Refactor(log, fs, null, null, verbose);
+			var refactor = new RefactorReplace(log, fs, null, null, verbose);
 			
 			var rules = [];
 			while (args.length > 0)
@@ -125,7 +125,7 @@ class Commands extends BaseCommands
 			var srcPacks = src.split(".");
 			if (~/^[a-z]/.match(srcPacks[srcPacks.length - 1]))
 			{
-				new Refactor(log, fs, baseDir, null, verbose).renamePackage(src, dest);
+				new RefactorRename(log, fs, baseDir, null, verbose).renamePackage(src, dest);
 			}
 			else
 			if (~/^[A-Z]/.match(srcPacks[srcPacks.length - 1]))
@@ -137,7 +137,7 @@ class Commands extends BaseCommands
 					n = n < 0 ? 0 : n + 1;
 					dest += "." + src.substr(n);
 				}
-				new Refactor(log, fs, baseDir, null, verbose).renameClass(new ClassPath(src), new ClassPath(dest));
+				new RefactorRename(log, fs, baseDir, null, verbose).renameClass(new ClassPath(src), new ClassPath(dest));
 			}
 			else
 			{
@@ -283,6 +283,59 @@ class Commands extends BaseCommands
 		}
 	}
 	
+	public function doOverride(args:Array<String>)
+	{
+		if (args.length == 1)
+		{
+			var srcDirs = args.shift();
+			var refactor = new RefactorOverride(log, fs, srcDirs, null, verbose);
+			refactor.overrideInFiles();
+		}
+		else
+		if (args.length == 0)
+		{
+			Lib.println("Autofix override/overload/redefinition in haxe extern class members.");
+			Lib.println("Usage: haxelib run refactor [-v] override <srcDirs>");
+			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("    <srcDirs>                   Paths to sorce folders. Use ';' as delimiter.");
+			Lib.println("                                Use '*' to specify 'any folder' in path.");
+			Lib.println("");
+			Lib.println("Example:");
+			Lib.println("");
+			Lib.println("    // file A.hx:");
+			Lib.println("    extern class A");
+			Lib.println("    {");
+			Lib.println("        var v : Int;");
+			Lib.println("        function f(p:Int) : Int;");
+			Lib.println("     }");
+			Lib.println("");
+			Lib.println("    // file B.hx:");
+			Lib.println("    extern class B extends A");
+			Lib.println("    {");
+			Lib.println("        var v : Float;");
+			Lib.println("        function f(p:String) : String;");
+			Lib.println("    }");
+			Lib.println("");
+			Lib.println("    // run command:");
+			Lib.println("    haxelib run refactor override src");
+			Lib.println("");
+			Lib.println("    // file A.hx - nothing changed");
+			Lib.println("");
+			Lib.println("    // file B.hx - fixed:");
+			Lib.println("    extern class B extends A");
+			Lib.println("    {");
+			Lib.println("        //var v : Float;");
+			Lib.println("        @:overload(function(p:String):String{})");
+			Lib.println("        override function f(p:Int) : Int;");
+			Lib.println("    }");
+			
+		}
+		else
+		{
+			fail("Wrong arguments count.");
+		}
+	}
+	
 	public function reindent(args:Array<String>)
 	{
 		if (args.length == 6 || args.length == 7)
@@ -298,7 +351,7 @@ class Commands extends BaseCommands
 			
 			var shiftSize = args.length > 0 ? Std.parseInt(args.shift()) : 0;
 			
-			var refactor = new Refactor(log, fs, baseDir, null, verbose);
+			var refactor = new RefactorReindent(log, fs, baseDir, null, verbose);
 			refactor.reindent(new EReg(filter, "i"), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 		}
 		else
@@ -335,7 +388,7 @@ class Commands extends BaseCommands
 			
 			var shiftSize = args.length > 0 ? Std.parseInt(args.shift()) : 0;
 			
-			var refactor = new Refactor(log, fs, null, null, verbose);
+			var refactor = new RefactorReindent(log, fs, null, null, verbose);
 			refactor.reindentFile(filePath, oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 		}
 		else

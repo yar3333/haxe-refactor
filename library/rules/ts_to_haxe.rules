@@ -1,48 +1,72 @@
-ID = [_a-zA-Z][_a-zA-Z0-9]*
-FUNC = ID(?:<\s*ID(?:\s*,\s*ID)*\s*>)?\s*
+ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
 TYPE = (?:(?:ID|\{[^}]*\})(?:\[\])*\s*)
-TYPE_COMPLEX = (?:TYPE|\(ID\s[:]\s*TYPE(?:,\s*ID\s[:]\s*TYPE)\)\s*=>\s*TYPE)
-INT = [0-9]+(?:e[-+][0-9]+)?
-FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
-NUMBER = (?:INT|FLOAT)
-VALUE = (?:ID|NUMBER)
-ARGS = (?:\s*ID\s*(?:,\s*ID\s*)*)?
-KEYWORDS = \b(?:new|return|var|class|package|if|else|import|using)\b
-SPACE = [ \t]+
-SPACEOPT = [ \t]*
+TYPE_COMPLEX = (?:TYPE|\((?:\s*ID\s*[:]\s*TYPE(?:,\s*ID\s*[:]\s*TYPE)*)?\)\s*[=][>]\s*TYPE)
+TEMPLATE = (?:\s*[<]TYPE\s+extends\s+TYPE[>]\s*)
+BRACKETS = (?:[(][^()]*[)])
+FORMALPARAMS = \((?:BRACKETS|[^()])*\s*\)
+SPACE = [ \t]*
 
-/(?:export\s+)?enum\s+(ID)\s*\{\s*\}((?:\s*(?:export\s+)?var\s+ID[:]\s*\1\s*;)+)/enum $1\n\t{$2\n\t}/s
+
+/((?:export\s+)?)enum\s+(ID)\s*\{\s*\}((?:\s*(?:export\s+)?var\s+ID[:]\s*\2\s*;)+)/$1enum $2\n\t{$3\n\t}/s
 /(enum\s+)(ID)(\s*{[^}]*)(?:export\s+)var\s+(ID)\s*[:]\s*\2;/$1$2$3\t$4;/r
 
-/\n(SPACEOPT)export(\s+(?:class|interface)[^\n{]+)\{/\n$1extern$2\n$1{/
-/\n(SPACEOPT)constructor\s*\(([^)]*)\)/\n$1function new($2) : Void
-/\n(SPACEOPT)(ID)[?]\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1@:optional var $2 : $3;/
-/\n(SPACEOPT(?:\s*static\s+)?)(ID)\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1var $2 : $3;/
-/\n(SPACEOPT)(ID)\s*\(/\n$1function $2(/
+/\n(SPACE)export(\s+(?:class|interface|enum)[^\n{]+)\{/\n$1extern$2\n$1{/
+/\n(SPACE)export(\s+(?:class|interface|enum)\b)/\n$1extern$2/
+/\n(SPACE)constructor\s*(FORMALPARAMS)/\n$1function new$2 : Void/s
+/\n(SPACE)(ID)[?]\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1@:optional var $2 : $3;/
+/\n(SPACE(?:\s*static\s+)?)(ID)\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1var $2 : $3;/
+/\n(SPACE(?:static\s+)?)(ID[?]?(?:TEMPLATE)?)\s*\(/\n$1function $2(/
+/\n(SPACE)((?:static\s+)?function\s+ID)[?]/\n$1@:optional $2/
 
 /[:](\s*)\{([^}]*ID\s*[:]\s*TYPE);/:$1{$2,/r
-/SPACEOPT,(\s*)\}/$1}/
+/SPACE,(\s*)\}/$1}/
 
-/([:]\s*)\(\s*\)\s*[=][>]\s*/$1void$2->
-
+// process pointer to function (like "func: (u: number, v: number) => Vector3" => "func:number->number->Vector3")
 /([:]\s*)\(([^)]+?),\s*ID\s*:\s*(TYPE)\)\s*[=][>]\s*/$1($2)=>$3->/r
+/([:]\s*)\(\s*ID\s*:\s*(TYPE)\)\s*[=][>]\s*/:$2->/r
+/([:]\s*)\(\s*\)\s*[=][>]\s*/$1void$2->
 
 /([:]\s*)\(ID\s*:\s*(TYPE)\)\s*[=][>]\s*/$1$2->/r
 /(ID)\?\s*\:\s*(TYPE)/?$1:$2/
 
 TYPE_PREFIX = [:]\s*|->\s*
-/(TYPE_PREFIX)number/$1Float/
-/(TYPE_PREFIX)any/$1Dynamic/
-/(TYPE_PREFIX)string/$1String/
-/(TYPE_PREFIX)void/$1Void/
-/(TYPE_PREFIX)boolean/$1Bool/
+/(TYPE_PREFIX)number\b/$1Float/
+/(TYPE_PREFIX)any\b/$1Dynamic/
+/(TYPE_PREFIX)string\b/$1String/
+/(TYPE_PREFIX)void\b/$1Void/
+/(TYPE_PREFIX)boolean\b/$1Bool/
+/(TYPE_PREFIX)Object\b/$1Dynamic/
+/(TYPE_PREFIX)HTMLCanvasElement\b/$1js.html.CanvasElement/
+/(TYPE_PREFIX)HTMLImageElement\b/$1js.html.ImageElement/
+/(TYPE_PREFIX)WebGLRenderingContext\b/$1js.html.webgl.RenderingContext/
+/(TYPE_PREFIX)Function\b/$1Dynamic/
+/(TYPE_PREFIX)HTMLElement\b/$1HtmlElement/
 
-/([:]\s*)(ID|\{[^}]*\})\[\]\[\]\[\]/$1Array<Array<Array<$2>>>/
-/([:]\s*)(ID|\{[^}]*\})\[\]\[\]/$1Array<Array<$2>>/
-/([:]\s*)(ID|\{[^}]*\})\[\]/$1Array<$2>/
+/(TYPE_PREFIX)(ID|\{[^}]*\})\[\]\[\]\[\]/$1Array<Array<Array<$2>>>/
+/(TYPE_PREFIX)(ID|\{[^}]*\})\[\]\[\]/$1Array<Array<$2>>/
+/(TYPE_PREFIX)(ID|\{[^}]*\})\[\]/$1Array<$2>/
 
 /{\s*\n(?:\n)+(\s+(?:function|var))/{\n$1/
 
+~(SPACE)(/[*][*].*?)[*]/\n\s*//[ \t]*deprecated[ \t]*\n~$1$2* @deprected\n$1 */\n~s
+~\n(SPACE)// DEPRECATED(?:SPACE)\n~\n$1/**\n$1 * @deprecated\n$1 */\n~
 
-~(SPACEOPT)(/[*][*].*?)[*]/\n\s*//[ \t]*deprecated[ \t]*\n~$1$2* @deprected\n$1 */\n~s
-~\n(SPACEOPT)// DEPRECATED(?:SPACEOPT)\n~\n$1/**\n$1 * @deprecated\n$1 */\n~
+HAXE_LONGID = ID(?:[.]ID)*
+HAXE_TYPE = HAXE_LONGID(?:[<]\s*HAXE_LONGID(?:\s*,\s*HAXE_LONGID)*\s*[>])?
+/([:]\s*)\{\s*\[\s*ID\s*[:]\s*(?:String)\s*\]\s*[:]\s*(HAXE_TYPE);\s*\}/$1Dynamic<$2>/
+
+// ": { ... var" => ": { ..."
+/([:]\s*\{(:?[^{]*\{[^}{]*\})*?[^}{]*)\bvar\s+/$1/sr
+
+// ID : { ... }; } => : { ... } }
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/(ID\s*[:]\s*\{[^}]*\}\s*);(\s*\})/$1$2/s
+
+// enum: "," => ";"
+/(\benum\s+ID\s*\{[^},]+),/$1;/sr
+
+// enum: add ";" at end
+/(\benum\s+ID\s*\{[^}]+?[a-zA-Z0-9_])(\s*\})/$1;$2/sr
+
+
+/[<](TYPE)\s+extends\s+(TYPE)[>]/<$1:$2>/
