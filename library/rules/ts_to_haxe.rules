@@ -49,7 +49,7 @@ TYPE_PREFIX = [:]\s*|->\s*
 /{\s*\n(?:\n)+(\s+(?:function|var))/{\n$1/
 
 ~(SPACE)(/[*][*].*?)[*]/\n\s*//[ \t]*deprecated[ \t]*\n~$1$2* @deprected\n$1 */\n~s
-~\n(SPACE)// DEPRECATED(?:SPACE)\n~\n$1/**\n$1 * @deprecated\n$1 */\n~
+~\n(SPACE)// deprecated(?:SPACE)\n~\n$1/**\n$1 * @deprecated\n$1 */\n~i
 
 HAXE_LONGID = ID(?:[.]ID)*
 HAXE_TYPE = HAXE_LONGID(?:[<]\s*HAXE_LONGID(?:\s*,\s*HAXE_LONGID)*\s*[>])?
@@ -58,8 +58,8 @@ HAXE_TYPE = HAXE_LONGID(?:[<]\s*HAXE_LONGID(?:\s*,\s*HAXE_LONGID)*\s*[>])?
 // ": { ... var" => ": { ..."
 /([:]\s*\{(:?[^{]*\{[^}{]*\})*?[^}{]*)\bvar\s+/$1/sr
 
+/////////////////////////////////////////////////////////////
 // ID : { ... }; } => : { ... } }
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 /(ID\s*[:]\s*\{[^}]*\}\s*);(\s*\})/$1$2/s
 
 // enum: "," => ";"

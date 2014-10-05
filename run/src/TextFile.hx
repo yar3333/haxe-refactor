@@ -13,12 +13,12 @@ typedef FileApi =
 class TextFile
 {
 	var fs:FileSystemTools;
-	var inpPath : String;
-	var outPath : String;
+	public var inpPath(default, null) : String;
+	public var outPath(default, null) : String;
 	var verbose : Bool;
 	var log : Log;
 	
-	var original : String;
+	public var text(default, null) : String;
 	var isWinLineEndStyle : Bool;
 	var isMacLineEndStyle : Bool;
 	
@@ -30,21 +30,19 @@ class TextFile
 		this.outPath = outPath;
 		this.verbose = verbose;
 		this.log = log;
-	}
-	
-	public function process(f:String->FileApi->String)
-	{
-		var text = File.getContent(inpPath);
 		
-		original = text;
+		text = File.getContent(inpPath);
 		
 		isWinLineEndStyle = text.indexOf("\r\n") >= 0;
 		if (isWinLineEndStyle) text = text.replace("\r\n", "\n");
 		
 		isMacLineEndStyle = !isWinLineEndStyle && text.indexOf("\r") >= 0;
 		if (isMacLineEndStyle) text = text.replace("\r", "\n");
-		
-		text = f(text, cast this);
+	}
+	
+	public function process(f:String->FileApi->String)
+	{
+		var text = f(this.text, cast this);
 		
 		if (text != null)
 		{
@@ -57,11 +55,13 @@ class TextFile
 	
 	function save(outPath:String, text:String) : Bool
 	{
+		if (inpPath == outPath && text == this.text) return false;
+		
+		this.text = text;		
+		
 		if (isMacLineEndStyle) text = text.replace("\n", "\r");
 		else
 		if (isWinLineEndStyle) text = text.replace("\n", "\r\n");
-		
-		if (inpPath == outPath && text == original) return false;
 		
 		var r = false;
 		var isHidden = fs.getHiddenFileAttribute(outPath);
