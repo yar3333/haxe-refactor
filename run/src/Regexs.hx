@@ -1,3 +1,6 @@
+import hant.Log;
+import stdlib.Regex;
+
 class Regexs
 {
 	static inline var OVERLOAD = "[ \t]*@[:]overload[^\n]+";
