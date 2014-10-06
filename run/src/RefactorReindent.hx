@@ -31,41 +31,36 @@ class RefactorReindent extends Refactor
 			log.finishFail("File not found.");
 		}
 		
-		var oldText = File.getContent(path);
-		oldText = oldText.replace("\r\n", "\n").replace("\r", "\n");
-		
-		var lines = oldText.split("\n");
-		for (i in 0...lines.length)
+		new TextFile(fs, path, path, verbose, log).process(function(text, _)
 		{
-			var oldLine = lines[i];
-			var newLine = "";
-			var oldPos = 0;
-			var j = 0; while (j < oldLine.length)
+			var lines = text.split("\n");
+			for (i in 0...lines.length)
 			{
-				if      (oldLine.charAt(j) == " ")  oldPos++;
-				else if (oldLine.charAt(j) == "\t") oldPos = (Std.int(oldPos / oldTabSize) + 1) * oldTabSize;
-				else                                { newLine = oldLine.substr(j); break; }
-				j++;
+				var oldLine = lines[i];
+				var newLine = "";
+				var oldPos = 0;
+				var j = 0; while (j < oldLine.length)
+				{
+					if      (oldLine.charAt(j) == " ")  oldPos++;
+					else if (oldLine.charAt(j) == "\t") oldPos = (Std.int(oldPos / oldTabSize) + 1) * oldTabSize;
+					else                                { newLine = oldLine.substr(j); break; }
+					j++;
+				}
+				
+				var oldIndents = Std.int(oldPos / oldIndentSize);
+				var oldIndentAdditionalSpaces = oldPos % oldIndentSize;
+				
+				oldPos = oldIndents * newIndentSize + oldIndentAdditionalSpaces;
+				
+				var newPos = -shiftSize;
+				var spaces = "";
+				while (newTabSize > 0 && newPos + newTabSize <= oldPos) { newPos += newTabSize; spaces += "\t"; }
+				while (newPos < oldPos) { newPos++; spaces += " "; }
+				
+				lines[i] = spaces + newLine;
 			}
 			
-			var oldIndents = Std.int(oldPos / oldIndentSize);
-			var oldIndentAdditionalSpaces = oldPos % oldIndentSize;
-			
-			oldPos = oldIndents * newIndentSize + oldIndentAdditionalSpaces;
-			
-			var newPos = -shiftSize;
-			var spaces = "";
-			while (newTabSize > 0 && newPos + newTabSize <= oldPos) { newPos += newTabSize; spaces += "\t"; }
-			while (newPos < oldPos) { newPos++; spaces += " "; }
-			
-			lines[i] = spaces + newLine;
-		}
-		
-		var newText = lines.join("\n");
-		if (newText != oldText)
-		{
-			File.saveContent(path, newText);
-			if (verbose) log.trace("Fixed: " + path);
-		}
+			return lines.join("\n");
+		});
 	}
 }

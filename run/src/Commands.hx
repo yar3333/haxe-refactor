@@ -30,15 +30,10 @@ class Commands extends BaseCommands
 			
 			var refactor = new RefactorReplace(log, fs, baseDir, null, verbose);
 			
-			var rules = [];
-			while (args.length > 0)
+			var rules = Rules.fromLines(args, verbose, log);
+			if (rules.check())
 			{
-				rules.push(new Regex(args.shift()));
-			}
-			
-			if (refactor.checkRules(rules))
-			{
-				refactor.replaceInFiles(new EReg(filter, "i"), new Regex("///"), rules, false, false);
+				refactor.replaceInFiles(new EReg(filter, "i"), new Regex("///"), rules.regexs, false, false);
 			}
 		}
 		else
@@ -84,15 +79,10 @@ class Commands extends BaseCommands
 			
 			var refactor = new RefactorReplace(log, fs, null, null, verbose);
 			
-			var rules = [];
-			while (args.length > 0)
+			var rules = Rules.fromLines(args, verbose, log);
+			if (rules.check())
 			{
-				rules.push(new Regex(args.shift()));
-			}
-			
-			if (refactor.checkRules(rules))
-			{
-				refactor.replaceInFile(filePath, rules, filePath, false, false);
+				refactor.replaceInFile(filePath, rules.regexs, filePath, false, false);
 			}
 		}
 		else
@@ -200,8 +190,9 @@ class Commands extends BaseCommands
 			if (changeFileName == null) fail("<changeFileName> arg must be specified.");
 			if (rulesFile == "") fail("<rulesFile> arg must be specified.");
 			
-			var processor = new RegexProcessor(log, fs, verbose, getRulesFilePath(exeDir, rulesFile));
-			processor.convert(baseDir, filter, outDir, changeFileName, excludeStrings, excludeComments);
+			var rules = Rules.fromFile(getRulesFilePath(exeDir, rulesFile), verbose, log);
+			var refactor = new RefactorConvert(log, fs, baseDir, outDir, verbose);
+			refactor.convert(filter, changeFileName, rules.regexs, excludeStrings, excludeComments);
 		}
 		else
 		{
@@ -245,6 +236,7 @@ class Commands extends BaseCommands
 			options.add("filter", "");
 			options.add("outDir", "");
 			options.add("rulesFile", "");
+			options.add("postRulesFile", "");
 			
 			options.parse(args);
 			
@@ -252,25 +244,34 @@ class Commands extends BaseCommands
 			var filter = filterToRegex(options.get("filter"));
 			var outDir = options.get("outDir");
 			var rulesFile = options.get("rulesFile");
+			var postRulesFile = options.get("postRulesFile");
 			
 			if (baseDir == "") fail("<baseDir> arg must be specified.");
 			if (filter == "") fail("<filter> arg must be specified.");
 			if (outDir == "") fail("<outDir> arg must be specified.");
 			if (rulesFile == "") fail("<rulesFile> arg must be specified.");
 			
-			var processor = new RegexProcessor(log, fs, verbose, getRulesFilePath(exeDir, rulesFile));
-			processor.extract(baseDir, filter, outDir);
+			var refactor = new RefactorExtract(log, fs, baseDir, outDir, verbose);
+			refactor.extract
+			(
+				filter,
+				Rules.fromFile(getRulesFilePath(exeDir, rulesFile), verbose, log).regexs,
+				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile), verbose, log).regexs : null
+			);
 		}
 		else
 		{
 			Lib.println("Recursive find files and extract parts of them to separate files.");
-			Lib.println("Usage: haxelib run refactor [-v] extract <baseDir> <filter> <outDir> <rulesFile>");
+			Lib.println("For example, you can split file contains many classes to separate class files.");
+			Lib.println("Usage: haxelib run refactor [-v] extract <baseDir> <filter> <outDir> <extractRulesFile> [ <postRulesFile> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    <baseDir>                   Path to folder.");
+			Lib.println("    <baseDir>                   Path to source folder.");
 			Lib.println("    <filter>                    File path's filter (regex or '*.ext;*.ext').");
 			Lib.println("    <outDir>                    Output directory.");
-			Lib.println("    <rulesFile>                 Path to rules file (see 'convert' command).");
-			Lib.println("                                Each regex must be in form '/find_start_text/out_file_name/flags'.");
+			Lib.println("    <extractRulesFile>          Path to rules file (see 'convert' command).");
+			Lib.println("                                Each rule must match begin of the extracted text and return a new file name.");
+			Lib.println("                                For example: \"/class (\\w+) \\{/$1.hx\".");
+			Lib.println("    <postRulesFile>             Rules to postprocess generated files.");
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
@@ -278,8 +279,8 @@ class Commands extends BaseCommands
 			Lib.println("        This command extract classes to separate files.");
 			Lib.println("        Content of the 'split_haxe.rules' file:");
 			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
-			Lib.println("            SPACE = [ \\t\\r\\n]");
-			Lib.println("            /class(?:SPACE+)(ID)(?:SPACE+){/$1.hx/g");
+			Lib.println("            SPACE = [ \\t\\n]");
+			Lib.println("            /class(?:SPACE+)(ID)(?:SPACE+){/$1.hx");
 		}
 	}
 	

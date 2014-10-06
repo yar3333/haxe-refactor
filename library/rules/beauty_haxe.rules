@@ -32,7 +32,7 @@ STD_TYPE = \b(?:Int|Float|String|Dynamic|Bool)\b
 /[(][ ]+([^{])/($1
 
 // remove spaces before ")"
-/([^}] \t\n)[ ]+[)]/$1)
+/([_a-zA-Z0-9])[ ]+[)]/$1)
 
 // remove empty lines before }
 /(?:\n(?:OPTSPACE))+\n(OPTSPACE)}/\n$1}/
