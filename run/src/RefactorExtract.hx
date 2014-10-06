@@ -15,7 +15,7 @@ class RefactorExtract extends RefactorReplace
 				if (reFilter.match(localPath))
 				{
 					var localDir = Path.directory(localPath);
-					extractFromFile(path, regexs, outDir + (localDir != "" ? "/" + localDir : ""), postRegexs);
+					extractFromFile(path, regexs, Path.removeTrailingSlashes(outDir) + (localDir != "" ? "/" + localDir : ""), postRegexs);
 				}
 			});
 		}
@@ -23,7 +23,7 @@ class RefactorExtract extends RefactorReplace
 	
 	function extractFromFile(inpPath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>)
 	{
-		log.start("Extract from '" + inpPath + "'");
+		log.start("Extract from '" + inpPath);
 		
 		var file = new TextFile(fs, inpPath, null, verbose, log);
 		file.process(function(text, fileApi)
