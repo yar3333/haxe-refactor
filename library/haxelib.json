@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Added \"--exclude-comments\" option. Renamed some files.",
-  "version": "1.5.0",
+  "releasenote": "Added \"extract\" command & reindent/shift option. Improve help. Added \"override\" command. Added rules to convert typescript definitions to haxe.",
+  "version": "2.0.0",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
