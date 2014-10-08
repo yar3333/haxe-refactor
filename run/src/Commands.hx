@@ -345,7 +345,7 @@ class Commands extends BaseCommands
 	{
 		var options = new CmdOptions();
 		
-		options.add("srcDirs", "", "Paths to sorce folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
+		options.add("srcDirs", "", "Paths to source folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
 		
 		if (args.length > 0)
 		{
