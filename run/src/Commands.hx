@@ -23,31 +23,42 @@ class Commands extends BaseCommands
 	
 	public function replace(args:Array<String>)
 	{
-		if (args.length >= 3)
+		var options = new CmdOptions();
+		
+		options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ], "Exclude C-like strings from search.");
+		options.add("excludeComments", false, [ "-ec", "--exclude-comments" ], "Exclude C-like comments from search.");
+		options.add("baseDirs", "", "Paths to base folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
+		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
+		options.addRepeatable("regex", String, "Regex to find and replace (/search/replacement/flags).\nIn <replacement> use $1-$9 to substitute groups.\nUse '^' and 'v' between '$' and number to make uppercase/lowercase (like '$^1').");
+		
+		if (args.length > 0)
 		{
-			var baseDir = args.shift();
-			var filter = filterToRegex(args.shift());
+			options.parse(args);
 			
-			var refactor = new RefactorReplace(log, fs, baseDir, null, verbose);
+			var excludeStrings = options.get("excludeStrings");
+			var excludeComments = options.get("excludeComments");
+			var baseDirs = options.get("baseDirs");
+			var filter = filterToRegex(filterToRegex(options.get("filter")));
+			var regexs : Array<String> = options.get("regex");
 			
-			var rules = Rules.fromLines(args, verbose, log);
+			if (baseDirs == "") fail("<baseDirs> arg must be specified.");
+			if (filter == "") fail("<filter> arg must be specified.");
+			if (regexs.length == 0) fail("<regex> arg must be specified.");
+			
+			var refactor = new RefactorReplace(log, fs, baseDirs, null, verbose);
+			var rules = Rules.fromLines(regexs, verbose, log);
 			if (rules.check())
 			{
-				refactor.replaceInFiles(new EReg(filter, "i"), new Regex("///"), rules.regexs, false, false);
+				refactor.replaceInFiles(new EReg(filter, "i"), new Regex(""), rules.regexs, excludeStrings, excludeComments);
 			}
 		}
 		else
-		if (args.length == 0)
 		{
 			Lib.println("Recursive find and replace in files.");
-			Lib.println("Usage: haxelib run refactor [-v] replace <baseDirs> <filter> <regex1> [ ... <regexN> ]");
+			Lib.println("Usage: haxelib run refactor [-v] replace [ -es ] [ -ec ] <baseDirs> <filter> <regex1> [ ... <regexN> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    <baseDirs>                  Paths to base folders. Use ';' as delimiter.");
-			Lib.println("                                Use '*' to specify 'any folder' in path.");
-			Lib.println("    <filter>                    File path's filter (regex or '*.ext;*.ext').");
-			Lib.println("    <regex>                     Regex to find and replace (/search/replacement/flags).");
-			Lib.println("                                In <replacement> use $1-$9 to substitute groups.");
-			Lib.println("                                Use '^' and 'v' between '$' and number to make uppercase/lowercase (like '$^1').");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
@@ -56,61 +67,71 @@ class Commands extends BaseCommands
 			Lib.println("        Only haxe code files will be processed.");
 			Lib.println("        String 'abc' will be replaced to 'def'.");
 			Lib.println("");
-			Lib.println("    haxelib run refactor replace */src;*/library [.](hx|xml)$ /(.)bc/$^1ef/");
+			Lib.println("    haxelib run refactor replace */src;*/library *.hx;*.xml /(.)bc/$^1ef/");
 			Lib.println("        Files will be recursively found in 'anydir/src' and 'anydir/library' folders.");
-			Lib.println("        Haxe code and xml files will be processed.");
+			Lib.println("        Haxe and xml files will be processed.");
 			Lib.println("        Next strings will be replaced:");
 			Lib.println("            abc => Aef");
 			Lib.println("            .bc => .ef");
 			Lib.println("            ...");
 			
 		}
-		else
-		{
-			fail("Wrong arguments count.");
-		}
 	}
 	
 	public function replaceInFile(args:Array<String>)
 	{
-		if (args.length >= 2)
+		var options = new CmdOptions();
+		
+		options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ], "Exclude C-like strings from search.");
+		options.add("excludeComments", false, [ "-ec", "--exclude-comments" ], "Exclude C-like comments from search.");
+		options.add("filePath", "", "Path to file.");
+		options.addRepeatable("regex", String, "Regex to find and replace (/search/replacement/flags).");
+		
+		if (args.length > 0)
 		{
-			var filePath = args.shift();
+			options.parse(args);
+			
+			var excludeStrings = options.get("excludeStrings");
+			var excludeComments = options.get("excludeComments");
+			var filePath = options.get("filePath");
+			var regexs = options.get("regex");
 			
 			var refactor = new RefactorReplace(log, fs, null, null, verbose);
-			
-			var rules = Rules.fromLines(args, verbose, log);
+			var rules = Rules.fromLines(regexs, verbose, log);
 			if (rules.check())
 			{
-				refactor.replaceInFile(filePath, rules.regexs, filePath, false, false);
+				refactor.replaceInFile(filePath, rules.regexs, filePath, excludeStrings, excludeComments);
 			}
 		}
 		else
-		if (args.length == 0)
 		{
 			Lib.println("Find and replace in file.");
-			Lib.println("Usage: haxelib run refactor [-v] replaceInFile <filePath> <regex1> [ ... <regexN> ]");
+			Lib.println("Usage: haxelib run refactor [-v] replaceInFile [ -es ] [ -ec ] <filePath> <regex1> [ ... <regexN> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    <filePath>                  Path to file.");
-			Lib.println("    <regex>                     Regex to find and replace (/search/replacement/flags).");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
 			Lib.println("    haxelib run refactor replaceInFile src/MyClass.hx /abc/def/i");
 		}
-		else
-		{
-			fail("Wrong arguments count.");
-		}
 	}
 	
 	public function rename(args:Array<String>)
 	{
-		if (args.length == 3)
+		var options = new CmdOptions();
+		
+		options.add("baseDir", "", "Path to source folder.");
+		options.add("src", "", "Source package or full class name.");
+		options.add("dest", "", "Destination package or full class name.");
+		
+		if (args.length > 0)
 		{
-			var baseDir = args.shift();
-			var src = pathToPack(baseDir, args.shift());
-			var dest = pathToPack(baseDir, args.shift());
+			options.parse(args);
+			
+			var baseDir = options.get("baseDir");
+			var src : String = options.get("src");
+			var dest = options.get("dest");
 			
 			var srcPacks = src.split(".");
 			if (~/^[a-z]/.match(srcPacks[srcPacks.length - 1]))
@@ -135,14 +156,12 @@ class Commands extends BaseCommands
 			}
 		}
 		else
-		if (args.length == 0)
 		{
 			Lib.println("Rename package or class.");
 			Lib.println("Usage: haxelib run refactor [-v] rename <baseDir> <src> <dest>");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    <baseDir>                   Path to source folder.");
-			Lib.println("    <src>                       Source package or full class name.");
-			Lib.println("    <dest>                      Destination package or full class name.");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
@@ -154,26 +173,22 @@ class Commands extends BaseCommands
 			Lib.println("        Files will be recursively found in 'src' folder.");
 			Lib.println("        Class 'mypackA.MyClass1' will be renamed to 'mypackB.MyClass2'.");
 		}
-		else
-		{
-			fail("Wrong arguments count.");
-		}
 	}
 	
 	public function convert(args:Array<String>)
 	{
+		var options = new CmdOptions();
+		
+		options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ], "Exclude C-like strings from search.");
+		options.add("excludeComments", false, [ "-ec", "--exclude-comments" ], "Exclude C-like comments from search.");
+		options.add("baseDir", "", "Path to source folder.");
+		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
+		options.add("outDir", "", "Output directory.");
+		options.add("convertFileName", "", "Regex to find and replace in file name (/search/replacement/flags).\nUsed to produce output file name.");
+		options.addRepeatable("rulesFile", String, "Path to rules file which contains one rule per line:\nVAR = regexp\nor\n/search_can_contain_VAR/replacement/flags");
+		
 		if (args.length > 0)
 		{
-			var options = new CmdOptions();
-			
-			options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ]);
-			options.add("excludeComments", false, [ "-ec", "--exclude-comments" ]);
-			options.add("baseDir", "");
-			options.add("filter", "");
-			options.add("outDir", "");
-			options.add("changeFileName", "");
-			options.addRepeatable("ruleFiles", String);
-			
 			options.parse(args);
 			
 			var excludeStrings = options.get("excludeStrings");
@@ -181,39 +196,30 @@ class Commands extends BaseCommands
 			var baseDir = options.get("baseDir");
 			var filter = filterToRegex(options.get("filter"));
 			var outDir = options.get("outDir");
-			var changeFileName = options.get("changeFileName") != "" ? new Regex(options.get("changeFileName")) : null;
-			var ruleFiles : Array<String> = options.get("ruleFiles");
+			var convertFileName = new Regex(options.get("convertFileName"));
+			var rulesFile : Array<String> = options.get("rulesFile");
 			
 			if (baseDir == "") fail("<baseDir> arg must be specified.");
 			if (filter == "") fail("<filter> arg must be specified.");
 			if (outDir == "") fail("<outDir> arg must be specified.");
-			if (changeFileName == null) fail("<changeFileName> arg must be specified.");
-			if (ruleFiles.length == 0) fail("<rulesFile> arg must be specified.");
+			if (convertFileName == null) fail("<convertFileName> arg must be specified.");
+			if (rulesFile.length == 0) fail("<rulesFile> arg must be specified.");
 			
 			var regexs = [];
-			for (ruleFile in ruleFiles)
+			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, ruleFile), verbose, log).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose, log).regexs);
 			}
 			var refactor = new RefactorConvert(log, fs, baseDir, outDir, verbose);
-			refactor.convert(filter, changeFileName, regexs, excludeStrings, excludeComments);
+			refactor.convert(filter, convertFileName, regexs, excludeStrings, excludeComments);
 		}
 		else
 		{
 			Lib.println("Recursive find and replace in files using rule files.");
-			Lib.println("Usage: haxelib run refactor [-v] convert [ --exclude-string-literals ] [ --exclude-comments ] <baseDir> <filter> <outDir> <convertFileName> <rulesFile1> [ ... <rulesFileN> ]");
+			Lib.println("Usage: haxelib run refactor [-v] convert [ -es ] [ -ec ] <baseDir> <filter> <outDir> <convertFileName> <rulesFile1> [ ... <rulesFileN> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    -es, --exclude-string-literals  Exclude C-like strings from search.");
-			Lib.println("    -ec, --exclude-comments         Exclude C-like comments from search.");
-			Lib.println("    <baseDir>                       Path to source folder.");
-			Lib.println("    <filter>                        File path's filter (regex or '*.ext;*.ext').");
-			Lib.println("    <outDir>                        Output directory.");
-			Lib.println("    <convertFileName>               Regex to find and replace in file name (/search/replacement/flags).");
-			Lib.println("                                    Used to produce output file name.");
-			Lib.println("    <rulesFile>                     Path to rules file which contains one rule per line:");
-			Lib.println("                                    VAR = regexp");
-			Lib.println("                                    or");
-			Lib.println("                                    /search_can_contain_VAR/replacement/flags");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
@@ -231,32 +237,32 @@ class Commands extends BaseCommands
 	
 	public function process(args:Array<String>)
 	{
+		var options = new CmdOptions();
+		
+		options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ], "Exclude C-like strings from search.");
+		options.add("excludeComments", false, [ "-ec", "--exclude-comments" ], "Exclude C-like comments from search.");
+		options.add("baseDir", "", "Path to folder to start search for files.");
+		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
+		options.addRepeatable("rulesFile", String, "Path to rules file which contains one rule per line:\nVAR = regexp\nor\n/search_can_contain_VAR/replacement/flags");
+		
 		if (args.length > 0)
 		{
-			var options = new CmdOptions();
-			
-			options.add("excludeStrings", false, [ "--exclude-string-literals" ]);
-			options.add("excludeComments", false, [ "--exclude-comments" ]);
-			options.add("baseDir", "");
-			options.add("filter", "");
-			options.addRepeatable("ruleFiles", String);
-			
 			options.parse(args);
 			
 			var excludeStrings = options.get("excludeStrings");
 			var excludeComments = options.get("excludeComments");
 			var baseDir = options.get("baseDir");
 			var filter = filterToRegex(options.get("filter"));
-			var ruleFiles : Array<String> = options.get("ruleFiles");
+			var rulesFile : Array<String> = options.get("rulesFile");
 			
 			if (baseDir == "") fail("<baseDir> arg must be specified.");
 			if (filter == "") fail("<filter> arg must be specified.");
-			if (ruleFiles.length == 0) fail("<ruleFiles> arg must be specified.");
+			if (rulesFile.length == 0) fail("<rulesFile> arg must be specified.");
 			
 			var regexs = [];
-			for (ruleFile in ruleFiles)
+			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, ruleFile), verbose, log).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose, log).regexs);
 			}
 			var refactor = new RefactorConvert(log, fs, baseDir, null, verbose);
 			refactor.convert(filter, new Regex(""), regexs, excludeStrings, excludeComments);
@@ -264,16 +270,10 @@ class Commands extends BaseCommands
 		else
 		{
 			Lib.println("Recursive find and replace in files using rules files.");
-			Lib.println("Usage: haxelib run refactor [-v] process [ --exclude-string-literals ] [ --exclude-comments ] <baseDir> <filter> <rulesFile1> [ ...  <rulesFileN> ]");
+			Lib.println("Usage: haxelib run refactor [-v] process [ -es ] [ -ec ] <baseDir> <filter> <rulesFile1> [ ...  <rulesFileN> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    --exclude-string-literals   Exclude C-like strings from search.");
-			Lib.println("    --exclude-comments          Exclude C-like comments from search.");
-			Lib.println("    <baseDir>                   Path to folder to start search for files.");
-			Lib.println("    <filter>                    File path's filter (regex or '*.ext;*.ext').");
-			Lib.println("    <rulesFile>                 Path to rules file which contains one rule per line:");
-			Lib.println("                                VAR = regexp");
-			Lib.println("                                or");
-			Lib.println("                                /search_can_contain_VAR/replacement/flags");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
@@ -290,34 +290,34 @@ class Commands extends BaseCommands
 	
 	public function extract(args:Array<String>)
 	{
+		var options = new CmdOptions();
+		
+		options.add("baseDir", "", "Path to source folder.");
+		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
+		options.add("outDir", "", "Output directory.");
+		options.add("extractRulesFile", "", "Path to rules file (see 'convert' command).\nEach rule must match begin of the extracted text and return a new file name.\nFor example: \"/class (\\w+) \\{/$1.hx\".\nIf matched text ends by open bracket '(', '[' or '{'\nwhen extracted text will be extended to matched close bracket.");
+		options.add("postRulesFile", "", "Rules to postprocess generated files.");
+		
 		if (args.length > 0)
 		{
-			var options = new CmdOptions();
-			
-			options.add("baseDir", "");
-			options.add("filter", "");
-			options.add("outDir", "");
-			options.add("rulesFile", "");
-			options.add("postRulesFile", "");
-			
 			options.parse(args);
 			
 			var baseDir = options.get("baseDir");
 			var filter = filterToRegex(options.get("filter"));
 			var outDir = options.get("outDir");
-			var rulesFile = options.get("rulesFile");
+			var extractRulesFile = options.get("extractRulesFile");
 			var postRulesFile = options.get("postRulesFile");
 			
 			if (baseDir == "") fail("<baseDir> arg must be specified.");
 			if (filter == "") fail("<filter> arg must be specified.");
 			if (outDir == "") fail("<outDir> arg must be specified.");
-			if (rulesFile == "") fail("<rulesFile> arg must be specified.");
+			if (extractRulesFile == "") fail("<extractRulesFile> arg must be specified.");
 			
 			var refactor = new RefactorExtract(log, fs, baseDir, outDir, verbose);
 			refactor.extract
 			(
 				filter,
-				Rules.fromFile(getRulesFilePath(exeDir, rulesFile), verbose, log).regexs,
+				Rules.fromFile(getRulesFilePath(exeDir, extractRulesFile), verbose, log).regexs,
 				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile), verbose, log).regexs : null
 			);
 		}
@@ -327,15 +327,8 @@ class Commands extends BaseCommands
 			Lib.println("For example, you can split file contains many classes to separate class files.");
 			Lib.println("Usage: haxelib run refactor [-v] extract <baseDir> <filter> <outDir> <extractRulesFile> [ <postRulesFile> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    <baseDir>                   Path to source folder.");
-			Lib.println("    <filter>                    File path's filter (regex or '*.ext;*.ext').");
-			Lib.println("    <outDir>                    Output directory.");
-			Lib.println("    <extractRulesFile>          Path to rules file (see 'convert' command).");
-			Lib.println("                                Each rule must match begin of the extracted text and return a new file name.");
-			Lib.println("                                For example: \"/class (\\w+) \\{/$1.hx\".");
-			Lib.println("                                If matched text ends by open bracket '(', '[' or '{'");
-			Lib.println("                                when extracted text will be extended to matched close bracket.");
-			Lib.println("    <postRulesFile>             Rules to postprocess generated files.");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
@@ -350,20 +343,28 @@ class Commands extends BaseCommands
 	
 	public function doOverride(args:Array<String>)
 	{
-		if (args.length == 1)
+		var options = new CmdOptions();
+		
+		options.add("srcDirs", "", "Paths to sorce folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
+		
+		if (args.length > 0)
 		{
-			var srcDirs = args.shift();
+			options.parse(args);
+			
+			var srcDirs = options.get("srcDirs");
+			
+			if (srcDirs == "") fail("<srcDirs> arg must be specified.");
+			
 			var refactor = new RefactorOverride(log, fs, srcDirs, null, verbose);
 			refactor.overrideInFiles();
 		}
 		else
-		if (args.length == 0)
 		{
 			Lib.println("Autofix override/overload/redefinition in haxe extern class members.");
 			Lib.println("Usage: haxelib run refactor [-v] override <srcDirs>");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    <srcDirs>                   Paths to sorce folders. Use ';' as delimiter.");
-			Lib.println("                                Use '*' to specify 'any folder' in path.");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Example:");
 			Lib.println("");
@@ -395,83 +396,98 @@ class Commands extends BaseCommands
 			Lib.println("    }");
 			
 		}
-		else
-		{
-			fail("Wrong arguments count.");
-		}
 	}
 	
 	public function reindent(args:Array<String>)
 	{
-		if (args.length == 6 || args.length == 7)
+		var options = new CmdOptions();
+		
+		options.add("baseDirs", "", "Paths to folders (like 'mydirA;mydirB').");
+		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
+		options.add("oldTabSize", -1, "Spaces per tab in old style.");
+		options.add("oldIndentSize", -1, "Spaces per indent in old style.");
+		options.add("newTabSize", -1, "Spaces per tab in new style.");
+		options.add("newIndentSize", -1, "Spaces per indent in new style.");
+		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.");
+		
+		if (args.length > 0)
 		{
-			var baseDir = args.shift();
-			var filter = filterToRegex(args.shift());
+			options.parse(args);
 			
-			var oldTabSize = Std.parseInt(args.shift());
-			var oldIndentSize = Std.parseInt(args.shift());
+			var baseDirs = options.get("baseDirs");
+			var filter = filterToRegex(options.get("filter"));
+			var oldTabSize = options.get("oldTabSize");
+			var oldIndentSize = options.get("oldIndentSize");
+			var newTabSize = options.get("newTabSize");
+			var newIndentSize = options.get("shiftSize");
+			var shiftSize = options.get("shiftSize");
 			
-			var newTabSize = Std.parseInt(args.shift());
-			var newIndentSize = Std.parseInt(args.shift());
+			if (baseDirs == "") fail("<baseDirs> arg must be specified.");
+			if (filter == "") fail("<filter> arg must be specified.");
+			if (oldTabSize == -1) fail("<oldTabSize> arg must be specified.");
+			if (oldIndentSize == -1) fail("<oldIndentSize> arg must be specified.");
+			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
+			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
-			var shiftSize = args.length > 0 ? Std.parseInt(args.shift()) : 0;
-			
-			var refactor = new RefactorReindent(log, fs, baseDir, null, verbose);
+			var refactor = new RefactorReindent(log, fs, baseDirs, null, verbose);
 			refactor.reindent(new EReg(filter, "i"), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 		}
 		else
-		if (args.length == 0)
 		{
 			Lib.println("Change indentation in the files.");
 			Lib.println("Usage: haxelib run refactor [-v] reindent <baseDirs> <filter> <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    <baseDirs>                  Paths to folders (like 'mydirA;mydirB').");
-			Lib.println("    <filter>                    File path's filter (regex or '*.ext;*.ext').");
-			Lib.println("    <oldTabSize>                Spaces per tab in old style.");
-			Lib.println("    <oldIndentSize>             Spaces per indent in old style.");
-			Lib.println("    <newTabSize>                Spaces per tab in new style.");
-			Lib.println("    <newIndentSize>             Spaces per indent in new style.");
-			Lib.println("    <shiftSize>                 Shift to left(-) or right(+) to specified spaces.");
-		}
-		else
-		{
-			fail("Wrong arguments count.");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+			Lib.println("");
+			Lib.println("Example:");
+			Lib.println("");
+			Lib.println("    haxelib run refactor reindent src *.hx 4 2 4 4 4");
 		}
 	}
 	
 	public function reindentInFile(args:Array<String>)
 	{
-		if (args.length == 5 || args.length == 6)
+		var options = new CmdOptions();
+		
+		options.add("filePath", "", "Path to file.");
+		options.add("oldTabSize", -1, "Spaces per tab in old style.");
+		options.add("oldIndentSize", -1, "Spaces per indent in old style.");
+		options.add("newTabSize", -1, "Spaces per tab in new style.");
+		options.add("newIndentSize", -1, "Spaces per indent in new style.");
+		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.");
+		
+		if (args.length > 0)
 		{
-			var filePath = args.shift();
+			options.parse(args);
 			
-			var oldTabSize = Std.parseInt(args.shift());
-			var oldIndentSize = Std.parseInt(args.shift());
+			var filePath = options.get("filePath");
+			var oldTabSize = options.get("oldTabSize");
+			var oldIndentSize = options.get("oldIndentSize");
+			var newTabSize = options.get("newTabSize");
+			var newIndentSize = options.get("shiftSize");
+			var shiftSize = options.get("shiftSize");
 			
-			var newTabSize = Std.parseInt(args.shift());
-			var newIndentSize = Std.parseInt(args.shift());
-			
-			var shiftSize = args.length > 0 ? Std.parseInt(args.shift()) : 0;
+			if (filePath == "") fail("<filePath> arg must be specified.");
+			if (oldTabSize == -1) fail("<oldTabSize> arg must be specified.");
+			if (oldIndentSize == -1) fail("<oldIndentSize> arg must be specified.");
+			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
+			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
 			var refactor = new RefactorReindent(log, fs, null, null, verbose);
 			refactor.reindentFile(filePath, oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 		}
 		else
-		if (args.length == 0)
 		{
 			Lib.println("Change indentation in the file.");
 			Lib.println("Usage: haxelib run refactor [-v] reindentInFile <filePath> <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    <filePath>                  Path to file.");
-			Lib.println("    <oldTabSize>                Spaces per tab in old style.");
-			Lib.println("    <oldIndentSize>             Spaces per indent in old style.");
-			Lib.println("    <newTabSize>                Spaces per tab in new style.");
-			Lib.println("    <newIndentSize>             Spaces per indent in new style.");
-			Lib.println("    <shiftSize>                 Shift to left(-) or right(+) to specified spaces.");
-		}
-		else
-		{
-			fail("Wrong arguments count.");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+			Lib.println("");
+			Lib.println("Example:");
+			Lib.println("");
+			Lib.println("    haxelib run refactor reindentInFile MyClass.hx 4 2 4 4 4");
 		}
 	}
 }

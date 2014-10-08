@@ -2,7 +2,7 @@
 
 IF [%1]==[] GOTO :help
 
-haxelib run refactor convert --exclude-string-literals --exclude-comments "%1" *.hx "%1" /// beauty_haxe.rules
+haxelib run refactor process -es -ec "%1" *.hx beauty_haxe.rules
 goto exit
 
 :help
