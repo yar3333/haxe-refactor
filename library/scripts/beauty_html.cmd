@@ -2,7 +2,7 @@
 
 IF [%1]==[] GOTO :help
 
-haxelib run refactor convert "%1" *.html "%1" /// beauty_html.rules
+haxelib run refactor process "%1" *.html beauty_html.rules
 goto exit
 
 :help

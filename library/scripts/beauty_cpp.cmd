@@ -2,7 +2,7 @@
 
 IF [%1]==[] GOTO :help
 
-haxelib run refactor convert --exclude-string-literals --exclude-comments "%1" *.c;*.cpp;*.h "%1" /// beauty_cpp.rules
+haxelib run refactor process -es -ec "%1" *.c;*.cpp;*.h beauty_cpp.rules
 goto exit
 
 :help
