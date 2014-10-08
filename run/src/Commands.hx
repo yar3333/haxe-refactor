@@ -166,50 +166,54 @@ class Commands extends BaseCommands
 		{
 			var options = new CmdOptions();
 			
+			options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ]);
+			options.add("excludeComments", false, [ "-ec", "--exclude-comments" ]);
 			options.add("baseDir", "");
 			options.add("filter", "");
 			options.add("outDir", "");
 			options.add("changeFileName", "");
-			options.add("rulesFile", "");
-			options.add("excludeStrings", false, [ "--exclude-string-literals" ]);
-			options.add("excludeComments", false, [ "--exclude-comments" ]);
+			options.addRepeatable("ruleFiles", String);
 			
 			options.parse(args);
 			
+			var excludeStrings = options.get("excludeStrings");
+			var excludeComments = options.get("excludeComments");
 			var baseDir = options.get("baseDir");
 			var filter = filterToRegex(options.get("filter"));
 			var outDir = options.get("outDir");
 			var changeFileName = options.get("changeFileName") != "" ? new Regex(options.get("changeFileName")) : null;
-			var rulesFile = options.get("rulesFile");
-			var excludeStrings = options.get("excludeStrings");
-			var excludeComments = options.get("excludeComments");
+			var ruleFiles : Array<String> = options.get("ruleFiles");
 			
 			if (baseDir == "") fail("<baseDir> arg must be specified.");
 			if (filter == "") fail("<filter> arg must be specified.");
 			if (outDir == "") fail("<outDir> arg must be specified.");
 			if (changeFileName == null) fail("<changeFileName> arg must be specified.");
-			if (rulesFile == "") fail("<rulesFile> arg must be specified.");
+			if (ruleFiles.length == 0) fail("<rulesFile> arg must be specified.");
 			
-			var rules = Rules.fromFile(getRulesFilePath(exeDir, rulesFile), verbose, log);
+			var regexs = [];
+			for (ruleFile in ruleFiles)
+			{
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, ruleFile), verbose, log).regexs);
+			}
 			var refactor = new RefactorConvert(log, fs, baseDir, outDir, verbose);
-			refactor.convert(filter, changeFileName, rules.regexs, excludeStrings, excludeComments);
+			refactor.convert(filter, changeFileName, regexs, excludeStrings, excludeComments);
 		}
 		else
 		{
-			Lib.println("Recursive find and replace in files using rules file.");
-			Lib.println("Usage: haxelib run refactor [-v] convert [ --exclude-string-literals ] [ --exclude-comments ] <baseDir> <filter> <outDir> <regex> <rulesFile>");
+			Lib.println("Recursive find and replace in files using rule files.");
+			Lib.println("Usage: haxelib run refactor [-v] convert [ --exclude-string-literals ] [ --exclude-comments ] <baseDir> <filter> <outDir> <convertFileName> <rulesFile1> [ ... <rulesFileN> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
-			Lib.println("    --exclude-string-literals   Exclude C-like strings from process.");
-			Lib.println("    --exclude-comments          Exclude C-like comments from process.");
-			Lib.println("    <baseDir>                   Path to source folder.");
-			Lib.println("    <filter>                    File path's filter (regex or '*.ext;*.ext').");
-			Lib.println("    <outDir>                    Output directory.");
-			Lib.println("    <regex>                     Regex to find and replace in file name (/search/replacement/flags).");
-			Lib.println("                                Used to produce output file name.");
-			Lib.println("    <rulesFile>                 Path to rules file, one rule per line:");
-			Lib.println("                                VAR = regexp");
-			Lib.println("                                or");
-			Lib.println("                                /search_can_contain_VAR/replacement/flags");
+			Lib.println("    -es, --exclude-string-literals  Exclude C-like strings from search.");
+			Lib.println("    -ec, --exclude-comments         Exclude C-like comments from search.");
+			Lib.println("    <baseDir>                       Path to source folder.");
+			Lib.println("    <filter>                        File path's filter (regex or '*.ext;*.ext').");
+			Lib.println("    <outDir>                        Output directory.");
+			Lib.println("    <convertFileName>               Regex to find and replace in file name (/search/replacement/flags).");
+			Lib.println("                                    Used to produce output file name.");
+			Lib.println("    <rulesFile>                     Path to rules file which contains one rule per line:");
+			Lib.println("                                    VAR = regexp");
+			Lib.println("                                    or");
+			Lib.println("                                    /search_can_contain_VAR/replacement/flags");
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
@@ -217,10 +221,68 @@ class Commands extends BaseCommands
 			Lib.println("        Search for *.js files in the 'native' folder.");
 			Lib.println("        Put output files as '*.hx' into the 'src' folder.");
 			Lib.println("        Read rules from file 'js_to_haxe.rules'. Rules example:");
-			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*        // define a var");
-			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)? // define a var");
-			Lib.println("            SPACE = [ \\t\\r\\n]                  // define a var");
-			Lib.println("            // regex to find&replace");
+			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
+			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)?");
+			Lib.println("            SPACE = [ \\t\\r\\n]");
+			Lib.println("            /^(SPACE)\\bvar\\s+_(ID)\\s*=\\s*function\\s*[(](ARGS)[)]\\s*$/$1function _$2($3)/m");
+			
+		}
+	}
+	
+	public function process(args:Array<String>)
+	{
+		if (args.length > 0)
+		{
+			var options = new CmdOptions();
+			
+			options.add("excludeStrings", false, [ "--exclude-string-literals" ]);
+			options.add("excludeComments", false, [ "--exclude-comments" ]);
+			options.add("baseDir", "");
+			options.add("filter", "");
+			options.addRepeatable("ruleFiles", String);
+			
+			options.parse(args);
+			
+			var excludeStrings = options.get("excludeStrings");
+			var excludeComments = options.get("excludeComments");
+			var baseDir = options.get("baseDir");
+			var filter = filterToRegex(options.get("filter"));
+			var ruleFiles : Array<String> = options.get("ruleFiles");
+			
+			if (baseDir == "") fail("<baseDir> arg must be specified.");
+			if (filter == "") fail("<filter> arg must be specified.");
+			if (ruleFiles.length == 0) fail("<ruleFiles> arg must be specified.");
+			
+			var regexs = [];
+			for (ruleFile in ruleFiles)
+			{
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, ruleFile), verbose, log).regexs);
+			}
+			var refactor = new RefactorConvert(log, fs, baseDir, null, verbose);
+			refactor.convert(filter, new Regex(""), regexs, excludeStrings, excludeComments);
+		}
+		else
+		{
+			Lib.println("Recursive find and replace in files using rules files.");
+			Lib.println("Usage: haxelib run refactor [-v] process [ --exclude-string-literals ] [ --exclude-comments ] <baseDir> <filter> <rulesFile1> [ ...  <rulesFileN> ]");
+			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("    --exclude-string-literals   Exclude C-like strings from search.");
+			Lib.println("    --exclude-comments          Exclude C-like comments from search.");
+			Lib.println("    <baseDir>                   Path to folder to start search for files.");
+			Lib.println("    <filter>                    File path's filter (regex or '*.ext;*.ext').");
+			Lib.println("    <rulesFile>                 Path to rules file which contains one rule per line:");
+			Lib.println("                                VAR = regexp");
+			Lib.println("                                or");
+			Lib.println("                                /search_can_contain_VAR/replacement/flags");
+			Lib.println("");
+			Lib.println("Examples:");
+			Lib.println("");
+			Lib.println("    haxelib run refactor process src *.hx beauty_haxe.rules");
+			Lib.println("        Search for *.hx files in the 'src' folder.");
+			Lib.println("        Read rules from file 'beauty_haxe.rules'. Rules example:");
+			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
+			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)?");
+			Lib.println("            SPACE = [ \\t\\r\\n]");
 			Lib.println("            /^(SPACE)\\bvar\\s+_(ID)\\s*=\\s*function\\s*[(](ARGS)[)]\\s*$/$1function _$2($3)/m");
 			
 		}
@@ -271,6 +333,8 @@ class Commands extends BaseCommands
 			Lib.println("    <extractRulesFile>          Path to rules file (see 'convert' command).");
 			Lib.println("                                Each rule must match begin of the extracted text and return a new file name.");
 			Lib.println("                                For example: \"/class (\\w+) \\{/$1.hx\".");
+			Lib.println("                                If matched text ends by open bracket '(', '[' or '{'");
+			Lib.println("                                when extracted text will be extended to matched close bracket.");
 			Lib.println("    <postRulesFile>             Rules to postprocess generated files.");
 			Lib.println("");
 			Lib.println("Examples:");
@@ -280,7 +344,7 @@ class Commands extends BaseCommands
 			Lib.println("        Content of the 'split_haxe.rules' file:");
 			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
 			Lib.println("            SPACE = [ \\t\\n]");
-			Lib.println("            /class(?:SPACE+)(ID)(?:SPACE+){/$1.hx");
+			Lib.println("            /class(?:SPACE+)(ID)(?:SPACE*){/$1.hx");
 		}
 	}
 	

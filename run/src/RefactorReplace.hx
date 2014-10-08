@@ -22,7 +22,9 @@ class RefactorReplace extends Refactor
 					else
 					{
 						var localDir = Path.directory(localPath);
-						replaceInFile(path, rules, outDir + (localDir != "" ? Path.addTrailingSlash(localDir) : "") + changeFileName.replace(Path.withoutDirectory(localPath)), excludeStrings, excludeComments);
+						var outPath = (outDir != null ? outDir + (localDir != "" ? localDir + "/" : "") : Path.directory(path) + "/")
+									+ changeFileName.replace(Path.withoutDirectory(path));
+						replaceInFile(path, rules, outPath, excludeStrings, excludeComments);
 					}
 				}
 			});
