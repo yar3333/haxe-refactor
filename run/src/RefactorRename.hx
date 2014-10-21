@@ -74,7 +74,7 @@ class RefactorRename extends RefactorReplace
 				replaceInFile(destFile, [ new Regex("/\\bpackage\\s+" + src.full.replace(".", "[.]") + "\\s*;/package " + dest.full + ";/") ], destFile, true, true);
 			}
 			
-			log.start("Replace in all haXe files: " + src.full + " => " + dest.full);
+			log.start("Replace in all haxe files: " + src.full + " => " + dest.full);
 			fs.findFiles(baseDir, function(path:String)
 			{
 				if (path.endsWith(".hx"))
