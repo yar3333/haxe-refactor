@@ -122,8 +122,8 @@ class Commands extends BaseCommands
 		var options = new CmdOptions();
 		
 		options.add("baseDir", "", "Path to source folder.");
-		options.add("src", "", "Source package or full class name.");
-		options.add("dest", "", "Destination package or full class name.");
+		options.add("src", "", "Source package or full class name.\nCan be specified in disk path form.");
+		options.add("dest", "", "Destination package or full class name.\nCan be specified in disk path form.");
 		
 		if (args.length > 0)
 		{
@@ -132,6 +132,12 @@ class Commands extends BaseCommands
 			var baseDir = options.get("baseDir");
 			var src : String = options.get("src");
 			var dest = options.get("dest");
+			
+			src = DirTools.pathToPack(baseDir, src, log, verbose);
+			if (src == null) fail("<src> specified in disk path form, but do not starts with one of base dirs.");
+			
+			dest = DirTools.pathToPack(baseDir, dest, log, verbose);
+			if (dest == null) fail("<dest> specified in disk path form, but do not starts with one of base dirs.");
 			
 			var srcPacks = src.split(".");
 			if (~/^[a-z]/.match(srcPacks[srcPacks.length - 1]))
@@ -172,6 +178,9 @@ class Commands extends BaseCommands
 			Lib.println("    haxelib run refactor rename src mypackA.MyClass1 mypackB.MyClass2");
 			Lib.println("        Files will be recursively found in 'src' folder.");
 			Lib.println("        Class 'mypackA.MyClass1' will be renamed to 'mypackB.MyClass2'.");
+			Lib.println("");
+			Lib.println("    haxelib run refactor rename src src/mypackA/MyClass1.hx src/mypackB/MyClass2.hx");
+			Lib.println("        Example of using path form.");
 		}
 	}
 	

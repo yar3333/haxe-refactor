@@ -1,9 +1,9 @@
-package ;
-
 import hant.FileSystemTools;
 import hant.Log;
 import hant.PathTools;
+import haxe.io.Path;
 import sys.FileSystem;
+using StringTools;
 
 class DirTools
 {
@@ -58,5 +58,35 @@ class DirTools
 		if (verbose) log.finishOk();
 		
 		return baseDirs;
+	}
+	
+	public static function pathToPack(baseDir:String, path:String, log:Log, verbose:Bool) : String
+	{
+		baseDir = baseDir.replace("\\", "/");
+		path = path.replace("\\", "/");
+		
+		if (path.indexOf("/") >= 0)
+		{
+			var baseDirFound = false;
+			for (dir in DirTools.parse(baseDir, log, verbose))
+			{
+				if (dir == "." && !path.startsWith("./")) path = "./" + path;
+				
+				if (path.startsWith(dir + "/"))
+				{
+					baseDirFound = true;
+					var oldPath = path;
+					path = Path.withoutExtension(path.substr(dir.length + 1)).replace("/", ".");
+					if (verbose)
+					{
+						log.trace("Convert disk path to package/class: " + oldPath + " => " + path);
+					}
+				}
+			}
+			
+			if (!baseDirFound) return null;
+		}
+		
+		return path;
 	}
 }
