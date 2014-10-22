@@ -9,4 +9,12 @@ class RefactorConvert extends RefactorReplace
 			replaceInFiles(new EReg(filter, "i"), changeFileName, regexs, excludeStrings, excludeComments);
 		}
 	}
+	
+	public function convertFile(inpFilePath:String, regexs:Array<Regex>, outFilePath:String, excludeStrings:Bool, excludeComments:Bool)
+	{
+		if (new Rules(verbose, log, regexs).check())
+		{
+			replaceInFile(inpFilePath, regexs, outFilePath, excludeStrings, excludeComments);
+		}
+	}
 }
