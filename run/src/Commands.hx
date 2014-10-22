@@ -117,6 +117,39 @@ class Commands extends BaseCommands
 		}
 	}
 	
+	public function replaceInText(args:Array<String>)
+	{
+		var options = new CmdOptions();
+		
+		options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ], "Exclude C-like strings from search.");
+		options.add("excludeComments", false, [ "-ec", "--exclude-comments" ], "Exclude C-like comments from search.");
+		options.addRepeatable("regex", String, "Regex to find and replace (/search/replacement/flags).");
+		
+		if (args.length > 0)
+		{
+			options.parse(args);
+			
+			var excludeStrings = options.get("excludeStrings");
+			var excludeComments = options.get("excludeComments");
+			var regexs = options.get("regex");
+			
+			var refactor = new RefactorReplace(log, fs, null, null, verbose);
+			var rules = Rules.fromLines(regexs, verbose, log);
+			if (rules.check())
+			{
+				Lib.print(refactor.replaceInText(Sys.stdin().readAll().toString(), rules.regexs, excludeStrings, excludeComments));
+			}
+		}
+		else
+		{
+			Lib.println("Find and replace. Read from stdin, write to stdout.");
+			Lib.println("Usage: haxelib run refactor replaceInText [ -es ] [ -ec ] <regex1> [ ... <regexN> ]");
+			Lib.println("Command args description:");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+		}
+	}
+	
 	public function rename(args:Array<String>)
 	{
 		var options = new CmdOptions();
@@ -398,7 +431,51 @@ class Commands extends BaseCommands
 			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)?");
 			Lib.println("            SPACE = [ \\t\\r\\n]");
 			Lib.println("            /^(SPACE)\\bvar\\s+_(ID)\\s*=\\s*function\\s*[(](ARGS)[)]\\s*$/$1function _$2($3)/m");
+		}
+	}
+	
+	public function processText(args:Array<String>)
+	{
+		var options = new CmdOptions();
+		
+		options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ], "Exclude C-like strings from search.");
+		options.add("excludeComments", false, [ "-ec", "--exclude-comments" ], "Exclude C-like comments from search.");
+		options.addRepeatable("rulesFile", String, "Path to rules file which contains one rule per line:\nVAR = regexp\nor\n/search_can_contain_VAR/replacement/flags");
+		
+		if (args.length > 0)
+		{
+			options.parse(args);
 			
+			var excludeStrings = options.get("excludeStrings");
+			var excludeComments = options.get("excludeComments");
+			var rulesFile : Array<String> = options.get("rulesFile");
+			
+			if (rulesFile.length == 0) fail("<rulesFile> arg must be specified.");
+			
+			var regexs = [];
+			for (file in rulesFile)
+			{
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose, log).regexs);
+			}
+			var refactor = new RefactorConvert(log, fs, null, null, verbose);
+			Lib.print(refactor.convertText(Sys.stdin().readAll().toString(), regexs, excludeStrings, excludeComments));
+		}
+		else
+		{
+			Lib.println("Find and replace in text. Read from stdin, write to stdout.");
+			Lib.println("Usage: haxelib run refactor processText [ -es ] [ -ec ] <rulesFile1> [ ...  <rulesFileN> ]");
+			Lib.println("Command args description:");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+			Lib.println("");
+			Lib.println("Examples:");
+			Lib.println("");
+			Lib.println("    haxelib run refactor processText beauty_haxe.rules");
+			Lib.println("        Read rules from file 'beauty_haxe.rules'. Rules example:");
+			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
+			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)?");
+			Lib.println("            SPACE = [ \\t\\r\\n]");
+			Lib.println("            /^(SPACE)\\bvar\\s+_(ID)\\s*=\\s*function\\s*[(](ARGS)[)]\\s*$/$1function _$2($3)/m");
 		}
 	}
 	
@@ -508,7 +585,6 @@ class Commands extends BaseCommands
 			Lib.println("        @:overload(function(p:String):String{})");
 			Lib.println("        override function f(p:Int) : Int;");
 			Lib.println("    }");
-			
 		}
 	}
 	

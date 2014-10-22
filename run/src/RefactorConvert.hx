@@ -17,4 +17,9 @@ class RefactorConvert extends RefactorReplace
 			replaceInFile(inpFilePath, regexs, outFilePath, excludeStrings, excludeComments);
 		}
 	}
+	
+	public function convertText(text:String, regexs:Array<Regex>, excludeStrings:Bool, excludeComments:Bool)
+	{
+		return replaceInText(text, regexs, excludeStrings, excludeComments);
+	}
 }
