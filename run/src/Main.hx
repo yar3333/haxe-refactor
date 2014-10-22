@@ -48,11 +48,13 @@ class Main
 			{
 				case "replace":			commands.replace(args);
 				case "replaceInFile":	commands.replaceInFile(args);
+				case "replaceInText":	commands.replaceInText(args);
 				case "rename":			commands.rename(args);
 				case "convert":			commands.convert(args);
 				case "convertFile":		commands.convertFile(args);
 				case "process":			commands.process(args);
 				case "processFile":		commands.processFile(args);
+				case "processText":		commands.processText(args);
 				case "extract":			commands.extract(args);
 				case "override":		commands.doOverride(args);
 				case "reindent":		commands.reindent(args);
@@ -83,11 +85,13 @@ class Main
 		Lib.println("");
 		Lib.println("    replace         Recursive search&replace by regex in files.");
 		Lib.println("    replaceInFile   Search&replace by regex in specified file.");
+		Lib.println("    replaceInText   Like replaceInFile, but read from stdin and write to stdout.");
 		Lib.println("    rename          Rename haxe package or class.");
 		Lib.println("    convert         Massive apply regexes to files.");
 		Lib.println("    convertFile     Massive apply regexes to file.");
 		Lib.println("    process         Shortcut for \"convert\" for changing in-place.");
 		Lib.println("    processFile     Shortcut for \"convertFile\" for changing in-place.");
+		Lib.println("    processText     Like processFile, but read from stdin and write to stdout.");
 		Lib.println("    extract         Search in files and save to another files.");
 		Lib.println("    override        Autofix override/overload/redefinition in haxe code.");
 		Lib.println("    reindent        Recursive change indentation in files.");
