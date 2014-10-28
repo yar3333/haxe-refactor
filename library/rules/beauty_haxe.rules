@@ -105,3 +105,6 @@ STD_TYPE = \b(?:Int|Float|String|Dynamic|Bool)\b
 
 // "> )" => ">)"
 /[>]SPACE\)/>)/
+
+// ",a" => ", a"
+/,([_a-zA-Z0-9])/, $1/
