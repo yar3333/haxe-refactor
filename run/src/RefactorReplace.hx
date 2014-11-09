@@ -56,14 +56,14 @@ class RefactorReplace extends Refactor
 		}
 		else
 		{
+			var reStr = (excludeStrings ? "(\"|')(?:\\\\.|.)*?\\1" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})")
+					  + "|"
+					  + (excludeComments ? "(/\\*.*?\\*/|^//.*?$)" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})");
+			var re = new EReg(reStr, "m");
+			
 			for (rule in rules)
 			{
 				var r = "";
-				
-				var reStr = (excludeStrings ? "(\"|')(?:\\\\.|.)*?\\1" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})")
-						  + "|"
-						  + (excludeComments ? "(/\\*.*?\\*/|^//.*?$)" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})");
-				var re = new EReg(reStr, "m");
 				var i = 0; while (re.matchSub(text, i))
 				{
 					var p = re.matchedPos();
