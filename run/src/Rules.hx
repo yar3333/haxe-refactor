@@ -32,7 +32,7 @@ class Rules
 		var regexs = [];
 		
 		var lines = text.replace("\r", "").split("\n");
-		var consts = new Array<{ name:String, value:String }>();
+		var consts = new Map<String, String>();
 		for (line in lines)
 		{
 			line = line.trim();
@@ -44,17 +44,17 @@ class Rules
 			if (reConst.match(line))
 			{
 				var value = reConst.matched(2);
-				for (const in consts)
+				for (constName in consts.keys())
 				{
-					value = replaceWord(value, const.name, const.value);
+					value = replaceWord(value, constName, consts.get(constName));
 				}
-				consts.push({ name:reConst.matched(1), value:value });
+				consts.set(reConst.matched(1), value);
 			}
 			else
 			{
-				for (const in consts)
+				for (constName in consts.keys())
 				{
-					line = replaceWord(line, const.name, const.value);
+					line = replaceWord(line, constName, consts.get(constName));
 				}
 				regexs.push(new Regex(line.replace("\t", "")));
 			}
