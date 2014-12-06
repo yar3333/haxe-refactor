@@ -2,6 +2,8 @@
 
 A tool to search&replace by regex in many files, refactor haxe code and convert source code to/from haxe.
 
+* Tip: you can use [http://regex.haqteam.com/](http://regex.haqteam.com/) to test your conversion rules.
+
 ### Features ###
 
 * Massive search&replace in files
