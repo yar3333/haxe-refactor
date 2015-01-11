@@ -1,0 +1,26 @@
+ID = [_a-zA-Z][_a-zA-Z0-9]*
+FUNC = ID(?:<\s*ID(?:\s*,\s*ID)*\s*>)?\s*
+TYPE = ID\s*
+INT = [0-9]+(?:e[-+][0-9]+)?
+FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
+NUMBER = (?:INT|FLOAT)
+VALUE = (?:ID|NUMBER)
+ARGS = (?:\s*ID\s*(?:,\s*ID\s*)*)?
+KEYWORDS = \b(?:new|return|var|class|package|if|else|import|using)\b
+SPACE = (?:[ ]|\t)*
+
+// trim end spaces ============================================
+/(?:[ ]|\t)+$//m
+
+// new line before brackets ===================================
+/^(SPACE)([^\n]+)\s*{\s*$/$1$2\n$1{/m
+
+// reserved keywords ==========================================
+/\binline\b/inlin/
+
+// types ======================================================
+/\bBoolean\b/Bool/
+/\bNumber\b/Float/
+
+// trim end spaces ============================================
+/(?:[ ]|\t)+$//m
