@@ -13,7 +13,7 @@ SPACE = (?:[ ]|\t)*
 /(?:[ ]|\t)+$//m
 
 // new line before brackets ===================================
-/^(SPACE)([^\n]+)\s*{\s*$/$1$2\n$1{/m
+/\n(SPACE)([^\n]+)\s*{\s*$/\n$1$2\n$1{/m
 
 // reserved keywords ==========================================
 /\binline\b/inlin/
@@ -46,3 +46,8 @@ SPACE = (?:[ ]|\t)*
 
 // trim end spaces ============================================
 /(?:[ ]|\t)+$//m
+
+/console.debug/trace/
+/this.(ID)\s*=\s*function\s*\(/function $1(/
+/\bsetTimeout\b/Timer.delay/
+/\bif\(/if (/
