@@ -1,0 +1,35 @@
+ID = [_a-zA-Z][_a-zA-Z0-9]*
+VALUE = ID(?:[.]ID)*
+TYPE = ID(?:\s*<[^>]+>)?
+SPACE = [ \t\n]*
+LONGID = ID(?:\.ID)*
+
+/@:(?:realPath|native|allow)\(["'][^"']*["']\)\s*//
+
+/\bfunction\s+new(\s*\([^)]*\))(?:\s*:\s*Void)/constructor$1
+
+/\bArray<([^>]+)>/$1[]
+
+//\b(?:extern class)\b/export class
+/\b(?:Void)\b/void
+/\b(?:Dynamic)\b/any
+/\b(?:String)\b/string
+/\b(?:Int)\b/number
+/\b(?:Float)\b/number
+/\b(?:Bool)\b/boolean
+
+/\bfunction\s+(ID)/$1
+
+/([,(]\s*)\?(ID)(\s*:\s*(?:ID|{))/$1$2?$3
+
+// (event: any) => void
+/(LONGID)\s*->\s*(LONGID)\s*->\s*(LONGID)\s*->\s*(LONGID)\s*->\s*(LONGID)/(p1:$1, p2:$2, p3:$3, p4:$4) => $5/
+/(LONGID)\s*->\s*(LONGID)\s*->\s*(LONGID)\s*->\s*(LONGID)/(p1:$1, p2:$2, p3:$3) => $4/
+/(LONGID)\s*->\s*(LONGID)\s*->\s*(LONGID)/(p1:$1, p2:$2) => $3/
+/(LONGID)\s*->\s*(LONGID)/(p:$1)=>$2/
+
+/\btypedef(\s+ID)\s*=\s*([^{])/interface$1 extends $2/
+
+/\bextern\s+class\b/export class/s
+
+/package\s+(LONGID)\s*;\s+(.+?)\s+$/module $1\n{\n$>2\n}/s
