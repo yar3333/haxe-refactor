@@ -1,12 +1,7 @@
-import hant.CmdOptions;
 import hant.FileSystemTools;
 import hant.Log;
 import hant.PathTools;
 import neko.Lib;
-import stdlib.Regex;
-import sys.FileSystem;
-using StringTools;
-using Lambda;
 
 class Main 
 {
