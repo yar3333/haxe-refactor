@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Bugfixes. Added command 'process'. Improved help.",
-  "version": "2.1.0",
+  "releasenote": "Rename: support disk paths. Added commands convertFile, processFile, replaceInText and convertText. Mac64 support. Allow constant redefenition in rule files. Added as2 to haxe rule file (very basic). Added beauty js rule file. Added haxe to typescript rule file (basic).",
+  "version": "2.2.0",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
