@@ -8,17 +8,13 @@ using Lambda;
 
 class Commands extends BaseCommands
 {
-	var log : Log;
-	var fs : FileSystemTools;
-	var verbose : Bool;
 	var exeDir : String;
+	var verbose : Bool;
 	
-	public function new(log:Log, fs:FileSystemTools, verbose:Bool, exeDir:String) 
+	public function new(exeDir:String, verbose:Bool)
 	{
-		this.log = log;
-		this.fs = fs;
-		this.verbose = verbose;
 		this.exeDir = exeDir;
+		this.verbose = verbose;
 	}
 	
 	public function replace(args:Array<String>)
@@ -45,8 +41,8 @@ class Commands extends BaseCommands
 			if (filter == "") fail("<filter> arg must be specified.");
 			if (regexs.length == 0) fail("<regex> arg must be specified.");
 			
-			var refactor = new RefactorReplace(log, fs, baseDirs, null, verbose);
-			var rules = Rules.fromLines(regexs, verbose, log);
+			var refactor = new RefactorReplace(baseDirs, null, verbose);
+			var rules = Rules.fromLines(regexs, verbose);
 			if (rules.check())
 			{
 				refactor.replaceInFiles(new EReg(filter, "i"), new Regex(""), rules.regexs, excludeStrings, excludeComments);
@@ -96,8 +92,8 @@ class Commands extends BaseCommands
 			var filePath = options.get("filePath");
 			var regexs = options.get("regex");
 			
-			var refactor = new RefactorReplace(log, fs, null, null, verbose);
-			var rules = Rules.fromLines(regexs, verbose, log);
+			var refactor = new RefactorReplace(null, null, verbose);
+			var rules = Rules.fromLines(regexs, verbose);
 			if (rules.check())
 			{
 				refactor.replaceInFile(filePath, rules.regexs, filePath, excludeStrings, excludeComments);
@@ -133,8 +129,8 @@ class Commands extends BaseCommands
 			var excludeComments = options.get("excludeComments");
 			var regexs = options.get("regex");
 			
-			var refactor = new RefactorReplace(log, fs, null, null, verbose);
-			var rules = Rules.fromLines(regexs, verbose, log);
+			var refactor = new RefactorReplace(null, null, verbose);
+			var rules = Rules.fromLines(regexs, verbose);
 			if (rules.check())
 			{
 				Lib.print(refactor.replaceInText(Sys.stdin().readAll().toString(), rules.regexs, excludeStrings, excludeComments));
@@ -166,16 +162,16 @@ class Commands extends BaseCommands
 			var src : String = options.get("src");
 			var dest = options.get("dest");
 			
-			src = DirTools.pathToPack(baseDir, src, log, verbose);
+			src = DirTools.pathToPack(baseDir, src, verbose);
 			if (src == null) fail("<src> specified in disk path form, but do not starts with one of base dirs.");
 			
-			dest = DirTools.pathToPack(baseDir, dest, log, verbose);
+			dest = DirTools.pathToPack(baseDir, dest, verbose);
 			if (dest == null) fail("<dest> specified in disk path form, but do not starts with one of base dirs.");
 			
 			var srcPacks = src.split(".");
 			if (~/^[a-z]/.match(srcPacks[srcPacks.length - 1]))
 			{
-				new RefactorRename(log, fs, baseDir, null, verbose).renamePackage(src, dest);
+				new RefactorRename(baseDir, null, verbose).renamePackage(src, dest);
 			}
 			else
 			if (~/^[A-Z]/.match(srcPacks[srcPacks.length - 1]))
@@ -187,7 +183,7 @@ class Commands extends BaseCommands
 					n = n < 0 ? 0 : n + 1;
 					dest += "." + src.substr(n);
 				}
-				new RefactorRename(log, fs, baseDir, null, verbose).renameClass(new ClassPath(src), new ClassPath(dest));
+				new RefactorRename(baseDir, null, verbose).renameClass(new ClassPath(src), new ClassPath(dest));
 			}
 			else
 			{
@@ -250,9 +246,9 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose, log).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
 			}
-			var refactor = new RefactorConvert(log, fs, baseDir, outDir, verbose);
+			var refactor = new RefactorConvert(baseDir, outDir, verbose);
 			refactor.convert(filter, convertFileName, regexs, excludeStrings, excludeComments);
 		}
 		else
@@ -306,9 +302,9 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose, log).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
 			}
-			var refactor = new RefactorConvert(log, fs, null, null, verbose);
+			var refactor = new RefactorConvert(null, null, verbose);
 			refactor.convertFile(inpFilePath, regexs, outFilePath, excludeStrings, excludeComments);
 		}
 		else
@@ -360,9 +356,9 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose, log).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
 			}
-			var refactor = new RefactorConvert(log, fs, baseDir, null, verbose);
+			var refactor = new RefactorConvert(baseDir, null, verbose);
 			refactor.convert(filter, new Regex(""), regexs, excludeStrings, excludeComments);
 		}
 		else
@@ -410,9 +406,9 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose, log).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
 			}
-			var refactor = new RefactorConvert(log, fs, null, null, verbose);
+			var refactor = new RefactorConvert(null, null, verbose);
 			refactor.convertFile(filePath, regexs, filePath, excludeStrings, excludeComments);
 		}
 		else
@@ -455,9 +451,9 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose, log).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
 			}
-			var refactor = new RefactorConvert(log, fs, null, null, verbose);
+			var refactor = new RefactorConvert(null, null, verbose);
 			Lib.print(refactor.convertText(Sys.stdin().readAll().toString(), regexs, excludeStrings, excludeComments));
 		}
 		else
@@ -504,12 +500,12 @@ class Commands extends BaseCommands
 			if (outDir == "") fail("<outDir> arg must be specified.");
 			if (extractRulesFile == "") fail("<extractRulesFile> arg must be specified.");
 			
-			var refactor = new RefactorExtract(log, fs, baseDir, outDir, verbose);
+			var refactor = new RefactorExtract(baseDir, outDir, verbose);
 			refactor.extract
 			(
 				filter,
-				Rules.fromFile(getRulesFilePath(exeDir, extractRulesFile), verbose, log).regexs,
-				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile), verbose, log).regexs : null
+				Rules.fromFile(getRulesFilePath(exeDir, extractRulesFile), verbose).regexs,
+				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile), verbose).regexs : null
 			);
 		}
 		else
@@ -546,7 +542,7 @@ class Commands extends BaseCommands
 			
 			if (srcDirs == "") fail("<srcDirs> arg must be specified.");
 			
-			var refactor = new RefactorOverride(log, fs, srcDirs, null, verbose);
+			var refactor = new RefactorOverride(srcDirs, null, verbose);
 			refactor.overrideInFiles();
 		}
 		else
@@ -619,7 +615,7 @@ class Commands extends BaseCommands
 			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
 			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
-			var refactor = new RefactorReindent(log, fs, baseDirs, null, verbose);
+			var refactor = new RefactorReindent(baseDirs, null, verbose);
 			refactor.reindent(new EReg(filter, "i"), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 		}
 		else
@@ -664,7 +660,7 @@ class Commands extends BaseCommands
 			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
 			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
-			var refactor = new RefactorReindent(log, fs, null, null, verbose);
+			var refactor = new RefactorReindent(null, null, verbose);
 			refactor.reindentFile(filePath, oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 		}
 		else

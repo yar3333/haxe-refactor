@@ -1,3 +1,5 @@
+import hant.FileSystemTools;
+import hant.Log;
 import haxe.io.Path;
 import stdlib.Regex;
 using StringTools;
@@ -8,9 +10,9 @@ class RefactorReplace extends Refactor
 	{
 		for (baseDir in baseDirs)
 		{
-			log.start("Replace in '" + baseDir + "'");
+			Log.start("Replace in '" + baseDir + "'");
 			
-			fs.findFiles(baseDir, function(path)
+			FileSystemTools.findFiles(baseDir, function(path)
 			{
 				var localPath = path.substr(baseDir.length + 1);
 				if (filter.match(localPath))
@@ -29,20 +31,20 @@ class RefactorReplace extends Refactor
 				}
 			});
 			
-			log.finishOk();
+			Log.finishSuccess();
 		}
 	}
 	
 	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool, excludeComments:Bool)
 	{
-		if (verbose) log.start("Search in '" + inpPath + "'");
+		if (verbose) Log.start("Search in '" + inpPath + "'");
 		
-		new TextFile(fs, inpPath, outPath, verbose, log).process(function(text, _)
+		new TextFile(inpPath, outPath, verbose).process(function(text, _)
 		{
 			return replaceInText(text, rules, excludeStrings, excludeComments);
 		});
 		
-		if (verbose) log.finishOk();
+		if (verbose) Log.finishSuccess();
 	}
 	
 	public function replaceInText(text:String, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool) : String
@@ -51,7 +53,7 @@ class RefactorReplace extends Refactor
 		{
 			for (rule in rules)
 			{
-				text = rule.replace(text, verbose ? function(s) log.trace(s) : null);
+				text = rule.replace(text, verbose ? function(s) Log.echo(s) : null);
 			}
 		}
 		else
@@ -70,18 +72,18 @@ class RefactorReplace extends Refactor
 					
 					if (excludeStrings && re.matched(1) != null)
 					{
-						r += rule.replace(text.substr(i, p.pos - i + 1), verbose ? function(s) log.trace(s) : null);
+						r += rule.replace(text.substr(i, p.pos - i + 1), verbose ? function(s) Log.echo(s) : null);
 						r += re.matched(0).substr(1, p.len - 2);
 						i = p.pos + p.len - 1;
 					}
 					else
 					{
-						r += rule.replace(text.substr(i, p.pos - i), verbose ? function(s) log.trace(s) : null);
+						r += rule.replace(text.substr(i, p.pos - i), verbose ? function(s) Log.echo(s) : null);
 						r += re.matched(0);
 						i = p.pos + p.len;
 					}
 				}
-				r += rule.replace(text.substr(i), verbose ? function(s) log.trace(s) : null);
+				r += rule.replace(text.substr(i), verbose ? function(s) Log.echo(s) : null);
 				text = r;
 			}
 		}

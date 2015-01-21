@@ -4,7 +4,7 @@ class RefactorConvert extends RefactorReplace
 {
 	public function convert(filter:String, changeFileName:Regex, regexs:Array<Regex>, excludeStrings:Bool, excludeComments:Bool)
 	{
-		if (new Rules(verbose, log, [changeFileName].concat(regexs)).check())
+		if (new Rules([changeFileName].concat(regexs), verbose).check())
 		{
 			replaceInFiles(new EReg(filter, "i"), changeFileName, regexs, excludeStrings, excludeComments);
 		}
@@ -12,7 +12,7 @@ class RefactorConvert extends RefactorReplace
 	
 	public function convertFile(inpFilePath:String, regexs:Array<Regex>, outFilePath:String, excludeStrings:Bool, excludeComments:Bool)
 	{
-		if (new Rules(verbose, log, regexs).check())
+		if (new Rules(regexs, verbose).check())
 		{
 			replaceInFile(inpFilePath, regexs, outFilePath, excludeStrings, excludeComments);
 		}

@@ -25,7 +25,7 @@ class RefactorOverride extends Refactor
 	{
 		for (baseDir in baseDirs)
 		{
-			fs.findFiles(baseDir, function(path)
+			FileSystemTools.findFiles(baseDir, function(path)
 			{
 				if (path.endsWith(".hx"))
 				{
@@ -35,12 +35,12 @@ class RefactorOverride extends Refactor
 			});
 		}
 		
-		log.start("Fix overrides");
+		Log.start("Fix overrides");
 		for (type in types)
 		{
 			overrideInType(type);
 		}
-		log.finishOk();
+		Log.finishSuccess();
 	}
 	
 	function overrideInType(type:HaxeType)
@@ -58,14 +58,14 @@ class RefactorOverride extends Refactor
 			}
 		}
 		
-		if (verbose) log.start("Process file '" + type.file.inpPath + "'; type " + type.name + "; base " + type.base + "; iterfaces " + type.interfaces);
+		if (verbose) Log.start("Process file '" + type.file.inpPath + "'; type " + type.name + "; base " + type.base + "; iterfaces " + type.interfaces);
 		type.file.process(function(text, _)
 		{
 			text = processVars(text, type);
 			text = processMethods(text, type);
 			return text;
 		});
-		if (verbose) log.finishOk();
+		if (verbose) Log.finishSuccess();
 	}
 	
 	function processVars(text:String, type:HaxeType) : String
@@ -85,7 +85,7 @@ class RefactorOverride extends Refactor
 				
 				if (baseType.kind == "class")
 				{
-					if (verbose) log.trace("Variable " + baseType + "." + varName + " is redefined in " + type.name);
+					if (verbose) Log.echo("Variable " + baseType + "." + varName + " is redefined in " + type.name);
 					return varIndent + "//" + varPrefix + varName + varTail;
 				}
 				else
@@ -94,7 +94,7 @@ class RefactorOverride extends Refactor
 					var baseSig = baseVarNameAndTail.replace(" ", "");
 					if (sig != baseSig)
 					{
-						if (verbose) log.trace("Variable " + baseType + "." + varName + " is defined with different type in " + type.name);
+						if (verbose) Log.echo("Variable " + baseType + "." + varName + " is defined with different type in " + type.name);
 						return varIndent + "//" + varPrefix + varName + varTail 
 							 + "\n" + varIndent + "var " + baseVarNameAndTail;
 					}
@@ -122,7 +122,7 @@ class RefactorOverride extends Refactor
 					var baseFuncName = reBase.matched(3);
 					var baseFuncTail = reBase.matched(4);
 					
-					if (verbose) log.trace("Method " + baseType.name + "." + baseFuncName + " is overriden by " + type.name + "." + funcName);
+					if (verbose) Log.echo("Method " + baseType.name + "." + baseFuncName + " is overriden by " + type.name + "." + funcName);
 					
 					var newOverload = ("@:overload(function" + funcTail + "{})").replace(" ", "");
 					if (overloads.indexOf(newOverload) < 0) overloads.push(newOverload);
@@ -148,7 +148,7 @@ class RefactorOverride extends Refactor
 	{
 		if (path == null || path == "") return null;
 		
-		var file = new TextFile(fs, path, path, true, log);
+		var file = new TextFile(path, path, true);
 		var reExtends = "(?:\\s+extends\\s+" + Regexs.ID + ")?";
 		var reImplement = "(?:\\s+implements\\s+" + Regexs.ID + ")*";
 		var reClass = new EReg("\\b(class|interface)\\s+(" + Regexs.ID + ")(" + reExtends + ")(" + reImplement + ")[ \t\n]*\\{", "");

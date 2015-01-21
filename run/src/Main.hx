@@ -25,8 +25,7 @@ class Main
         
 		if (args.length > 0)
 		{
-			var log = new Log(5);
-			var fs = new FileSystemTools(log);
+			Log.instance = new Log(5);
 			
 			var verbose = false;
 			
@@ -37,7 +36,7 @@ class Main
 				k = args.shift();
 			}
 			
-			var commands = new Commands(log, fs, verbose, exeDir);
+			var commands = new Commands(exeDir, verbose);
 			
 			switch (k)
 			{
