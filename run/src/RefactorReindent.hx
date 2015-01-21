@@ -1,3 +1,5 @@
+import hant.FileSystemTools;
+import hant.Log;
 import sys.FileSystem;
 import sys.io.File;
 using StringTools;
@@ -8,9 +10,9 @@ class RefactorReindent extends Refactor
 	{
 		for (baseDir in baseDirs)
 		{
-			log.start("Reindent in '" + baseDir + "'");
+			Log.start("Reindent in '" + baseDir + "'");
 			
-			fs.findFiles(baseDir, function(path)
+			FileSystemTools.findFiles(baseDir, function(path)
 			{
 				var localPath = path.substr(baseDir.length + 1);
 				if (filter.match(localPath))
@@ -19,7 +21,7 @@ class RefactorReindent extends Refactor
 				}
 			});
 			
-			log.finishOk();
+			Log.finishSuccess();
 		}
 	}
 	
@@ -27,11 +29,11 @@ class RefactorReindent extends Refactor
 	{
 		if (!FileSystem.exists(path) || FileSystem.isDirectory(path))
 		{
-			log.start("Reindent in '" + path + "'");
-			log.finishFail("File not found.");
+			Log.start("Reindent in '" + path + "'");
+			Log.finishFail("File not found.");
 		}
 		
-		new TextFile(fs, path, path, verbose, log).process(function(text, _)
+		new TextFile(path, path, verbose).process(function(text, _)
 		{
 			var lines = text.split("\n");
 			for (i in 0...lines.length)

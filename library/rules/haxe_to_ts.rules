@@ -33,3 +33,10 @@ LONGID = ID(?:\.ID)*
 /\bextern\s+class\b/export class/s
 
 /package\s+(LONGID)\s*;\s+(.+?)\s+$/module $1\n{\n$>2\n}/s
+
+/\b(?:import|using)\s*(ID(?:[.]ID)*[.])(ID);/type $2 = $1$2;/
+/(?:import|using)\s*ID;\s*\n//
+
+/\bnew\(/constructor(/
+
+/\btrace\b/console.log/

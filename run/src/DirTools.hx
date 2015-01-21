@@ -7,13 +7,13 @@ using StringTools;
 
 class DirTools
 {
-	public static function parse(baseDir:String, log:Log, verbose:Bool) : Array<String>
+	public static function parse(baseDir:String, verbose:Bool) : Array<String>
 	{
 		if (baseDir == null) return [];
 		
 		var baseDirs = [];
 		
-		if (verbose) log.start("Prepare paths");
+		if (verbose) Log.start("Prepare paths");
 		
 		for (vdir in baseDir.split(";"))
 		{
@@ -22,12 +22,12 @@ class DirTools
 			{
 				if (FileSystem.exists(vdir) && FileSystem.isDirectory(vdir))
 				{
-					if (verbose) log.trace(vdir);
+					if (verbose) Log.echo(vdir);
 					baseDirs.push(vdir);
 				}
 				else
 				{
-					log.trace("Directory '" + vdir + "' is not found.");
+					Log.echo("Directory '" + vdir + "' is not found.");
 				}
 			}
 			else
@@ -43,24 +43,24 @@ class DirTools
 						var path = basePath + "/" + dir + addPath;
 						if (FileSystem.exists(path) && FileSystem.isDirectory(path))
 						{
-							if (verbose) log.trace(path);
+							if (verbose) Log.echo(path);
 							baseDirs.push(path);
 						}
 					}
 				}
 				else
 				{
-					log.trace("Directory '" + basePath + "' is not found.");
+					Log.echo("Directory '" + basePath + "' is not found.");
 				}
 			}
 		}
 		
-		if (verbose) log.finishOk();
+		if (verbose) Log.finishSuccess();
 		
 		return baseDirs;
 	}
 	
-	public static function pathToPack(baseDir:String, path:String, log:Log, verbose:Bool) : String
+	public static function pathToPack(baseDir:String, path:String, verbose:Bool) : String
 	{
 		baseDir = baseDir.replace("\\", "/");
 		path = path.replace("\\", "/");
@@ -68,7 +68,7 @@ class DirTools
 		if (path.indexOf("/") >= 0)
 		{
 			var baseDirFound = false;
-			for (dir in DirTools.parse(baseDir, log, verbose))
+			for (dir in DirTools.parse(baseDir, verbose))
 			{
 				if (dir == "." && !path.startsWith("./")) path = "./" + path;
 				
@@ -77,10 +77,7 @@ class DirTools
 					baseDirFound = true;
 					var oldPath = path;
 					path = Path.withoutExtension(path.substr(dir.length + 1)).replace("/", ".");
-					if (verbose)
-					{
-						log.trace("Convert disk path to package/class: " + oldPath + " => " + path);
-					}
+					if (verbose) Log.echo("Convert disk path to package/class: " + oldPath + " => " + path);
 				}
 			}
 			

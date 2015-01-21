@@ -12,14 +12,14 @@ class RefactorRename extends RefactorReplace
 	{
 		for (baseDir in baseDirs)
 		{
-			log.start("Rename package '" + srcPack + "' => '" + destPack + "'");
+			Log.start("Rename package '" + srcPack + "' => '" + destPack + "'");
 			
 			var srcPath = baseDir + "/" + srcPack.replace(".", "/");
 			var destPath = baseDir + "/" + destPack.replace(".", "/");
 			
 			if (FileSystem.exists(srcPath) && FileSystem.isDirectory(srcPath))
 			{
-				fs.findFiles(srcPath, function(path)
+				FileSystemTools.findFiles(srcPath, function(path)
 				{
 					if (path.endsWith(".hx"))
 					{
@@ -36,27 +36,27 @@ class RefactorRename extends RefactorReplace
 				});
 			}
 			
-			log.trace("Replace in all *.hx and *.xml files '" + srcPack + "' => '" + destPack + "'");
+			Log.echo("Replace in all *.hx and *.xml files '" + srcPack + "' => '" + destPack + "'");
 			
-			fs.findFiles(baseDir, function(path:String)
+			FileSystemTools.findFiles(baseDir, function(path:String)
 			{
 				if (path.endsWith(".hx") || path.endsWith(".xml"))
 				{
 					var localPath = path.substr(baseDir.length + 1);
 					
-					if (verbose) log.start("Process file '" + localPath + "'");
+					if (verbose) Log.start("Process file '" + localPath + "'");
 					
-					new TextFile(fs, path, path, verbose, log).process(function(text, _)
+					new TextFile(path, path, verbose).process(function(text, _)
 					{
 						var re = new Regex("/(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b/$1" + destPack + "/");
-						return re.replace(text, verbose ? function(s) log.trace(s) : null);
+						return re.replace(text, verbose ? function(s) Log.echo(s) : null);
 					});
 					
-					if (verbose) log.finishOk();
+					if (verbose) Log.finishSuccess();
 				}
 			});
 			
-			log.finishOk();
+			Log.finishSuccess();
 		}
 	}
 	
@@ -64,7 +64,7 @@ class RefactorRename extends RefactorReplace
 	{
 		for (baseDir in baseDirs)
 		{
-			log.start("Rename class: " + src.full + " => " + dest.full);
+			Log.start("Rename class: " + src.full + " => " + dest.full);
 			
 			var srcFile = baseDir + "/" + src.getFilePath();
 			var destFile = baseDir + "/" + dest.getFilePath();
@@ -74,34 +74,34 @@ class RefactorRename extends RefactorReplace
 				replaceInFile(destFile, [ new Regex("/\\bpackage\\s+" + src.full.replace(".", "[.]") + "\\s*;/package " + dest.full + ";/") ], destFile, true, true);
 			}
 			
-			log.start("Replace in all haxe files: " + src.full + " => " + dest.full);
-			fs.findFiles(baseDir, function(path:String)
+			Log.start("Replace in all haxe files: " + src.full + " => " + dest.full);
+			FileSystemTools.findFiles(baseDir, function(path:String)
 			{
 				if (path.endsWith(".hx"))
 				{
 					var localPath = path.substr(baseDir.length + 1);
 					
-					new TextFile(fs, path, path, verbose, log).process(function(text, _)
+					new TextFile(path, path, verbose).process(function(text, _)
 					{
 						var packageOrImport = 
 								new EReg("\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;", "").match(text)
 							 || new EReg("\\bimport\\s+" + src.full.replace(".", "[.]") + "\\s*;", "").match(text);
 						
-						text = new Regex("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").replace(text, verbose ? function(s) log.trace(s) : null);
+						text = new Regex("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").replace(text, verbose ? function(s) Log.echo(s) : null);
 						
 						if (packageOrImport && src.name != dest.name)
 						{
-							if (verbose) log.trace(localPath + ": " + src.name + " => " + dest.name);
-							text = new Regex("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").replace(text, verbose ? function(s) log.trace(s) : null);
+							if (verbose) Log.echo(localPath + ": " + src.name + " => " + dest.name);
+							text = new Regex("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").replace(text, verbose ? function(s) Log.echo(s) : null);
 						}
 						
 						return text;
 					});
 				}
 			});
-			log.finishOk();
+			Log.finishSuccess();
 			
-			log.finishOk();
+			Log.finishSuccess();
 		}
 	}
 	
@@ -109,12 +109,12 @@ class RefactorRename extends RefactorReplace
 	{
 		if (FileSystem.exists(src) && !FileSystem.exists(dest))
 		{
-			log.start("Rename file " + src + " => " + dest);
+			Log.start("Rename file " + src + " => " + dest);
 			
-			fs.createDirectory(Path.directory(dest));
+			FileSystemTools.createDirectory(Path.directory(dest));
 			FileSystem.rename(src, dest);
 			
-			log.finishOk();
+			Log.finishSuccess();
 			
 			return true;
 		}

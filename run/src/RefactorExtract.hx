@@ -1,5 +1,7 @@
-import stdlib.Regex;
+import hant.FileSystemTools;
+import hant.Log;
 import haxe.io.Path;
+import stdlib.Regex;
 
 class RefactorExtract extends RefactorReplace
 {
@@ -9,7 +11,7 @@ class RefactorExtract extends RefactorReplace
 		{
 			var reFilter = new EReg(filter, "i");
 			
-			fs.findFiles(baseDir, function(path)
+			FileSystemTools.findFiles(baseDir, function(path)
 			{
 				var localPath = path.substr(baseDir.length + 1);
 				if (reFilter.match(localPath))
@@ -23,9 +25,9 @@ class RefactorExtract extends RefactorReplace
 	
 	function extractFromFile(inpPath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>)
 	{
-		log.start("Extract from '" + inpPath);
+		Log.start("Extract from '" + inpPath);
 		
-		var file = new TextFile(fs, inpPath, null, verbose, log);
+		var file = new TextFile(inpPath, null, verbose);
 		file.process(function(text, fileApi)
 		{
 			for (regex in regexs)
@@ -43,19 +45,19 @@ class RefactorExtract extends RefactorReplace
 						
 					if (postRegexs != null)
 					{
-						text = new RefactorReplace(log, fs, null, null, verbose).replaceInText(text, postRegexs, true, true);
+						text = new RefactorReplace(null, null, verbose).replaceInText(text, postRegexs, true, true);
 					}
 					
 					if (fileApi.save(destPath, text))
 					{
-						log.trace(destPath);
+						Log.echo(destPath);
 					}
 				}
 			}
 			return null;
 		});
 		
-		log.finishOk();
+		Log.finishSuccess();
 	}
 	
 	static function findCloseBracketIndex(text:String, openBacketIndex:Int)

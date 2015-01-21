@@ -12,24 +12,20 @@ typedef FileApi =
 
 class TextFile
 {
-	var fs:FileSystemTools;
 	public var inpPath(default, null) : String;
 	public var outPath(default, null) : String;
 	var verbose : Bool;
-	var log : Log;
 	
 	public var text(default, null) : String;
 	var isWinLineEndStyle : Bool;
 	var isMacLineEndStyle : Bool;
 	
 	
-	public function new(fs:FileSystemTools, inpPath:String, outPath:String, verbose:Bool, log:Log)
+	public function new(inpPath:String, outPath:String, verbose:Bool)
 	{
-		this.fs = fs;
 		this.inpPath = inpPath;
 		this.outPath = outPath;
 		this.verbose = verbose;
-		this.log = log;
 		
 		text = File.getContent(inpPath);
 		
@@ -48,7 +44,7 @@ class TextFile
 		{
 			if (save(outPath, text))
 			{
-				if (verbose) log.trace("Fixed: " + outPath);
+				if (verbose) Log.echo("Fixed: " + outPath);
 			}
 		}
 	}
@@ -64,15 +60,15 @@ class TextFile
 		if (isWinLineEndStyle) text = text.replace("\n", "\r\n");
 		
 		var r = false;
-		var isHidden = fs.getHiddenFileAttribute(outPath);
-		if (isHidden) fs.setHiddenFileAttribute(outPath, false);
+		var isHidden = FileSystemTools.getHiddenFileAttribute(outPath);
+		if (isHidden) FileSystemTools.setHiddenFileAttribute(outPath, false);
 		if (!FileSystem.exists(outPath) || File.getContent(outPath) != text)
 		{
 			FileSystem.createDirectory(Path.directory(outPath));
 			File.saveContent(outPath, text);
 			r = true;
 		}
-		if (isHidden) fs.setHiddenFileAttribute(outPath, true);
+		if (isHidden) FileSystemTools.setHiddenFileAttribute(outPath, true);
 		return r;
 	}
 }
