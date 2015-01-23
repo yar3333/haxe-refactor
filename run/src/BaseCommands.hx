@@ -8,6 +8,7 @@ class BaseCommands
 {
 	function filterToRegex(s:String) : String
 	{
+		if (s == "*" || s == "*.*") return ".";
 		if (~/^[*][.][a-z0-9_-]+(?:\s*;\s*[*][.][a-z0-9_-]+)*$/i.match(s))
 		{
 			var exts = s.split(";").map(function(s) return s.trim().substr("*.".length));
