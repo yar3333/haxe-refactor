@@ -1,6 +1,6 @@
 import hant.FileSystemTools;
 import hant.Log;
-import haxe.io.Path;
+import hant.Path;
 import sys.FileSystem;
 import sys.io.File;
 using StringTools;

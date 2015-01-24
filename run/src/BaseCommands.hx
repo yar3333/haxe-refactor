@@ -1,4 +1,4 @@
-import hant.PathTools;
+import hant.Path;
 import neko.Lib;
 import sys.FileSystem;
 using StringTools;
@@ -25,12 +25,12 @@ class BaseCommands
 	
 	function pathToPack(srcDirs:String, path:String) : String
 	{
-		path = PathTools.normalize(path);
+		path = Path.normalize(path);
 		if (path.indexOf("/") < 0 && !path.endsWith(".hx")) return path;
 		
 		if (path.endsWith(".hx")) path = path.substr(0, path.length - ".hx".length);
 		
-		for (srcDir in srcDirs.split(";").map(function(e) return PathTools.normalize(e)))
+		for (srcDir in srcDirs.split(";").map(function(e) return Path.normalize(e)))
 		{
 			if (path.startsWith(srcDir + "/"))
 			{
@@ -46,7 +46,7 @@ class BaseCommands
 	{
 		if (!FileSystem.exists(path))
 		{
-			var alt = haxe.io.Path.join([ exeDir, "rules", path ]);
+			var alt = Path.join([ exeDir, "rules", path ]);
 			if (FileSystem.exists(alt) && !FileSystem.isDirectory(alt))
 			{
 				path = alt;
