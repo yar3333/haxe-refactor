@@ -1,6 +1,6 @@
 import hant.FileSystemTools;
 import hant.Log;
-import hant.PathTools;
+import hant.Path;
 import neko.Lib;
 
 class Main 
@@ -9,7 +9,7 @@ class Main
 	{
         var args = Sys.args();
 		
-		var exeDir = PathTools.normalize(Sys.getCwd());
+		var exeDir = Path.normalize(Sys.getCwd());
 		if (args.length > 0)
 		{
 			var dir = args.pop();

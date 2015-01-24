@@ -1,7 +1,6 @@
 import hant.FileSystemTools;
 import hant.Log;
-import hant.PathTools;
-import haxe.io.Path;
+import hant.Path;
 import sys.FileSystem;
 using StringTools;
 
@@ -17,7 +16,7 @@ class DirTools
 		
 		for (vdir in baseDir.split(";"))
 		{
-			vdir = PathTools.normalize(vdir);
+			vdir = Path.normalize(vdir);
 			if (vdir.indexOf("*") < 0)
 			{
 				if (FileSystem.exists(vdir) && FileSystem.isDirectory(vdir))
@@ -33,7 +32,7 @@ class DirTools
 			else
 			{
 				var n = vdir.indexOf("*");
-				var basePath = PathTools.normalize(vdir.substr(0, n));
+				var basePath = Path.normalize(vdir.substr(0, n));
 				var addPath = n + 1 < vdir.length ? vdir.substr(n + 1) : "";
 				
 				if (FileSystem.exists(basePath) && FileSystem.isDirectory(basePath))
