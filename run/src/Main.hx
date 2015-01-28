@@ -81,12 +81,12 @@ class Main
 		Lib.println("    replaceInFile   Search&replace by regex in specified file.");
 		Lib.println("    replaceInText   Like replaceInFile, but read from stdin and write to stdout.");
 		Lib.println("    rename          Rename haxe package or class.");
-		Lib.println("    convert         Massive apply regexes to files.");
-		Lib.println("    convertFile     Massive apply regexes to file.");
+		Lib.println("    convert         Massive apply regexes to files and save into other files.");
+		Lib.println("    convertFile     Massive apply regexes to file and save into other file.");
 		Lib.println("    process         Shortcut for \"convert\" for changing in-place.");
 		Lib.println("    processFile     Shortcut for \"convertFile\" for changing in-place.");
 		Lib.println("    processText     Like processFile, but read from stdin and write to stdout.");
-		Lib.println("    extract         Search in files and save to another files.");
+		Lib.println("    extract         Search in files and save found texts into separate files.");
 		Lib.println("    override        Autofix override/overload/redefinition in haxe code.");
 		Lib.println("    reindent        Recursive change indentation in files.");
 		Lib.println("    reindentInFile  Change indentation in specified file.");

@@ -291,12 +291,10 @@ class Commands extends BaseCommands
 			var excludeComments = options.get("excludeComments");
 			var inpFilePath = options.get("inpFilePath");
 			var outFilePath = options.get("outFilePath");
-			var convertFileName = new Regex(options.get("convertFileName"));
 			var rulesFile : Array<String> = options.get("rulesFile");
 			
 			if (inpFilePath == "") fail("<inpFilePath> arg must be specified.");
 			if (outFilePath == "") fail("<outFilePath> arg must be specified.");
-			if (convertFileName == null) fail("<convertFileName> arg must be specified.");
 			if (rulesFile.length == 0) fail("<rulesFile> arg must be specified.");
 			
 			var regexs = [];
@@ -310,22 +308,14 @@ class Commands extends BaseCommands
 		else
 		{
 			Lib.println("Recursive find and replace in files using rule files.");
-			Lib.println("Usage: haxelib run refactor [-v] convert [ -es ] [ -ec ] <baseDir> <filter> <outDir> <convertFileName> <rulesFile1> [ ... <rulesFileN> ]");
+			Lib.println("Usage: haxelib run refactor [-v] convert [ -es ] [ -ec ] <inpFilePath> <outFilePath> <rulesFile1> [ ... <rulesFileN> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
-			Lib.println("    haxelib run refactor convert native *.js src /[.]js$/.hx/ js_to_haxe.rules");
-			Lib.println("        Search for *.js files in the 'native' folder.");
-			Lib.println("        Put output files as '*.hx' into the 'src' folder.");
-			Lib.println("        Read rules from file 'js_to_haxe.rules'. Rules example:");
-			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
-			Lib.println("            ARGS = (?:\\s*ID\\s*(?:,\\s*ID\\s*)*)?");
-			Lib.println("            SPACE = [ \\t\\r\\n]");
-			Lib.println("            /^(SPACE)\\bvar\\s+_(ID)\\s*=\\s*function\\s*[(](ARGS)[)]\\s*$/$1function _$2($3)/m");
-			
+			Lib.println("    haxelib run refactor convertFile in.js out.hx js_to_haxe.rules");
 		}
 	}
 	
@@ -510,8 +500,12 @@ class Commands extends BaseCommands
 		}
 		else
 		{
-			Lib.println("Recursive find files and extract parts of them to separate files.");
-			Lib.println("For example, you can split file contains many classes to separate class files.");
+			Lib.println("Recursive find files and extract parts of them into separate files.");
+			Lib.println("For example, you can split file contains many classes into separate class files.");
+			Lib.println("Regular expressions in rule file can match:");
+			Lib.println("\t1) start of text block to save (must ends with open bracket);");
+			Lib.println("\t2) whole text block (must NOT ends with open bracket).");
+			Lib.println("In all cases regular expression 'replacement' part must specify new file name to save text block.");
 			Lib.println("Usage: haxelib run refactor [-v] extract <baseDir> <filter> <outDir> <extractRulesFile> [ <postRulesFile> ]");
 			Lib.println("where '-v' is the verbose key. Command args description:");
 			Lib.println("");
@@ -605,7 +599,7 @@ class Commands extends BaseCommands
 			var oldTabSize = options.get("oldTabSize");
 			var oldIndentSize = options.get("oldIndentSize");
 			var newTabSize = options.get("newTabSize");
-			var newIndentSize = options.get("shiftSize");
+			var newIndentSize = options.get("newIndentSize");
 			var shiftSize = options.get("shiftSize");
 			
 			if (baseDirs == "") fail("<baseDirs> arg must be specified.");
@@ -651,7 +645,7 @@ class Commands extends BaseCommands
 			var oldTabSize = options.get("oldTabSize");
 			var oldIndentSize = options.get("oldIndentSize");
 			var newTabSize = options.get("newTabSize");
-			var newIndentSize = options.get("shiftSize");
+			var newIndentSize = options.get("newIndentSize");
 			var shiftSize = options.get("shiftSize");
 			
 			if (filePath == "") fail("<filePath> arg must be specified.");
