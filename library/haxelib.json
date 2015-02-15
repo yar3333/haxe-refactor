@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Support \"*\" and \"*.*\" as file filter.",
-  "version": "2.2.2",
+  "releasenote": "Indent command bugfix. Improve haxe to ts rules.",
+  "version": "2.2.3",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
