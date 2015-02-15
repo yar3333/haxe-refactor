@@ -40,3 +40,4 @@ LONGID = ID(?:\.ID)*
 /\bnew\(/constructor(/
 
 /\btrace\b/console.log/
+/\boverride\s+//
