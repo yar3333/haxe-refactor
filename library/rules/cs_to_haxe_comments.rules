@@ -1,0 +1,41 @@
+// Convert C# comments like this:
+//	/// <summary>
+//	/// SUM_TEXT
+//	/// </summary>
+//	/// <param name="arg">
+//	/// PARAM_TEXT
+//	/// </param>
+//	/// <returns>
+//	/// RET_TEXT
+//	/// </return>
+//
+// To haxe format:
+//	/**
+//   * SUM_TEXT
+//   *
+//   * @param arg PARAM_TEXT
+//   * @returns RET_TEXT
+//   */
+
+ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
+
+%^([ \t]*)((?:[ \t]*///[^\n]*\n)+)%$1/**\n$1$2$1 */\n%m
+%^([ \t]*)///[ \t]*<summary>[ \t]*\n%%m
+%^([ \t]*)///[ \t]*</summary>[ \t]*\n%$1 *\n%m
+
+%///[ \t]*[<]param[ \t]+name[=]"(ID)"[>]([^<]+)[<]/param[>]% * @param $1 $2
+%^[ \t]*///[ \t]*[<]param[ \t]+name[=]"ID"[>][<]/param[>][ \t]*\n%%m
+
+%///[ \t]*[<]returns[>]([^<]+)[<]/returns[>]% * @returns $1
+%^[ \t]*///[ \t]*[<]returns[>][<]/returns[>][ \t]*\n%%m
+
+%///% * %
+
+// trim
+%(?:\n[ \t]*[*][ \t]*)+\n([ \t]+[*]/)[ \t]*\n%\n$1\n%
+
+// @param ID\n comments => @param ID comments
+%([*][ \t]*@param\s+ID)[ \t]\n[ \t]*[*][ \t]*([a-zA-Z])%$1$2%
+
+// remove blank lines
+%^([ \t]*[*][ \t]*[@][^\n]+\n)[ \t]*[*][ \t]*\n%$1%m
