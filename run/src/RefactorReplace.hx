@@ -60,7 +60,7 @@ class RefactorReplace extends Refactor
 		{
 			var reStr = (excludeStrings ? "(\"|')(?:\\\\.|.)*?\\1" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})")
 					  + "|"
-					  + (excludeComments ? "(/\\*.*?\\*/|^//.*?$)" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})");
+					  + (excludeComments ? "(/[*](?:\\S|\\s)*?[*]/|//[^\n]*$)" : "({9a5a7986-d5e5-4c5e-92fc-ee557254d67f})");
 			var re = new EReg(reStr, "m");
 			
 			for (rule in rules)
