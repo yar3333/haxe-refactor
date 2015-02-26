@@ -2,7 +2,8 @@
 
 IF [%2]==[] GOTO :help
 
-haxelib run refactor convert --exclude-string-literals --exclude-comments "%1" *.cs "%2" /[.]cs$/.hx/ cs_to_haxe.rules
+haxelib run refactor convert "%1" *.cs "%2" /[.]cs$/.hx/ cs_to_haxe_comments.rules
+haxelib run refactor process --exclude-string-literals --exclude-comments "%2" *.hx cs_to_haxe.rules
 goto exit
 
 :help

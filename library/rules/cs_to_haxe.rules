@@ -5,23 +5,23 @@ FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
 NUMBER = (?:INT|FLOAT)
 VALUE = (?:LONGID|NUMBER)
 SPACE = (?:[ ]|\t)+
-OPTSPACE = (?:SPACE)?
+OPTSPACE = (?:SPACE)?+
 
-KEYWORDS = \b(?:new|return|var|class|enum|struct|namespace|if|else|using|foreach|for)\b
+KEYWORDS = \b(?:new|return|var|class|interface|enum|struct|namespace|if|else|using|foreach|for)\b
 
 FORMAL_ARG = \s*ID\s*:\s*TYPE\s*
 FORMAL_ARGS = (?:FORMAL_ARG(?:,FORMAL_ARG)*)?
 FUNC_CALL = ID(?:<\s*ID(?:\s*,\s*ID)*\s*>)?\s*
 
-ACCESS = (?:static\s+)?(?:public|private|ptotected)(?:\s+static)?
+ACCESS = (?:(?:static|public|private|override)\s+)+
 BASETYPE = LONGID(?:[<]\s*LONGID(?:\s*,\s*LONGID)*\s*[>])?
 TYPE = BASETYPE[?]?
 
 // trim end spaces ============================================
-/(?:[ ]|\t)+$//m
+/[ \t]+\n/\n/
 
 // new line before brackets ===================================
-/^(OPTSPACE)([^\n]+)\s*{\s*$/$1$2\n$1{/m
+/\n(OPTSPACE)([^\n]+)\s*{[ \t]*\n/\n$1$2\n$1{\n/
 
 // remove spaces before ")"
 /[ ]+[)]/)
@@ -29,19 +29,21 @@ TYPE = BASETYPE[?]?
 // ============================================================
 // ============================================================
 
+/\bvirtual\s+//
+/\bprotected\b/private/
+
 // change "T[]" => "Array<T>"
 /(TYPE)\s*\[\s*\]/Array<$1>
 
 // change: "T v" => "var v:T"
-/(TYPE)\s+(ID)(\s*.)/var $2:$1$3//KEYWORDS|[(]|(?:\b(?:static|public|protected|private|switch|case)\b)
+/(TYPE)\s+(ID)(\s*[-=;+*\/%&{,)])/var $2:$1$3/s/KEYWORDS|[(]
 
-// private int     m_iServerID
-/(ACCESS)\s+(TYPE)\s+(ID)(\s*.)/$1 var $3:$2$4//KEYWORDS|[(]
 
 // fix: "(var v:T" => "(v:T" and ",var v:T" => ",v:T"
 /([(,]\s*)var (ID)[:](TYPE)/$1$2:$3//
 
-/(ACCESS)\s+(TYPE)\s+(ID)[(](FORMAL_ARGS)[)]/$1 function $3($4):$2/
+/(ACCESS)(TYPE)\s+(ID)[(](FORMAL_ARGS)[)]/$1function $3($4):$2/
+/^([ \t]*(?:ACCESS)?)(TYPE)\s+(ID)[(](FORMAL_ARGS)[)]/$1function $3($4):$2/m
 
 /\busing\b/import
 /\bnamespace\b/package
@@ -67,6 +69,7 @@ TYPE = BASETYPE[?]?
 /:string\b/:String
 /:bool\b/:Bool
 /:void\b/:Void
+/:short\b/:Int
 
 /\bDateTime\b/Date
 /\bDate.Now\b/Date.now()
@@ -91,8 +94,8 @@ TYPE = BASETYPE[?]?
 
 
 // trim end spaces ==============================
-/SPACE$//
-/\n((?:[ ]|\t)+)([^\n]+)\n\n/\n$1$2\n$1\n/m
+/[ \t]+\n/\n/
+//\n((?:[ ]|\t)+)([^\n]+)\n\n/\n$1$2\n$1\n/m
 
 // add space prefixes ===========================
 /\n\n((?:[ ]|\t)+)/\n$1\n$1/
