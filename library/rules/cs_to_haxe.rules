@@ -53,16 +53,8 @@ TYPE = BASETYPE[?]?
 // dtStart:DateTime?
 /(ID):(BASETYPE)[?]/?$1:$2
 
-// simplify: ":T = new T" => " = new T"
-/:(TYPE)\s*[=]\s*new\s*\1/ = new $1
-
-// simplify: ":T = T." => " = T."
-/:(TYPE)\s*[=]\s*\1[.]/ = $1.
-
 // foreach (i:T in a)
 /\bforeach\s*[(](LONGID):TYPE\s+in\s+/for ($1 in /
-
-/:bool\s*[=]\s*(true|false)/ = $1
 
 // change std types
 /:int\b/:Int
@@ -70,6 +62,7 @@ TYPE = BASETYPE[?]?
 /:bool\b/:Bool
 /:void\b/:Void
 /:short\b/:Int
+/:float\b/:Float
 
 /\bDateTime\b/Date
 /\bDate.Now\b/Date.now()
