@@ -53,6 +53,7 @@ class Main
 				case "override":		commands.doOverride(args);
 				case "reindent":		commands.reindent(args);
 				case "reindentInFile":	commands.reindentInFile(args);
+				case "reindentText":	commands.reindentText(args);
 				default:
 					fail("Unknow command.");
 			}
@@ -90,6 +91,7 @@ class Main
 		Lib.println("    override        Autofix override/overload/redefinition in haxe code.");
 		Lib.println("    reindent        Recursive change indentation in files.");
 		Lib.println("    reindentInFile  Change indentation in specified file.");
+		Lib.println("    reindentText    Like reindentInFile, but read from stdin and write to stdout.");
 		Lib.println("");
 		Lib.println("Type 'haxelib run refactor <command>' to get help about specified command.");
 	}

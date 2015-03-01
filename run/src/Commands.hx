@@ -670,4 +670,46 @@ class Commands extends BaseCommands
 			Lib.println("    haxelib run refactor reindentInFile MyClass.hx 4 2 4 4 4");
 		}
 	}
+	
+	public function reindentText(args:Array<String>)
+	{
+		var options = new CmdOptions();
+		
+		options.add("oldTabSize", -1, "Spaces per tab in old style.");
+		options.add("oldIndentSize", -1, "Spaces per indent in old style.");
+		options.add("newTabSize", -1, "Spaces per tab in new style.");
+		options.add("newIndentSize", -1, "Spaces per indent in new style.");
+		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.");
+		
+		if (args.length > 0)
+		{
+			options.parse(args);
+			
+			var oldTabSize = options.get("oldTabSize");
+			var oldIndentSize = options.get("oldIndentSize");
+			var newTabSize = options.get("newTabSize");
+			var newIndentSize = options.get("newIndentSize");
+			var shiftSize = options.get("shiftSize");
+			
+			if (oldTabSize == -1) fail("<oldTabSize> arg must be specified.");
+			if (oldIndentSize == -1) fail("<oldIndentSize> arg must be specified.");
+			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
+			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
+			
+			var refactor = new RefactorReindent(null, null, verbose);
+			Lib.print(refactor.reindentText(Sys.stdin().readAll().toString(), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize));
+		}
+		else
+		{
+			Lib.println("Change indentation in the file.");
+			Lib.println("Usage: haxelib run refactor [-v] reindentInFile <filePath> <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
+			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+			Lib.println("");
+			Lib.println("Example:");
+			Lib.println("");
+			Lib.println("    haxelib run refactor reindentInFile MyClass.hx 4 2 4 4 4");
+		}
+	}
 }
