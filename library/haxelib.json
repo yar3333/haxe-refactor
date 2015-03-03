@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Added command \"reindentText\".",
-  "version": "2.4.0",
+  "releasenote": "Recompile due \"--\" support in options.",
+  "version": "2.4.1",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
