@@ -23,22 +23,23 @@ class Main
 			}
 		}
         
+		var verboseLevel = 0;
+		for (i in 0...args.length)
+		{
+			if (~/^-v+$/.match(args[i]))
+			{
+				verboseLevel = args[i].length - 1;
+				args.splice(i, 1);
+				break;
+			}
+		}
+		Log.instance = new Log(999, verboseLevel);
+		
 		if (args.length > 0)
 		{
-			var verboseLevel = 0;
-			
-			var arg = args.shift();
-			if (~/^-v+$/.match(arg))
-			{
-				verboseLevel = arg.length - 1;
-				arg = args.shift();
-			}
-			
-			Log.instance = new Log(999, verboseLevel);
-			
 			var commands = new Commands(exeDir);
 			
-			switch (arg)
+			switch (args.shift())
 			{
 				case "replace":			commands.replace(args);
 				case "replaceInFile":	commands.replaceInFile(args, 1);
@@ -77,7 +78,7 @@ class Main
 	{
 		Lib.println("Refactor is a refactoring and search/replace tool.");
 		Lib.println("Usage: haxelib run refactor [-v] <command> <args>");
-		Lib.println("where '-v' is the verbose key and <command> may be:");
+		Lib.println("where '-v' is the verbose key ('-vv' for more details) and <command> may be:");
 		Lib.println("");
 		Lib.println("    replace         Recursive search&replace by regex in files.");
 		Lib.println("    replaceInFile   Search&replace by regex in specified file.");

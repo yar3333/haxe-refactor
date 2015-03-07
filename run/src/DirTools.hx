@@ -6,13 +6,13 @@ using StringTools;
 
 class DirTools
 {
-	public static function parse(baseDir:String) : Array<String>
+	public static function parse(baseDir:String, verbose=true) : Array<String>
 	{
 		if (baseDir == null) return [];
 		
 		var baseDirs = [];
 		
-		Log.start("Prepare paths");
+		Log.start("Prepare paths", verbose ? 1 : 1000);
 		
 		for (vdir in baseDir.split(";"))
 		{
@@ -21,7 +21,7 @@ class DirTools
 			{
 				if (FileSystem.exists(vdir) && FileSystem.isDirectory(vdir))
 				{
-					Log.echo(vdir);
+					Log.echo(vdir, verbose ? 1 : 1000);
 					baseDirs.push(vdir);
 				}
 				else
@@ -42,7 +42,7 @@ class DirTools
 						var path = basePath + "/" + dir + addPath;
 						if (FileSystem.exists(path) && FileSystem.isDirectory(path))
 						{
-							Log.echo(path);
+							Log.echo(path, verbose ? 1 : 1000);
 							baseDirs.push(path);
 						}
 					}
@@ -69,7 +69,7 @@ class DirTools
 		if (path.indexOf("/") >= 0)
 		{
 			var baseDirFound = false;
-			for (dir in DirTools.parse(baseDir))
+			for (dir in DirTools.parse(baseDir, false))
 			{
 				if (dir == "." && !path.startsWith("./")) path = "./" + path;
 				
