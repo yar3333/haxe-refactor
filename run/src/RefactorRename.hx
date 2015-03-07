@@ -84,7 +84,7 @@ class RefactorRename extends RefactorReplace
 				replaceInFile
 				(
 					destFile,
-					[ new Regex("/\\bpackage\\s+" + src.full.replace(".", "[.]") + "\\s*;/package " + dest.full + ";/") ],
+					[ new Regex("/\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;/package " + dest.pack + ";/") ],
 					destFile,
 					true,
 					true,
