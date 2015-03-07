@@ -627,7 +627,7 @@ class Commands extends BaseCommands
 		options.add("oldIndentSize", -1, "Spaces per indent in old style.");
 		options.add("newTabSize", -1, "Spaces per tab in new style.");
 		options.add("newIndentSize", -1, "Spaces per indent in new style.");
-		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.");
+		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.\nUse '--' to prevent treating negative value as switch.");
 		
 		if (args.length > 0)
 		{
@@ -661,7 +661,7 @@ class Commands extends BaseCommands
 			Lib.println("");
 			Lib.println("Example:");
 			Lib.println("");
-			Lib.println("    haxelib run refactor reindent src *.hx 4 2 4 4 4");
+			Lib.println("    haxelib run refactor reindent src *.hx 4 2 4 4 -- -1");
 		}
 	}
 	
@@ -674,7 +674,7 @@ class Commands extends BaseCommands
 		options.add("oldIndentSize", -1, "Spaces per indent in old style.");
 		options.add("newTabSize", -1, "Spaces per tab in new style.");
 		options.add("newIndentSize", -1, "Spaces per indent in new style.");
-		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.");
+		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.\nUse '--' to prevent treating negative value as switch.");
 		
 		if (args.length > 0)
 		{
@@ -699,14 +699,14 @@ class Commands extends BaseCommands
 		else
 		{
 			Lib.println("Change indentation in the file.");
-			Lib.println("Usage: haxelib run refactor [-v] reindentInFile <filePath> <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
+			Lib.println("Usage: haxelib run refactor [-v] reindentFile <filePath> <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
 			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Example:");
 			Lib.println("");
-			Lib.println("    haxelib run refactor reindentInFile MyClass.hx 4 2 4 4 4");
+			Lib.println("    haxelib run refactor reindentFile MyClass.hx 4 2 4 4 -- -1");
 		}
 	}
 	
@@ -718,7 +718,7 @@ class Commands extends BaseCommands
 		options.add("oldIndentSize", -1, "Spaces per indent in old style.");
 		options.add("newTabSize", -1, "Spaces per tab in new style.");
 		options.add("newIndentSize", -1, "Spaces per indent in new style.");
-		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.");
+		options.add("shiftSize", 0, "Shift to left(-) or right(+) by specified spaces.");
 		
 		if (args.length > 0)
 		{
