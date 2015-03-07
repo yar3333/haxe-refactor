@@ -665,7 +665,7 @@ class Commands extends BaseCommands
 		}
 	}
 	
-	public function reindentInFile(args:Array<String>)
+	public function reindentFile(args:Array<String>)
 	{
 		var options = new CmdOptions();
 		
