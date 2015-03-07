@@ -6,11 +6,11 @@ using StringTools;
 
 class RefactorReplace extends Refactor
 {
-	public function replaceInFiles(filter:EReg, changeFileName:Regex, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool)
+	public function replaceInFiles(filter:EReg, changeFileName:Regex, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int)
 	{
 		for (baseDir in baseDirs)
 		{
-			Log.start("Replace in '" + baseDir + "'");
+			Log.start("Replace in '" + baseDir + "'", baseLogLevel);
 			
 			FileSystemTools.findFiles(baseDir, function(path)
 			{
@@ -19,14 +19,15 @@ class RefactorReplace extends Refactor
 				{
 					if (outDir == null)
 					{
-						replaceInFile(path, rules, Path.directory(path) + "/" + changeFileName.replace(Path.withoutDirectory(path)), excludeStrings, excludeComments);
+						var outPath = Path.directory(path) + "/" + changeFileName.replace(Path.withoutDirectory(path));
+						replaceInFile(path, rules, outPath, excludeStrings, excludeComments, baseLogLevel + 1);
 					}
 					else
 					{
 						var localDir = Path.directory(localPath);
 						var outPath = (outDir != null ? outDir + (localDir != "" ? localDir + "/" : "") : Path.directory(path) + "/")
 									+ changeFileName.replace(Path.withoutDirectory(path));
-						replaceInFile(path, rules, outPath, excludeStrings, excludeComments);
+						replaceInFile(path, rules, outPath, excludeStrings, excludeComments, baseLogLevel + 1);
 					}
 				}
 			});
@@ -35,25 +36,25 @@ class RefactorReplace extends Refactor
 		}
 	}
 	
-	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool, excludeComments:Bool)
+	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int)
 	{
-		if (verboseLevel > 1) Log.start("Search in '" + inpPath + "'");
+		Log.start("Search in '" + inpPath + "'", baseLogLevel);
 		
-		new TextFile(inpPath, outPath, verboseLevel > 1).process(function(text, _)
+		new TextFile(inpPath, outPath, baseLogLevel + 1).process(function(text, _)
 		{
-			return replaceInText(text, rules, excludeStrings, excludeComments, verboseLevel > 2);
+			return replaceInText(text, rules, excludeStrings, excludeComments, baseLogLevel + 1);
 		});
 		
-		if (verboseLevel > 1) Log.finishSuccess();
+		Log.finishSuccess();
 	}
 	
-	public function replaceInText(text:String, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool, verbose:Bool) : String
+	public function replaceInText(text:String, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int) : String
 	{
 		if (!excludeStrings && !excludeComments)
 		{
 			for (rule in rules)
 			{
-				text = rule.replace(text, verbose ? function(s) Log.echo(s) : null);
+				text = rule.replace(text, Log.echo.bind(_, baseLogLevel));
 			}
 		}
 		else
@@ -72,18 +73,18 @@ class RefactorReplace extends Refactor
 					
 					if (excludeStrings && re.matched(1) != null)
 					{
-						r += rule.replace(text.substr(i, p.pos - i + 1), verbose ? function(s) Log.echo(s) : null);
+						r += rule.replace(text.substr(i, p.pos - i + 1), Log.echo.bind(_, baseLogLevel));
 						r += re.matched(0).substr(1, p.len - 2);
 						i = p.pos + p.len - 1;
 					}
 					else
 					{
-						r += rule.replace(text.substr(i, p.pos - i), verbose ? function(s) Log.echo(s) : null);
+						r += rule.replace(text.substr(i, p.pos - i), Log.echo.bind(_, baseLogLevel));
 						r += re.matched(0);
 						i = p.pos + p.len;
 					}
 				}
-				r += rule.replace(text.substr(i), verbose ? function(s) Log.echo(s) : null);
+				r += rule.replace(text.substr(i), Log.echo.bind(_, baseLogLevel));
 				text = r;
 			}
 		}

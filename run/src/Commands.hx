@@ -10,12 +10,10 @@ using Lambda;
 class Commands extends BaseCommands
 {
 	var exeDir : String;
-	var verboseLevel : Int;
 	
-	public function new(exeDir:String, verboseLevel:Int)
+	public function new(exeDir:String)
 	{
 		this.exeDir = exeDir;
-		this.verboseLevel = verboseLevel;
 	}
 	
 	public function replace(args:Array<String>)
@@ -42,11 +40,11 @@ class Commands extends BaseCommands
 			if (filter == "") fail("<filter> arg must be specified.");
 			if (regexs.length == 0) fail("<regex> arg must be specified.");
 			
-			var refactor = new RefactorReplace(baseDirs, null, verboseLevel);
-			var rules = Rules.fromLines(regexs, verboseLevel>0);
+			var refactor = new RefactorReplace(baseDirs, null);
+			var rules = Rules.fromLines(regexs);
 			if (rules.check())
 			{
-				refactor.replaceInFiles(new EReg(filter, "i"), new Regex(""), rules.regexs, excludeStrings, excludeComments);
+				refactor.replaceInFiles(new EReg(filter, "i"), new Regex(""), rules.regexs, excludeStrings, excludeComments, 1);
 			}
 		}
 		else
@@ -75,7 +73,7 @@ class Commands extends BaseCommands
 		}
 	}
 	
-	public function replaceInFile(args:Array<String>)
+	public function replaceInFile(args:Array<String>, baseVerboseLevel:Int)
 	{
 		var options = new CmdOptions();
 		
@@ -93,11 +91,11 @@ class Commands extends BaseCommands
 			var filePath = options.get("filePath");
 			var regexs = options.get("regex");
 			
-			var refactor = new RefactorReplace(null, null, verboseLevel);
-			var rules = Rules.fromLines(regexs, verboseLevel > 0);
+			var refactor = new RefactorReplace(null, null);
+			var rules = Rules.fromLines(regexs);
 			if (rules.check())
 			{
-				refactor.replaceInFile(filePath, rules.regexs, filePath, excludeStrings, excludeComments);
+				refactor.replaceInFile(filePath, rules.regexs, filePath, excludeStrings, excludeComments, baseVerboseLevel);
 			}
 		}
 		else
@@ -130,11 +128,11 @@ class Commands extends BaseCommands
 			var excludeComments = options.get("excludeComments");
 			var regexs = options.get("regex");
 			
-			var refactor = new RefactorReplace(null, null, verboseLevel);
-			var rules = Rules.fromLines(regexs, verboseLevel > 0);
+			var refactor = new RefactorReplace(null, null);
+			var rules = Rules.fromLines(regexs);
 			if (rules.check())
 			{
-				Lib.print(refactor.replaceInText(Sys.stdin().readAll().toString(), rules.regexs, excludeStrings, excludeComments, false));
+				Lib.print(refactor.replaceInText(Sys.stdin().readAll().toString(), rules.regexs, excludeStrings, excludeComments, 1000));
 			}
 		}
 		else
@@ -182,32 +180,46 @@ class Commands extends BaseCommands
 				baseDir = project.classPaths.join(";");
 			}
 			
-			src = DirTools.pathToPack(baseDir, src, verboseLevel > 0);
-			if (src == null) fail("<src> specified in disk path form, but do not starts with one of base dirs.");
+			var srcPackAndFilter = DirTools.pathToPack(baseDir, src, false);
+			if (srcPackAndFilter == null) fail("<src> specified in disk path form, but do not starts with one of base dirs.");
 			
-			dest = DirTools.pathToPack(baseDir, dest, verboseLevel > 0);
-			if (dest == null) fail("<dest> specified in disk path form, but do not starts with one of base dirs.");
+			var destPackAndFilter = DirTools.pathToPack(baseDir, dest, false);
+			if (destPackAndFilter == null) fail("<dest> specified in disk path form, but do not starts with one of base dirs.");
 			
-			var srcPacks = src.split(".");
+			var srcPacks = srcPackAndFilter.pack.split(".");
 			if (~/^[a-z]/.match(srcPacks[srcPacks.length - 1]))
 			{
-				new RefactorRename(baseDir, null, verboseLevel).renamePackage(src, dest);
+				new RefactorRename(baseDir, null).renamePackage
+				(
+					srcPackAndFilter.pack,
+					destPackAndFilter.pack,
+					srcPackAndFilter.filterDir,
+					destPackAndFilter.filterDir,
+					1
+				);
 			}
 			else
 			if (~/^[A-Z]/.match(srcPacks[srcPacks.length - 1]))
 			{
-				var destPacks = dest.split(".");
+				var destPacks = destPackAndFilter.pack.split(".");
 				if (!(~/^[A-Z]/.match(destPacks[destPacks.length - 1])))
 				{
-					var n = src.lastIndexOf(".");
+					var n = srcPackAndFilter.pack.lastIndexOf(".");
 					n = n < 0 ? 0 : n + 1;
-					dest += "." + src.substr(n);
+					destPackAndFilter.pack += "." + srcPackAndFilter.pack.substr(n);
 				}
-				new RefactorRename(baseDir, null, verboseLevel).renameClass(new ClassPath(src), new ClassPath(dest));
+				new RefactorRename(baseDir, null).renameClass
+				(
+					new ClassPath(srcPackAndFilter.pack),
+					new ClassPath(destPackAndFilter.pack),
+					srcPackAndFilter.filterDir,
+					destPackAndFilter.filterDir,
+					1
+				);
 			}
 			else
 			{
-				fail("Unrecognized '" + src + "'.");
+				fail("Unrecognized '" + srcPackAndFilter.pack + "'.");
 			}
 		}
 		else
@@ -272,10 +284,10 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file)).regexs);
 			}
-			var refactor = new RefactorConvert(baseDir, outDir, verboseLevel);
-			refactor.convert(filter, convertFileName, regexs, excludeStrings, excludeComments);
+			var refactor = new RefactorConvert(baseDir, outDir);
+			refactor.convert(filter, convertFileName, regexs, excludeStrings, excludeComments, 1);
 		}
 		else
 		{
@@ -326,10 +338,10 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file)).regexs);
 			}
-			var refactor = new RefactorConvert(null, null, verboseLevel);
-			refactor.convertFile(inpFilePath, regexs, outFilePath, excludeStrings, excludeComments);
+			var refactor = new RefactorConvert(null, null);
+			refactor.convertFile(inpFilePath, regexs, outFilePath, excludeStrings, excludeComments, 1);
 		}
 		else
 		{
@@ -372,10 +384,10 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file)).regexs);
 			}
-			var refactor = new RefactorConvert(baseDir, null, verboseLevel);
-			refactor.convert(filter, new Regex(""), regexs, excludeStrings, excludeComments);
+			var refactor = new RefactorConvert(baseDir, null);
+			refactor.convert(filter, new Regex(""), regexs, excludeStrings, excludeComments, 1);
 		}
 		else
 		{
@@ -422,10 +434,10 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file)).regexs);
 			}
-			var refactor = new RefactorConvert(null, null, verboseLevel);
-			refactor.convertFile(filePath, regexs, filePath, excludeStrings, excludeComments);
+			var refactor = new RefactorConvert(null, null);
+			refactor.convertFile(filePath, regexs, filePath, excludeStrings, excludeComments, 1);
 		}
 		else
 		{
@@ -467,9 +479,9 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file)).regexs);
 			}
-			var refactor = new RefactorConvert(null, null, verboseLevel);
+			var refactor = new RefactorConvert(null, null);
 			Lib.print(refactor.convertText(Sys.stdin().readAll().toString(), regexs, excludeStrings, excludeComments));
 		}
 		else
@@ -516,12 +528,13 @@ class Commands extends BaseCommands
 			if (outDir == "") fail("<outDir> arg must be specified.");
 			if (extractRulesFile == "") fail("<extractRulesFile> arg must be specified.");
 			
-			var refactor = new RefactorExtract(baseDir, outDir, verboseLevel);
+			var refactor = new RefactorExtract(baseDir, outDir);
 			refactor.extract
 			(
 				filter,
-				Rules.fromFile(getRulesFilePath(exeDir, extractRulesFile), verboseLevel > 0).regexs,
-				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile), verboseLevel > 0).regexs : null
+				Rules.fromFile(getRulesFilePath(exeDir, extractRulesFile)).regexs,
+				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile)).regexs : null,
+				1
 			);
 		}
 		else
@@ -562,8 +575,8 @@ class Commands extends BaseCommands
 			
 			if (srcDirs == "") fail("<srcDirs> arg must be specified.");
 			
-			var refactor = new RefactorOverride(srcDirs, null, verboseLevel);
-			refactor.overrideInFiles();
+			var refactor = new RefactorOverride(srcDirs, null);
+			refactor.overrideInFiles(1);
 		}
 		else
 		{
@@ -635,8 +648,8 @@ class Commands extends BaseCommands
 			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
 			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
-			var refactor = new RefactorReindent(baseDirs, null, verboseLevel);
-			refactor.reindent(new EReg(filter, "i"), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
+			var refactor = new RefactorReindent(baseDirs, null);
+			refactor.reindent(new EReg(filter, "i"), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize, 1);
 		}
 		else
 		{
@@ -680,8 +693,8 @@ class Commands extends BaseCommands
 			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
 			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
-			var refactor = new RefactorReindent(null, null, verboseLevel);
-			refactor.reindentFile(filePath, oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
+			var refactor = new RefactorReindent(null, null);
+			refactor.reindentFile(filePath, oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize, 1);
 		}
 		else
 		{
@@ -722,8 +735,8 @@ class Commands extends BaseCommands
 			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
 			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
-			var refactor = new RefactorReindent(null, null, verboseLevel);
-			Lib.print(refactor.reindentText(Sys.stdin().readAll().toString(), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize));
+			var refactor = new RefactorReindent(null, null);
+			Lib.print(refactor.reindentText(Sys.stdin().readAll().toString(), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize, 1));
 		}
 		else
 		{

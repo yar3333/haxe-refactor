@@ -25,8 +25,6 @@ class Main
         
 		if (args.length > 0)
 		{
-			Log.instance = new Log(5);
-			
 			var verboseLevel = 0;
 			
 			var arg = args.shift();
@@ -36,12 +34,14 @@ class Main
 				arg = args.shift();
 			}
 			
-			var commands = new Commands(exeDir, verboseLevel);
+			Log.instance = new Log(999, verboseLevel);
+			
+			var commands = new Commands(exeDir);
 			
 			switch (arg)
 			{
 				case "replace":			commands.replace(args);
-				case "replaceInFile":	commands.replaceInFile(args);
+				case "replaceInFile":	commands.replaceInFile(args, 1);
 				case "replaceInText":	commands.replaceInText(args);
 				case "rename":			commands.rename(args);
 				case "convert":			commands.convert(args);

@@ -5,27 +5,24 @@ using StringTools;
 
 class Rules
 {
-	var verbose : Bool;
-	
 	public var regexs(default, null) : Array<Regex>;
 	
-	public function new(regexs:Array<Regex>, verbose:Bool)
+	public function new(regexs:Array<Regex>)
 	{
 		this.regexs = regexs;
-		this.verbose = verbose;
 	}
 	
-	public static function fromFile(rulesFile:String, verbose:Bool) : Rules
+	public static function fromFile(rulesFile:String) : Rules
 	{
-		return fromText(File.getContent(rulesFile), verbose);
+		return fromText(File.getContent(rulesFile));
 	}
 	
-	public static function fromLines(ruleLines:Array<String>, verbose:Bool) : Rules
+	public static function fromLines(ruleLines:Array<String>) : Rules
 	{
-		return fromText(ruleLines.join("\n"), verbose);
+		return fromText(ruleLines.join("\n"));
 	}
 	
-	public static function fromText(text:String, verbose:Bool) : Rules
+	public static function fromText(text:String) : Rules
 	{
 		var regexs = [];
 		
@@ -58,28 +55,27 @@ class Rules
 			}
 		}
 		
-		return new Rules(regexs, verbose);
+		return new Rules(regexs);
 	}
 	
 	public function check() : Bool
 	{
-		if (verbose) Log.start("Check rules");
+		Log.start("Check rules");
 		for (regex in regexs)
 		{
-			if (verbose) Log.start(regex.search + " => " + regex.replacement);
+			Log.start(regex.search + " => " + regex.replacement);
 			try
 			{
 				new EReg(regex.search, "g");
-				if (verbose) Log.finishSuccess();
+				Log.finishSuccess();
 			}
 			catch (e:Dynamic)
 			{
-				if (verbose) Log.finishFail();
-				Log.echo(e);
+				Log.finishFail(Std.string(e));
 				return false;
 			}
 		}
-		if (verbose) Log.finishSuccess();
+		Log.finishSuccess();
 		return true;
 	}
 	

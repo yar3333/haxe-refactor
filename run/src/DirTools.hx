@@ -6,13 +6,13 @@ using StringTools;
 
 class DirTools
 {
-	public static function parse(baseDir:String, verbose:Bool) : Array<String>
+	public static function parse(baseDir:String) : Array<String>
 	{
 		if (baseDir == null) return [];
 		
 		var baseDirs = [];
 		
-		if (verbose) Log.start("Prepare paths");
+		Log.start("Prepare paths");
 		
 		for (vdir in baseDir.split(";"))
 		{
@@ -21,7 +21,7 @@ class DirTools
 			{
 				if (FileSystem.exists(vdir) && FileSystem.isDirectory(vdir))
 				{
-					if (verbose) Log.echo(vdir);
+					Log.echo(vdir);
 					baseDirs.push(vdir);
 				}
 				else
@@ -42,7 +42,7 @@ class DirTools
 						var path = basePath + "/" + dir + addPath;
 						if (FileSystem.exists(path) && FileSystem.isDirectory(path))
 						{
-							if (verbose) Log.echo(path);
+							Log.echo(path);
 							baseDirs.push(path);
 						}
 					}
@@ -54,20 +54,22 @@ class DirTools
 			}
 		}
 		
-		if (verbose) Log.finishSuccess();
+		Log.finishSuccess();
 		
 		return baseDirs;
 	}
 	
-	public static function pathToPack(baseDir:String, path:String, verbose:Bool) : String
+	public static function pathToPack(baseDir:String, path:String, verbose:Bool) : { pack:String, filterDir:String }
 	{
 		baseDir = baseDir.replace("\\", "/");
 		path = path.replace("\\", "/");
 		
+		var filterDir = null;
+		
 		if (path.indexOf("/") >= 0)
 		{
 			var baseDirFound = false;
-			for (dir in DirTools.parse(baseDir, verbose))
+			for (dir in DirTools.parse(baseDir))
 			{
 				if (dir == "." && !path.startsWith("./")) path = "./" + path;
 				
@@ -76,13 +78,17 @@ class DirTools
 					baseDirFound = true;
 					var oldPath = path;
 					path = Path.withoutExtension(path.substr(dir.length + 1)).replace("/", ".");
-					if (verbose) Log.echo("Convert disk path to package/class: " + oldPath + " => " + path);
+					filterDir = path.substring(0, dir.length);
+					if (verbose)
+					{
+						Log.echo("Convert disk path to type path: " + oldPath + " => " + path + "; filter directory: " + filterDir);
+					}
 				}
 			}
 			
 			if (!baseDirFound) return null;
 		}
 		
-		return path;
+		return { pack:path, filterDir:filterDir };
 	}
 }
