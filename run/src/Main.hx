@@ -27,18 +27,18 @@ class Main
 		{
 			Log.instance = new Log(5);
 			
-			var verbose = false;
+			var verboseLevel = 0;
 			
-			var k = args.shift();
-			if (k == "-v")
+			var arg = args.shift();
+			if (~/^-v+$/.match(arg))
 			{
-				verbose = true;
-				k = args.shift();
+				verboseLevel = arg.length - 1;
+				arg = args.shift();
 			}
 			
-			var commands = new Commands(exeDir, verbose);
+			var commands = new Commands(exeDir, verboseLevel);
 			
-			switch (k)
+			switch (arg)
 			{
 				case "replace":			commands.replace(args);
 				case "replaceInFile":	commands.replaceInFile(args);
@@ -53,6 +53,7 @@ class Main
 				case "override":		commands.doOverride(args);
 				case "reindent":		commands.reindent(args);
 				case "reindentInFile":	commands.reindentInFile(args);
+				case "reindentFile":	commands.reindentInFile(args);
 				case "reindentText":	commands.reindentText(args);
 				default:
 					fail("Unknow command.");

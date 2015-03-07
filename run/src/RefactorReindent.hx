@@ -33,7 +33,7 @@ class RefactorReindent extends Refactor
 			Log.finishFail("File not found.");
 		}
 		
-		new TextFile(path, path, verbose).process(function(text, _)
+		new TextFile(path, path, verboseLevel > 1).process(function(text, _)
 		{
 			var lines = text.split("\n");
 			for (i in 0...lines.length)

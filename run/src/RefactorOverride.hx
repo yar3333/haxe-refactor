@@ -58,14 +58,14 @@ class RefactorOverride extends Refactor
 			}
 		}
 		
-		if (verbose) Log.start("Process file '" + type.file.inpPath + "'; type " + type.name + "; base " + type.base + "; iterfaces " + type.interfaces);
+		if (verboseLevel > 1) Log.start("Process file '" + type.file.inpPath + "'; type " + type.name + "; base " + type.base + "; iterfaces " + type.interfaces);
 		type.file.process(function(text, _)
 		{
 			text = processVars(text, type);
 			text = processMethods(text, type);
 			return text;
 		});
-		if (verbose) Log.finishSuccess();
+		if (verboseLevel > 1) Log.finishSuccess();
 	}
 	
 	function processVars(text:String, type:HaxeType) : String
@@ -85,7 +85,7 @@ class RefactorOverride extends Refactor
 				
 				if (baseType.kind == "class")
 				{
-					if (verbose) Log.echo("Variable " + baseType + "." + varName + " is redefined in " + type.name);
+					if (verboseLevel > 2) Log.echo("Variable " + baseType + "." + varName + " is redefined in " + type.name);
 					return varIndent + "//" + varPrefix + varName + varTail;
 				}
 				else
@@ -94,7 +94,7 @@ class RefactorOverride extends Refactor
 					var baseSig = baseVarNameAndTail.replace(" ", "");
 					if (sig != baseSig)
 					{
-						if (verbose) Log.echo("Variable " + baseType + "." + varName + " is defined with different type in " + type.name);
+						if (verboseLevel > 2) Log.echo("Variable " + baseType + "." + varName + " is defined with different type in " + type.name);
 						return varIndent + "//" + varPrefix + varName + varTail 
 							 + "\n" + varIndent + "var " + baseVarNameAndTail;
 					}
@@ -122,7 +122,7 @@ class RefactorOverride extends Refactor
 					var baseFuncName = reBase.matched(3);
 					var baseFuncTail = reBase.matched(4);
 					
-					if (verbose) Log.echo("Method " + baseType.name + "." + baseFuncName + " is overriden by " + type.name + "." + funcName);
+					if (verboseLevel > 2) Log.echo("Method " + baseType.name + "." + baseFuncName + " is overriden by " + type.name + "." + funcName);
 					
 					var newOverload = ("@:overload(function" + funcTail + "{})").replace(" ", "");
 					if (overloads.indexOf(newOverload) < 0) overloads.push(newOverload);

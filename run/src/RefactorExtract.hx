@@ -27,7 +27,7 @@ class RefactorExtract extends RefactorReplace
 	{
 		Log.start("Extract from '" + inpPath);
 		
-		var file = new TextFile(inpPath, null, verbose);
+		var file = new TextFile(inpPath, null, verboseLevel > 1);
 		file.process(function(text, fileApi)
 		{
 			for (regex in regexs)
@@ -45,7 +45,7 @@ class RefactorExtract extends RefactorReplace
 						
 					if (postRegexs != null)
 					{
-						text = new RefactorReplace(null, null, verbose).replaceInText(text, postRegexs, true, true);
+						text = new RefactorReplace(null, null, verboseLevel).replaceInText(text, postRegexs, true, true, verboseLevel > 2);
 					}
 					
 					if (fileApi.save(destPath, text))

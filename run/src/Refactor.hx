@@ -7,13 +7,13 @@ class Refactor
 {
 	var baseDirs : Array<String>;
 	var outDir : String;
-	var verbose : Bool;
+	var verboseLevel : Int;
 	
-	public function new(baseDir:String, outDir:String, verbose:Bool)
+	public function new(baseDir:String, outDir:String, verboseLevel:Int)
 	{
 		this.outDir = outDir != null && outDir != "" ? Path.addTrailingSlash(outDir) : outDir;
-		this.verbose = verbose;
+		this.verboseLevel = verboseLevel;
 		
-		if (baseDir != null) baseDirs = DirTools.parse(baseDir, verbose);
+		if (baseDir != null) baseDirs = DirTools.parse(baseDir, verboseLevel > 0);
 	}
 }
