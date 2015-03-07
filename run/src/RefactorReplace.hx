@@ -38,7 +38,7 @@ class RefactorReplace extends Refactor
 	
 	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int)
 	{
-		Log.start("Search in '" + inpPath + "'", baseLogLevel);
+		Log.start("Replace in '" + inpPath + "'", baseLogLevel);
 		
 		new TextFile(inpPath, outPath, baseLogLevel + 1).process(function(text, _)
 		{

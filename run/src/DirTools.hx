@@ -59,36 +59,36 @@ class DirTools
 		return baseDirs;
 	}
 	
-	public static function pathToPack(baseDir:String, path:String, verbose:Bool) : { pack:String, filterDir:String }
+	public static function pathToPack(baseDir:String, oldPath:String, verbose:Bool) : { pack:String, filterDir:String }
 	{
-		baseDir = baseDir.replace("\\", "/");
-		path = path.replace("\\", "/");
+		baseDir = Path.normalize(baseDir);
+		oldPath = Path.normalize(oldPath);
 		
+		var newPath = null;
 		var filterDir = null;
 		
-		if (path.indexOf("/") >= 0)
+		if (oldPath.indexOf("/") >= 0)
 		{
 			var baseDirFound = false;
 			for (dir in DirTools.parse(baseDir, false))
 			{
-				if (dir == "." && !path.startsWith("./")) path = "./" + path;
-				
+				var path = dir == "." && !oldPath.startsWith("./") ? "./" + oldPath : oldPath;
 				if (path.startsWith(dir + "/"))
 				{
 					baseDirFound = true;
-					var oldPath = path;
-					path = Path.withoutExtension(path.substr(dir.length + 1)).replace("/", ".");
-					filterDir = path.substring(0, dir.length);
-					if (verbose)
-					{
-						Log.echo("Convert disk path to type path: " + oldPath + " => " + path + "; filter directory: " + filterDir);
-					}
+					newPath = Path.withoutExtension(path.substr(dir.length + 1)).replace("/", ".");
+					filterDir = dir;
 				}
 			}
-			
-			if (!baseDirFound) return null;
 		}
 		
-		return { pack:path, filterDir:filterDir };
+		if (newPath == null) return null;
+		
+		if (verbose)
+		{
+			Log.echo("Convert disk path to type path: " + oldPath + " => " + newPath + "; filter directory: " + filterDir);
+		}
+		
+		return { pack:newPath, filterDir:filterDir };
 	}
 }

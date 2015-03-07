@@ -30,39 +30,42 @@ class RefactorRename extends RefactorReplace
 							ClassPath.fromFilePath(baseDir, destPath + path.substr(srcPath.length)),
 							srcFilterDir,
 							destFilterDir,
-							baseLogLevel + 1
+							baseLogLevel
 						);
 					}
 					else
 					{
-						renameFile(srcPath, destPath);
+						renameFile(srcPath, destPath, baseLogLevel);
 					}
 				});
 			}
 		}
 		
-		Log.start("Replace in files: " + srcPack + " => " + destPack, baseLogLevel + 1);
-		for (baseDir in baseDirs)
+		if (srcFilterDir == null)
 		{
-			FileSystemTools.findFiles(baseDir, function(path:String)
+			Log.start("Replace in files: " + srcPack + " => " + destPack, baseLogLevel);
+			for (baseDir in baseDirs)
 			{
-				if (path.endsWith(".hx") || path.endsWith(".xml"))
+				FileSystemTools.findFiles(baseDir, function(path:String)
 				{
-					var localPath = path.substr(baseDir.length + 1);
-					
-					Log.start("Process file '" + localPath + "'", baseLogLevel + 2);
-					
-					new TextFile(path, path, baseLogLevel + 3).process(function(text, _)
+					if (path.endsWith(".hx") || path.endsWith(".xml"))
 					{
-						var re = new Regex("/(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b/$1" + destPack + "/");
-						return re.replace(text, Log.echo.bind(_, baseLogLevel + 3));
-					});
-					
-					Log.finishSuccess();
-				}
-			});
+						var localPath = path.substr(baseDir.length + 1);
+						
+						Log.start("Process file '" + localPath + "'", baseLogLevel + 1);
+						
+						new TextFile(path, path, baseLogLevel + 2).process(function(text, _)
+						{
+							var re = new Regex("/(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b/$1" + destPack + "/");
+							return re.replace(text, Log.echo.bind(_, baseLogLevel + 2));
+						});
+						
+						Log.finishSuccess();
+					}
+				});
+			}
+			Log.finishSuccess();
 		}
-		Log.finishSuccess();
 		
 		Log.finishSuccess();
 	}
@@ -76,7 +79,7 @@ class RefactorRename extends RefactorReplace
 			var srcFile = baseDir + "/" + src.getFilePath();
 			var destFile = (destFilterDir != null ? destFilterDir : baseDir) + "/" + dest.getFilePath();
 			
-			if (renameFile(srcFile, destFile))
+			if (renameFile(srcFile, destFile, baseLogLevel + 1))
 			{
 				replaceInFile
 				(
@@ -125,11 +128,11 @@ class RefactorRename extends RefactorReplace
 		Log.finishSuccess();
 	}
 	
-	public function renameFile(src:String, dest:String) : Bool
+	public function renameFile(src:String, dest:String, baseLogLevel:Int) : Bool
 	{
 		if (FileSystem.exists(src) && !FileSystem.exists(dest))
 		{
-			Log.start("Rename file " + src + " => " + dest);
+			Log.start("Rename file " + src + " => " + dest, baseLogLevel);
 			
 			FileSystemTools.createDirectory(Path.directory(dest));
 			
@@ -140,22 +143,16 @@ class RefactorRename extends RefactorReplace
 				switch (roots.get(rootSrc))
 				{
 					case "hg":
-						if (!Process.run("hg", [ "status", src ]).output.startsWith("?"))
+						if (Process.run("hg", [ "mv", src, dest ], null, false, false).exitCode == 0)
 						{
-							if (Sys.command("hg", [ "mv", src, dest ]) == 0)
-							{
-								Log.finishSuccess("hg");
-								return true;
-							}
+							Log.finishSuccess("hg");
+							return true;
 						}
 					case "git":
-						if (Sys.command("git", [ "ls-files", src, "--error-unmatch" ]) == 0)
+						if (Process.run("git", [ "mv", src, dest ], null, false, false).exitCode == 0)
 						{
-							if (Sys.command("git", [ "mv", src, dest ]) == 0)
-							{
-								Log.finishSuccess("git");
-								return true;
-							}
+							Log.finishSuccess("git");
+							return true;
 						}
 				}
 			}
