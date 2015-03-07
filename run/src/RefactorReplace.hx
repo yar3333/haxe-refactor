@@ -37,17 +37,17 @@ class RefactorReplace extends Refactor
 	
 	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool, excludeComments:Bool)
 	{
-		if (verbose) Log.start("Search in '" + inpPath + "'");
+		if (verboseLevel > 1) Log.start("Search in '" + inpPath + "'");
 		
-		new TextFile(inpPath, outPath, verbose).process(function(text, _)
+		new TextFile(inpPath, outPath, verboseLevel > 1).process(function(text, _)
 		{
-			return replaceInText(text, rules, excludeStrings, excludeComments);
+			return replaceInText(text, rules, excludeStrings, excludeComments, verboseLevel > 2);
 		});
 		
-		if (verbose) Log.finishSuccess();
+		if (verboseLevel > 1) Log.finishSuccess();
 	}
 	
-	public function replaceInText(text:String, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool) : String
+	public function replaceInText(text:String, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool, verbose:Bool) : String
 	{
 		if (!excludeStrings && !excludeComments)
 		{

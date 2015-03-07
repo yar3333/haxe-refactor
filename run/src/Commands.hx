@@ -1,5 +1,6 @@
 import hant.CmdOptions;
 import hant.FileSystemTools;
+import hant.FlashDevelopProject;
 import hant.Log;
 import neko.Lib;
 import stdlib.Regex;
@@ -9,12 +10,12 @@ using Lambda;
 class Commands extends BaseCommands
 {
 	var exeDir : String;
-	var verbose : Bool;
+	var verboseLevel : Int;
 	
-	public function new(exeDir:String, verbose:Bool)
+	public function new(exeDir:String, verboseLevel:Int)
 	{
 		this.exeDir = exeDir;
-		this.verbose = verbose;
+		this.verboseLevel = verboseLevel;
 	}
 	
 	public function replace(args:Array<String>)
@@ -41,8 +42,8 @@ class Commands extends BaseCommands
 			if (filter == "") fail("<filter> arg must be specified.");
 			if (regexs.length == 0) fail("<regex> arg must be specified.");
 			
-			var refactor = new RefactorReplace(baseDirs, null, verbose);
-			var rules = Rules.fromLines(regexs, verbose);
+			var refactor = new RefactorReplace(baseDirs, null, verboseLevel);
+			var rules = Rules.fromLines(regexs, verboseLevel>0);
 			if (rules.check())
 			{
 				refactor.replaceInFiles(new EReg(filter, "i"), new Regex(""), rules.regexs, excludeStrings, excludeComments);
@@ -52,7 +53,7 @@ class Commands extends BaseCommands
 		{
 			Lib.println("Recursive find and replace in files.");
 			Lib.println("Usage: haxelib run refactor [-v] replace [ -es ] [ -ec ] <baseDirs> <filter> <regex1> [ ... <regexN> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -92,8 +93,8 @@ class Commands extends BaseCommands
 			var filePath = options.get("filePath");
 			var regexs = options.get("regex");
 			
-			var refactor = new RefactorReplace(null, null, verbose);
-			var rules = Rules.fromLines(regexs, verbose);
+			var refactor = new RefactorReplace(null, null, verboseLevel);
+			var rules = Rules.fromLines(regexs, verboseLevel > 0);
 			if (rules.check())
 			{
 				refactor.replaceInFile(filePath, rules.regexs, filePath, excludeStrings, excludeComments);
@@ -103,7 +104,7 @@ class Commands extends BaseCommands
 		{
 			Lib.println("Find and replace in file.");
 			Lib.println("Usage: haxelib run refactor [-v] replaceInFile [ -es ] [ -ec ] <filePath> <regex1> [ ... <regexN> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -129,11 +130,11 @@ class Commands extends BaseCommands
 			var excludeComments = options.get("excludeComments");
 			var regexs = options.get("regex");
 			
-			var refactor = new RefactorReplace(null, null, verbose);
-			var rules = Rules.fromLines(regexs, verbose);
+			var refactor = new RefactorReplace(null, null, verboseLevel);
+			var rules = Rules.fromLines(regexs, verboseLevel > 0);
 			if (rules.check())
 			{
-				Lib.print(refactor.replaceInText(Sys.stdin().readAll().toString(), rules.regexs, excludeStrings, excludeComments));
+				Lib.print(refactor.replaceInText(Sys.stdin().readAll().toString(), rules.regexs, excludeStrings, excludeComments, false));
 			}
 		}
 		else
@@ -150,7 +151,12 @@ class Commands extends BaseCommands
 	{
 		var options = new CmdOptions();
 		
-		options.add("baseDir", "", "Path to source folder.");
+		options.add
+		(
+			"baseDir", "", "Path to one or more source folders (like \"dir1;dir2\")."
+						 + "\nAlso, you can specify FlashDevelop project file here to read class paths from it."
+						 + "\nIf this arg is not specified, FlashDevelop project in current directory will be used."
+		);
 		options.add("src", "", "Source package or full class name.\nCan be specified in disk path form.");
 		options.add("dest", "", "Destination package or full class name.\nCan be specified in disk path form.");
 		
@@ -158,20 +164,34 @@ class Commands extends BaseCommands
 		{
 			options.parse(args);
 			
-			var baseDir = options.get("baseDir");
+			var baseDir : String = options.get("baseDir");
 			var src : String = options.get("src");
-			var dest = options.get("dest");
+			var dest : String = options.get("dest");
 			
-			src = DirTools.pathToPack(baseDir, src, verbose);
+			if (dest == "")
+			{
+				dest = src;
+				src = baseDir;
+				baseDir = "";
+			}
+			
+			if (baseDir == "" || baseDir.endsWith(".hxproj"))
+			{
+				var project = FlashDevelopProject.load(baseDir);
+				if (project == null) fail("File '" + project + "' is not found.");
+				baseDir = project.classPaths.join(";");
+			}
+			
+			src = DirTools.pathToPack(baseDir, src, verboseLevel > 0);
 			if (src == null) fail("<src> specified in disk path form, but do not starts with one of base dirs.");
 			
-			dest = DirTools.pathToPack(baseDir, dest, verbose);
+			dest = DirTools.pathToPack(baseDir, dest, verboseLevel > 0);
 			if (dest == null) fail("<dest> specified in disk path form, but do not starts with one of base dirs.");
 			
 			var srcPacks = src.split(".");
 			if (~/^[a-z]/.match(srcPacks[srcPacks.length - 1]))
 			{
-				new RefactorRename(baseDir, null, verbose).renamePackage(src, dest);
+				new RefactorRename(baseDir, null, verboseLevel).renamePackage(src, dest);
 			}
 			else
 			if (~/^[A-Z]/.match(srcPacks[srcPacks.length - 1]))
@@ -183,7 +203,7 @@ class Commands extends BaseCommands
 					n = n < 0 ? 0 : n + 1;
 					dest += "." + src.substr(n);
 				}
-				new RefactorRename(baseDir, null, verbose).renameClass(new ClassPath(src), new ClassPath(dest));
+				new RefactorRename(baseDir, null, verboseLevel).renameClass(new ClassPath(src), new ClassPath(dest));
 			}
 			else
 			{
@@ -194,7 +214,7 @@ class Commands extends BaseCommands
 		{
 			Lib.println("Rename package or class.");
 			Lib.println("Usage: haxelib run refactor [-v] rename <baseDir> <src> <dest>");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -210,6 +230,12 @@ class Commands extends BaseCommands
 			Lib.println("");
 			Lib.println("    haxelib run refactor rename src src/mypackA/MyClass1.hx src/mypackB/MyClass2.hx");
 			Lib.println("        Example of using path form.");
+			Lib.println("");
+			Lib.println("    haxelib run refactor rename MyProject.hxproj src/mypackA/MyClass1.hx src/mypackB/MyClass2.hx");
+			Lib.println("        Example of reading source directories from FlashDevelop project.");
+			Lib.println("");
+			Lib.println("    haxelib run refactor rename src/mypackA/MyClass1.hx src/mypackB/MyClass2.hx");
+			Lib.println("        Example of reading source directories from FlashDevelop project in current directory.");
 		}
 	}
 	
@@ -246,16 +272,16 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
 			}
-			var refactor = new RefactorConvert(baseDir, outDir, verbose);
+			var refactor = new RefactorConvert(baseDir, outDir, verboseLevel);
 			refactor.convert(filter, convertFileName, regexs, excludeStrings, excludeComments);
 		}
 		else
 		{
 			Lib.println("Recursive find and replace in files using rule files.");
 			Lib.println("Usage: haxelib run refactor [-v] convert [ -es ] [ -ec ] <baseDir> <filter> <outDir> <convertFileName> <rulesFile1> [ ... <rulesFileN> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -300,16 +326,16 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
 			}
-			var refactor = new RefactorConvert(null, null, verbose);
+			var refactor = new RefactorConvert(null, null, verboseLevel);
 			refactor.convertFile(inpFilePath, regexs, outFilePath, excludeStrings, excludeComments);
 		}
 		else
 		{
 			Lib.println("Recursive find and replace in files using rule files.");
 			Lib.println("Usage: haxelib run refactor [-v] convert [ -es ] [ -ec ] <inpFilePath> <outFilePath> <rulesFile1> [ ... <rulesFileN> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -346,16 +372,16 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
 			}
-			var refactor = new RefactorConvert(baseDir, null, verbose);
+			var refactor = new RefactorConvert(baseDir, null, verboseLevel);
 			refactor.convert(filter, new Regex(""), regexs, excludeStrings, excludeComments);
 		}
 		else
 		{
 			Lib.println("Recursive find and replace in files using rules files.");
 			Lib.println("Usage: haxelib run refactor [-v] process [ -es ] [ -ec ] <baseDir> <filter> <rulesFile1> [ ...  <rulesFileN> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -396,16 +422,16 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
 			}
-			var refactor = new RefactorConvert(null, null, verbose);
+			var refactor = new RefactorConvert(null, null, verboseLevel);
 			refactor.convertFile(filePath, regexs, filePath, excludeStrings, excludeComments);
 		}
 		else
 		{
 			Lib.println("Find and replace in file using rules files.");
 			Lib.println("Usage: haxelib run refactor [-v] processFile [ -es ] [ -ec ] <filePath> <rulesFile1> [ ...  <rulesFileN> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -441,9 +467,9 @@ class Commands extends BaseCommands
 			var regexs = [];
 			for (file in rulesFile)
 			{
-				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verbose).regexs);
+				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file), verboseLevel > 0).regexs);
 			}
-			var refactor = new RefactorConvert(null, null, verbose);
+			var refactor = new RefactorConvert(null, null, verboseLevel);
 			Lib.print(refactor.convertText(Sys.stdin().readAll().toString(), regexs, excludeStrings, excludeComments));
 		}
 		else
@@ -490,12 +516,12 @@ class Commands extends BaseCommands
 			if (outDir == "") fail("<outDir> arg must be specified.");
 			if (extractRulesFile == "") fail("<extractRulesFile> arg must be specified.");
 			
-			var refactor = new RefactorExtract(baseDir, outDir, verbose);
+			var refactor = new RefactorExtract(baseDir, outDir, verboseLevel);
 			refactor.extract
 			(
 				filter,
-				Rules.fromFile(getRulesFilePath(exeDir, extractRulesFile), verbose).regexs,
-				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile), verbose).regexs : null
+				Rules.fromFile(getRulesFilePath(exeDir, extractRulesFile), verboseLevel > 0).regexs,
+				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile), verboseLevel > 0).regexs : null
 			);
 		}
 		else
@@ -507,7 +533,7 @@ class Commands extends BaseCommands
 			Lib.println("\t2) whole text block (must NOT ends with open bracket).");
 			Lib.println("In all cases regular expression 'replacement' part must specify new file name to save text block.");
 			Lib.println("Usage: haxelib run refactor [-v] extract <baseDir> <filter> <outDir> <extractRulesFile> [ <postRulesFile> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -536,14 +562,14 @@ class Commands extends BaseCommands
 			
 			if (srcDirs == "") fail("<srcDirs> arg must be specified.");
 			
-			var refactor = new RefactorOverride(srcDirs, null, verbose);
+			var refactor = new RefactorOverride(srcDirs, null, verboseLevel);
 			refactor.overrideInFiles();
 		}
 		else
 		{
 			Lib.println("Autofix override/overload/redefinition in haxe extern class members.");
 			Lib.println("Usage: haxelib run refactor [-v] override <srcDirs>");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -609,14 +635,14 @@ class Commands extends BaseCommands
 			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
 			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
-			var refactor = new RefactorReindent(baseDirs, null, verbose);
+			var refactor = new RefactorReindent(baseDirs, null, verboseLevel);
 			refactor.reindent(new EReg(filter, "i"), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 		}
 		else
 		{
 			Lib.println("Change indentation in the files.");
 			Lib.println("Usage: haxelib run refactor [-v] reindent <baseDirs> <filter> <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -654,14 +680,14 @@ class Commands extends BaseCommands
 			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
 			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
-			var refactor = new RefactorReindent(null, null, verbose);
+			var refactor = new RefactorReindent(null, null, verboseLevel);
 			refactor.reindentFile(filePath, oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize);
 		}
 		else
 		{
 			Lib.println("Change indentation in the file.");
 			Lib.println("Usage: haxelib run refactor [-v] reindentInFile <filePath> <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
@@ -696,14 +722,14 @@ class Commands extends BaseCommands
 			if (newTabSize == -1) fail("<newTabSize> arg must be specified.");
 			if (newIndentSize == -1) fail("<newIndentSize> arg must be specified.");
 			
-			var refactor = new RefactorReindent(null, null, verbose);
+			var refactor = new RefactorReindent(null, null, verboseLevel);
 			Lib.print(refactor.reindentText(Sys.stdin().readAll().toString(), oldTabSize, oldIndentSize, newTabSize, newIndentSize, shiftSize));
 		}
 		else
 		{
 			Lib.println("Change indentation in the file.");
 			Lib.println("Usage: haxelib run refactor [-v] reindentInFile <filePath> <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
-			Lib.println("where '-v' is the verbose key. Command args description:");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");

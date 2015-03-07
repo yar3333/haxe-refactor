@@ -1,6 +1,7 @@
 import hant.FileSystemTools;
 import hant.Log;
-import haxe.io.Path;
+import hant.Process;
+import hant.Path;
 import stdlib.Regex;
 import sys.FileSystem;
 import sys.io.File;
@@ -44,15 +45,15 @@ class RefactorRename extends RefactorReplace
 				{
 					var localPath = path.substr(baseDir.length + 1);
 					
-					if (verbose) Log.start("Process file '" + localPath + "'");
+					if (verboseLevel > 1) Log.start("Process file '" + localPath + "'");
 					
-					new TextFile(path, path, verbose).process(function(text, _)
+					new TextFile(path, path, verboseLevel > 1).process(function(text, _)
 					{
 						var re = new Regex("/(^|[^._a-zA-Z0-9])" + srcPack.replace(".", "[.]") + "\\b/$1" + destPack + "/");
-						return re.replace(text, verbose ? function(s) Log.echo(s) : null);
+						return re.replace(text, verboseLevel > 2 ? function(s) Log.echo(s) : null);
 					});
 					
-					if (verbose) Log.finishSuccess();
+					if (verboseLevel > 1) Log.finishSuccess();
 				}
 			});
 			
@@ -81,18 +82,18 @@ class RefactorRename extends RefactorReplace
 				{
 					var localPath = path.substr(baseDir.length + 1);
 					
-					new TextFile(path, path, verbose).process(function(text, _)
+					new TextFile(path, path, verboseLevel > 1).process(function(text, _)
 					{
 						var packageOrImport = 
 								new EReg("\\bpackage\\s+" + src.pack.replace(".", "[.]") + "\\s*;", "").match(text)
 							 || new EReg("\\bimport\\s+" + src.full.replace(".", "[.]") + "\\s*;", "").match(text);
 						
-						text = new Regex("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").replace(text, verbose ? function(s) Log.echo(s) : null);
+						text = new Regex("/(^|[^._a-zA-Z0-9])" + src.full.replace(".", "[.]") + "\\b/$1" + dest.full + "/").replace(text, verboseLevel > 2 ? function(s) Log.echo(s) : null);
 						
 						if (packageOrImport && src.name != dest.name)
 						{
-							if (verbose) Log.echo(localPath + ": " + src.name + " => " + dest.name);
-							text = new Regex("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").replace(text, verbose ? function(s) Log.echo(s) : null);
+							if (verboseLevel > 2) Log.echo(localPath + ": " + src.name + " => " + dest.name);
+							text = new Regex("/(^|[^._a-zA-Z0-9])" + src.name + "\\b/$1" + dest.name + "/").replace(text, verboseLevel > 2 ? function(s) Log.echo(s) : null);
 						}
 						
 						return text;
@@ -112,12 +113,87 @@ class RefactorRename extends RefactorReplace
 			Log.start("Rename file " + src + " => " + dest);
 			
 			FileSystemTools.createDirectory(Path.directory(dest));
-			FileSystem.rename(src, dest);
+			
+			var moved = false;
+			
+			var rootSrc = getRoot(src);
+			var rootDst = rootSrc != null ? getRoot(dest) : null;
+			if (rootSrc != null && rootDst != null && rootSrc == rootDst)
+			{
+				switch (roots.get(rootSrc))
+				{
+					case "hg":
+						if (!Process.run("hg", [ "status", src ]).output.startsWith("?"))
+						{
+							moved = Sys.command("hg", [ "mv", src, dest ]) == 0;
+						}
+					case "git":
+						if (Sys.command("git", [ "ls-files", src, "--error-unmatch" ]) == 0)
+						{
+							moved = Sys.command("git", [ "mv", src, dest ]) == 0;
+						}
+				}
+			}
+			
+			if (!moved) FileSystem.rename(src, dest);
 			
 			Log.finishSuccess();
 			
 			return true;
 		}
 		return false;
+	}
+	
+	static var hg : Bool = null;
+	static var git : Bool = null;
+	static var roots = new Map<String, String>(); // "path/to/root" => "hg"/"git"
+	
+	static function getRoot(filePath:String) : String
+	{
+		var fullPath = Path.normalize(FileSystem.fullPath(filePath));
+		
+		for (root in roots.keys())
+		{
+			if (fullPath.startsWith(root + "/")) return root;
+		}
+		
+		if (hg == null)
+		{
+			hg = Sys.command("hg", [ "--version" ]) == 0;
+			trace("DETECT Mercurial = " + hg);
+		}
+		
+		if (git == null)
+		{
+			git = Sys.command("git", [ "--version" ]) == 0;
+			trace("DETECT Git = " + git);
+		}
+		
+		if (hg)
+		{
+			var r = Process.run("hg", [ "--cwd", Path.directory(filePath), "root" ], null, false, false);
+			if (r.exitCode == 0)
+			{
+				var root = Path.normalize(r.output);
+				roots.set(root, "hg");
+				return root;
+			}
+		}
+		
+		if (git)
+		{
+			var saveCwd = Sys.getCwd();
+			Sys.setCwd(Path.directory(filePath));
+			var r = Process.run("git", [ "rev-parse", "--show-toplevel" ], null, false, false);
+			Sys.setCwd(saveCwd);
+			if (r.exitCode == 0)
+			{
+				var root = Path.normalize(r.output);
+				roots.set(root, "git");
+				return root;
+			}
+		}
+		
+		return null;
 	}
 }
