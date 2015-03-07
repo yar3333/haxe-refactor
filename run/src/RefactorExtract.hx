@@ -5,7 +5,7 @@ import stdlib.Regex;
 
 class RefactorExtract extends RefactorReplace
 {
-	public function extract(filter:String, regexs:Array<Regex>, ?postRegexs:Array<Regex>)
+	public function extract(filter:String, regexs:Array<Regex>, ?postRegexs:Array<Regex>, baseLogLevel:Int)
 	{
 		for (baseDir in baseDirs)
 		{
@@ -17,17 +17,17 @@ class RefactorExtract extends RefactorReplace
 				if (reFilter.match(localPath))
 				{
 					var localDir = Path.directory(localPath);
-					extractFromFile(path, regexs, Path.removeTrailingSlashes(outDir) + (localDir != "" ? "/" + localDir : ""), postRegexs);
+					extractFromFile(path, regexs, Path.removeTrailingSlashes(outDir) + (localDir != "" ? "/" + localDir : ""), postRegexs, baseLogLevel);
 				}
 			});
 		}
 	}
 	
-	function extractFromFile(inpPath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>)
+	function extractFromFile(inpPath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>, baseLogLevel:Int)
 	{
-		Log.start("Extract from '" + inpPath);
+		Log.start("Extract from '" + inpPath, baseLogLevel);
 		
-		var file = new TextFile(inpPath, null, verboseLevel > 1);
+		var file = new TextFile(inpPath, null, baseLogLevel + 1);
 		file.process(function(text, fileApi)
 		{
 			for (regex in regexs)
@@ -45,12 +45,12 @@ class RefactorExtract extends RefactorReplace
 						
 					if (postRegexs != null)
 					{
-						text = new RefactorReplace(null, null, verboseLevel).replaceInText(text, postRegexs, true, true, verboseLevel > 2);
+						text = new RefactorReplace(null, null).replaceInText(text, postRegexs, true, true, baseLogLevel + 2);
 					}
 					
 					if (fileApi.save(destPath, text))
 					{
-						Log.echo(destPath);
+						Log.echo(destPath, baseLogLevel + 2);
 					}
 				}
 			}

@@ -14,18 +14,18 @@ class TextFile
 {
 	public var inpPath(default, null) : String;
 	public var outPath(default, null) : String;
-	var verbose : Bool;
+	var baseVerboseLevel : Int;
 	
 	public var text(default, null) : String;
 	var isWinLineEndStyle : Bool;
 	var isMacLineEndStyle : Bool;
 	
 	
-	public function new(inpPath:String, outPath:String, verbose:Bool)
+	public function new(inpPath:String, outPath:String, baseVerboseLevel:Int)
 	{
 		this.inpPath = inpPath;
 		this.outPath = outPath;
-		this.verbose = verbose;
+		this.baseVerboseLevel = baseVerboseLevel;
 		
 		text = File.getContent(inpPath);
 		
@@ -44,7 +44,7 @@ class TextFile
 		{
 			if (save(outPath, text))
 			{
-				if (verbose) Log.echo("Fixed: " + outPath);
+				Log.echo("Fixed: " + outPath, baseVerboseLevel);
 			}
 		}
 	}

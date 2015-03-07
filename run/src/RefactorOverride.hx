@@ -21,7 +21,7 @@ class RefactorOverride extends Refactor
 {
 	var types = new Map<String, HaxeType>();
 	
-	public function overrideInFiles()
+	public function overrideInFiles(baseLogLevel:Int)
 	{
 		for (baseDir in baseDirs)
 		{
@@ -29,21 +29,21 @@ class RefactorOverride extends Refactor
 			{
 				if (path.endsWith(".hx"))
 				{
-					var type = readType(baseDir, path);
+					var type = readType(baseDir, path, baseLogLevel);
 					if (type != null) types.set(path, type);
 				}
 			});
 		}
 		
-		Log.start("Fix overrides");
+		Log.start("Fix overrides", baseLogLevel);
 		for (type in types)
 		{
-			overrideInType(type);
+			overrideInType(type, baseLogLevel);
 		}
 		Log.finishSuccess();
 	}
 	
-	function overrideInType(type:HaxeType)
+	function overrideInType(type:HaxeType, baseLogLevel:Int)
 	{
 		if (type == null ||  type.processed) return;
 		
@@ -54,21 +54,21 @@ class RefactorOverride extends Refactor
 			var baseTypeFilePath = findClassFilePath(type, baseTypeName);
 			if (baseTypeFilePath != null)
 			{
-				overrideInType(types.get(baseTypeFilePath));
+				overrideInType(types.get(baseTypeFilePath), baseLogLevel);
 			}
 		}
 		
-		if (verboseLevel > 1) Log.start("Process file '" + type.file.inpPath + "'; type " + type.name + "; base " + type.base + "; iterfaces " + type.interfaces);
+		Log.start("Process file '" + type.file.inpPath + "'; type " + type.name + "; base " + type.base + "; iterfaces " + type.interfaces, baseLogLevel);
 		type.file.process(function(text, _)
 		{
-			text = processVars(text, type);
-			text = processMethods(text, type);
+			text = processVars(text, type, baseLogLevel + 1);
+			text = processMethods(text, type, baseLogLevel + 1);
 			return text;
 		});
-		if (verboseLevel > 1) Log.finishSuccess();
+		Log.finishSuccess();
 	}
 	
-	function processVars(text:String, type:HaxeType) : String
+	function processVars(text:String, type:HaxeType, baseLogLevel:Int) : String
 	{
 		return new EReg("(\n[ \t]*)(var\\s+)(" + Regexs.ID + ")([^;]*)", "g").map(text, function(re)
 		{
@@ -85,7 +85,7 @@ class RefactorOverride extends Refactor
 				
 				if (baseType.kind == "class")
 				{
-					if (verboseLevel > 2) Log.echo("Variable " + baseType + "." + varName + " is redefined in " + type.name);
+					Log.echo("Variable " + baseType + "." + varName + " is redefined in " + type.name, baseLogLevel);
 					return varIndent + "//" + varPrefix + varName + varTail;
 				}
 				else
@@ -94,7 +94,7 @@ class RefactorOverride extends Refactor
 					var baseSig = baseVarNameAndTail.replace(" ", "");
 					if (sig != baseSig)
 					{
-						if (verboseLevel > 2) Log.echo("Variable " + baseType + "." + varName + " is defined with different type in " + type.name);
+						Log.echo("Variable " + baseType + "." + varName + " is defined with different type in " + type.name, baseLogLevel);
 						return varIndent + "//" + varPrefix + varName + varTail 
 							 + "\n" + varIndent + "var " + baseVarNameAndTail;
 					}
@@ -104,7 +104,7 @@ class RefactorOverride extends Refactor
 		});
 	}
 	
-	function processMethods(text:String, type:HaxeType) : String
+	function processMethods(text:String, type:HaxeType, baseLogLevel:Int) : String
 	{
 		return new EReg(Regexs.FULL_FUNC_DECL_TEMPLATE.replace("{ID}", Regexs.ID), "gs").map(text, function(re)
 		{
@@ -122,7 +122,7 @@ class RefactorOverride extends Refactor
 					var baseFuncName = reBase.matched(3);
 					var baseFuncTail = reBase.matched(4);
 					
-					if (verboseLevel > 2) Log.echo("Method " + baseType.name + "." + baseFuncName + " is overriden by " + type.name + "." + funcName);
+					Log.echo("Method " + baseType.name + "." + baseFuncName + " is overriden by " + type.name + "." + funcName, baseLogLevel);
 					
 					var newOverload = ("@:overload(function" + funcTail + "{})").replace(" ", "");
 					if (overloads.indexOf(newOverload) < 0) overloads.push(newOverload);
@@ -144,11 +144,11 @@ class RefactorOverride extends Refactor
 		return overloads.split("\n").map(function(s) return s.trim().replace(" ", "")).filter(function(s) return s != "");
 	}
 	
-	function readType(baseDir:String, path:String) : HaxeType
+	function readType(baseDir:String, path:String, baseLogLevel:Int) : HaxeType
 	{
 		if (path == null || path == "") return null;
 		
-		var file = new TextFile(path, path, true);
+		var file = new TextFile(path, path, baseLogLevel);
 		var reExtends = "(?:\\s+extends\\s+" + Regexs.ID + ")?";
 		var reImplement = "(?:\\s+implements\\s+" + Regexs.ID + ")*";
 		var reClass = new EReg("\\b(class|interface)\\s+(" + Regexs.ID + ")(" + reExtends + ")(" + reImplement + ")[ \t\n]*\\{", "");
