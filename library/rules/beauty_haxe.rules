@@ -108,3 +108,15 @@ STD_TYPE = \b(?:Int|Float|String|Dynamic|Bool)\b
 
 // ",a" => ", a"
 /,([_a-zA-Z0-9])/, $1/
+
+// AGGRESSIVE CHANGES ////////////////////////////////////////////////////////////////////////
+
+// newlines before {
+/\n(OPTSPACE)([^ \t\n][^\n]+?)OPTSPACE[{]OPTSPACE\n/\n$1$2\n$1{\n/
+
+// collapse several empty lines
+/\n(?:OPTSPACE\n){2,}(OPTSPACE)/\n$1\n$1/
+
+/\n(OPTSPACE)[}](?:OPTSPACE)else(?:OPTSPACE)\n/\n$1}\n$1else\n/s
+
+/[{]\n(?:OPTSPACE\n)+(OPTSPACE)/{\n$1
