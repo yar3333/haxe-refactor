@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Use hg/git to rename files where possible.<br>\nLogging refactoring.<br>\nAllow '-v' switch at any position (not only before command).<br>\nSupport for '-vv' switch. Rename 'reindentInFile' command to 'reindentFile'.<br>\nPackage rename bugfix.",
-  "version": "2.5.0",
+  "releasenote": "Beauty haxe: more aggressive. Add README.md.",
+  "version": "2.5.1",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
