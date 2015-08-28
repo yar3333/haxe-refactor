@@ -627,7 +627,7 @@ class Commands extends BaseCommands
 		options.add("oldIndentSize", -1, "Spaces per indent in old style.");
 		options.add("newTabSize", -1, "Spaces per tab in new style.");
 		options.add("newIndentSize", -1, "Spaces per indent in new style.");
-		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.\nUse '--' to prevent treating negative value as switch.");
+		options.add("shiftSize", 0, "Shift to left(-) or right(+) by specified spaces.\nUse '--' to prevent treating negative value as a switch.");
 		
 		if (args.length > 0)
 		{
@@ -659,9 +659,14 @@ class Commands extends BaseCommands
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
-			Lib.println("Example:");
+			Lib.println("Examples:");
 			Lib.println("");
+			Lib.println("    # from tab=2 to tab=4 and shift all left to 1 space");
 			Lib.println("    haxelib run refactor reindent src *.hx 4 2 4 4 -- -1");
+			Lib.println("");
+			Lib.println("    # change tab=4 to spaces (assume 4 spaces per indent)");
+			Lib.println("    haxelib run refactor reindent src *.hx 4 4 1 4   # change tab=4 to tab=1");
+			Lib.println("    haxelib run refactor replace  src \"/\\t/ /\"    # replace tabs by spaces");
 		}
 	}
 	
@@ -674,7 +679,7 @@ class Commands extends BaseCommands
 		options.add("oldIndentSize", -1, "Spaces per indent in old style.");
 		options.add("newTabSize", -1, "Spaces per tab in new style.");
 		options.add("newIndentSize", -1, "Spaces per indent in new style.");
-		options.add("shiftSize", 0, "Shift to left(-) or right(+) to specified spaces.\nUse '--' to prevent treating negative value as switch.");
+		options.add("shiftSize", 0, "Shift to left(-) or right(+) by specified spaces.\nUse '--' to prevent treating negative value as a switch.");
 		
 		if (args.length > 0)
 		{
@@ -704,9 +709,14 @@ class Commands extends BaseCommands
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
-			Lib.println("Example:");
+			Lib.println("Examples:");
 			Lib.println("");
+			Lib.println("    # from tab=2 to tab=4 and shift all left to 1 space");
 			Lib.println("    haxelib run refactor reindentFile MyClass.hx 4 2 4 4 -- -1");
+			Lib.println("");
+			Lib.println("    # change tab=4 to spaces (assume 4 spaces per indent)");
+			Lib.println("    haxelib run refactor reindentFile  MyClass.hx *.hx 4 4 1 4   # change tab=4 to tab=1");
+			Lib.println("    haxelib run refactor replaceInFile MyClass.hx \"/\\\\t/ /\"      # replace tabs by spaces");
 		}
 	}
 	
@@ -718,7 +728,7 @@ class Commands extends BaseCommands
 		options.add("oldIndentSize", -1, "Spaces per indent in old style.");
 		options.add("newTabSize", -1, "Spaces per tab in new style.");
 		options.add("newIndentSize", -1, "Spaces per indent in new style.");
-		options.add("shiftSize", 0, "Shift to left(-) or right(+) by specified spaces.");
+		options.add("shiftSize", 0, "Shift to left(-) or right(+) by specified spaces.\nUse '--' to prevent treating negative value as a switch.");
 		
 		if (args.length > 0)
 		{
@@ -740,15 +750,19 @@ class Commands extends BaseCommands
 		}
 		else
 		{
-			Lib.println("Change indentation in the file.");
-			Lib.println("Usage: haxelib run refactor [-v] reindentInFile <filePath> <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
-			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
+			Lib.println("Change indentation in the stream: read from stdin, write into stdout.");
+			Lib.println("Usage: haxelib run refactor reindentText <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
+			Lib.println("Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
-			Lib.println("Example:");
+			Lib.println("Examples:");
 			Lib.println("");
-			Lib.println("    haxelib run refactor reindentInFile MyClass.hx 4 2 4 4 4");
+			Lib.println("    # from tab=2 to tab=4 and shift all left to 1 space");
+			Lib.println("    cat MyClass.hx | haxelib run refactor reindentInFile 4 2 4 4 -- -1 > MyClass.hx");
+			Lib.println("");
+			Lib.println("    # from tab=4 to spaces");
+			Lib.println("    cat MyClass.hx | haxelib run refactor reindentInFile 4 4 1 4 | haxelib run refactor replaceInText \"/\\\\t/ /\" > MyClass.hx");
 		}
 	}
 }
