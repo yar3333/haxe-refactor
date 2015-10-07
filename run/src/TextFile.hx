@@ -64,7 +64,8 @@ class TextFile
 		if (isHidden) FileSystemTools.setHiddenFileAttribute(outPath, false);
 		if (!FileSystem.exists(outPath) || File.getContent(outPath) != text)
 		{
-			FileSystem.createDirectory(Path.directory(outPath));
+			var dir = Path.directory(outPath);
+			if (FileSystem.exists(dir)) FileSystem.createDirectory(dir);
 			File.saveContent(outPath, text);
 			r = true;
 		}
