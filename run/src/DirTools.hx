@@ -64,31 +64,28 @@ class DirTools
 		baseDir = Path.normalize(baseDir);
 		oldPath = Path.normalize(oldPath);
 		
-		var newPath = null;
-		var filterDir = null;
-		
 		if (oldPath.indexOf("/") >= 0)
 		{
-			var baseDirFound = false;
 			for (dir in DirTools.parse(baseDir, false))
 			{
 				var path = dir == "." && !oldPath.startsWith("./") ? "./" + oldPath : oldPath;
 				if (path.startsWith(dir + "/"))
 				{
-					baseDirFound = true;
-					newPath = Path.withoutExtension(path.substr(dir.length + 1)).replace("/", ".");
-					filterDir = dir;
+					var newPath = Path.withoutExtension(path.substr(dir.length + 1)).replace("/", ".");
+					var filterDir = dir;
+					
+					if (verbose)
+					{
+						Log.echo("Convert disk path to type path: " + oldPath + " => " + newPath + "; filter directory: " + filterDir);
+					}
+					
+					return { pack:newPath, filterDir:filterDir };
 				}
 			}
+			
+			return null;
 		}
 		
-		if (newPath == null) return null;
-		
-		if (verbose)
-		{
-			Log.echo("Convert disk path to type path: " + oldPath + " => " + newPath + "; filter directory: " + filterDir);
-		}
-		
-		return { pack:newPath, filterDir:filterDir };
+		return { pack:oldPath, filterDir:null };
 	}
 }

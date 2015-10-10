@@ -1,4 +1,5 @@
 import hant.Path;
+import haxe.CallStack;
 import neko.Lib;
 import sys.FileSystem;
 using StringTools;
@@ -20,6 +21,7 @@ class BaseCommands
 	function fail(message:String)
 	{
 		Lib.println("ERROR: " + message);
+		Lib.println(CallStack.toString(CallStack.callStack()));
 		Sys.exit(1);
 	}
 	

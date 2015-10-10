@@ -1,6 +1,7 @@
 import hant.FileSystemTools;
 import hant.Log;
 import hant.Path;
+import haxe.CallStack;
 import neko.Lib;
 
 class Main 
@@ -70,6 +71,7 @@ class Main
 	static function fail(message:String)
 	{
 		Lib.println("ERROR: " + message);
+		Lib.println(CallStack.toString(CallStack.callStack()));
 		Sys.exit(1);
 	}
 	
