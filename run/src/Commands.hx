@@ -33,7 +33,7 @@ class Commands extends BaseCommands
 			var excludeStrings = options.get("excludeStrings");
 			var excludeComments = options.get("excludeComments");
 			var baseDirs = options.get("baseDirs");
-			var filter = filterToRegex(filterToRegex(options.get("filter")));
+			var filter = filterToRegex(options.get("filter"));
 			var regexs : Array<String> = options.get("regex");
 			
 			if (baseDirs == "") fail("<baseDirs> arg must be specified.");
