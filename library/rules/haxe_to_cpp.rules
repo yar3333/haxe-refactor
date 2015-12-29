@@ -1,3 +1,5 @@
+// Haxe to C++
+
 ID = [_a-zA-Z][_a-zA-Z0-9]*
 VALUE = ID(?:[.]ID)*
 TYPE = ID(?:\s*<[^>]+>)?

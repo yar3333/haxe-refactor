@@ -1,3 +1,5 @@
+// ActionScript 2 to Haxe
+
 ID = [_a-zA-Z][_a-zA-Z0-9]*
 FUNC = ID(?:<\s*ID(?:\s*,\s*ID)*\s*>)?\s*
 TYPE = ID\s*
