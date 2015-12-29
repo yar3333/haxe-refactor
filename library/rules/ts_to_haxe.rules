@@ -1,7 +1,13 @@
+// TypeScript to Haxe
+
 ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
-TYPE = (?:(?:ID|\{[^}]*\})(?:\[\])*\s*)
+LONGID = ID(?:[.]ID)*
+STRUCT = \{[^}]*\}
+TYPE = (?:(?:LONGID|STRUCT)(?:\[\])*\s*)
 TYPE_COMPLEX = (?:TYPE|\((?:\s*ID\s*[:]\s*TYPE(?:,\s*ID\s*[:]\s*TYPE)*)?\)\s*[=][>]\s*TYPE)
+
 TEMPLATE = (?:\s*[<]TYPE\s+extends\s+TYPE[>]\s*)
+TYPE_COMPLEX_EX = TYPE_COMPLEX(?:TEMPLATE)?
 BRACKETS = (?:[(][^()]*[)])
 FORMALPARAMS = \((?:BRACKETS|[^()])*\s*\)
 SPACE = [ \t]*
@@ -30,7 +36,7 @@ EXPORT = (?:[ \t]*\bexport\s+)?
 /([:]\s*)\(ID\s*:\s*(TYPE)\)\s*[=][>]\s*/$1$2->/r
 /(ID)\?\s*\:\s*(TYPE)/?$1:$2/r
 
-TYPE_PREFIX = [:]\s*|->\s*
+TYPE_PREFIX = (?:[:|<]|->)\s*
 /(TYPE_PREFIX)number\b/$1Float/
 /(TYPE_PREFIX)any\b/$1Dynamic/
 /(TYPE_PREFIX)string\b/$1String/
@@ -42,6 +48,20 @@ TYPE_PREFIX = [:]\s*|->\s*
 /(TYPE_PREFIX)WebGLRenderingContext\b/$1js.html.webgl.RenderingContext/
 /(TYPE_PREFIX)Function\b/$1Dynamic/
 /(TYPE_PREFIX)HTMLElement\b/$1HtmlElement/
+/(TYPE_PREFIX)HTMLVideoElement\b/$1VideoElement/
+/(TYPE_PREFIX)AudioContext\b/$1js.html.audio.AudioContext/
+/(TYPE_PREFIX)AudioBufferSourceNode\b/$1js.html.audio.AudioBufferSourceNode/
+/(TYPE_PREFIX)GainNode\b/$1js.html.audio.GainNode/
+/(TYPE_PREFIX)PannerNode\b/$1js.html.audio.PannerNode/
+
+// escape keywords
+RESERVED = dynamic
+/([(,]\s*)(RESERVED)(\s*[:])/$1$2_$3/
+
+/(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)/haxe.extern.EitherType<haxe.extern.EitherType<haxe.extern.EitherType<haxe.extern.EitherType<$1, $2>, $3>, $4>, $5>/
+/(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)/haxe.extern.EitherType<haxe.extern.EitherType<haxe.extern.EitherType<$1, $2>, $3>, $4>/
+/(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)/haxe.extern.EitherType<haxe.extern.EitherType<$1, $2>, $3>/
+/(TYPE_COMPLEX_EX)\s*[|]\s*(TYPE_COMPLEX_EX)/haxe.extern.EitherType<$1, $2>/
 
 /(TYPE_PREFIX)(ID|\{[^}]*\})\[\]\[\]\[\]/$1Array<Array<Array<$2>>>/
 /(TYPE_PREFIX)(ID|\{[^}]*\})\[\]\[\]/$1Array<Array<$2>>/
