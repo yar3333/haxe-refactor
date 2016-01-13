@@ -65,7 +65,7 @@ class TextFile
 		if (!FileSystem.exists(outPath) || File.getContent(outPath) != text)
 		{
 			var dir = Path.directory(outPath);
-			if (!FileSystem.exists(dir)) FileSystem.createDirectory(dir);
+			if (dir != "" && !FileSystem.exists(dir)) FileSystem.createDirectory(dir);
 			File.saveContent(outPath, text);
 			r = true;
 		}
