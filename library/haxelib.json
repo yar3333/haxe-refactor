@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "TypeScript to Haxe improvements.",
-  "version": "2.7.1",
+  "releasenote": "Creating directory with empty name bugfix.",
+  "version": "2.7.2",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
