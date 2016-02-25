@@ -1,0 +1,2 @@
+/\bprotected var\b/var/
+/\bprotected function\b/function/
