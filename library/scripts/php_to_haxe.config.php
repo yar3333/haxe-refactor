@@ -24,10 +24,12 @@ $varNamesMapping = array(
     ,'_SESSION' => "php.Session"
 );
 
-$functionNameMapping = array(
+$magickFunctionNameMapping = array(
      '__construct'              => 'new'
+);
 
-    ,'str_starts_with'          => array('(',0,')', '.', 'startsWith', '(', 1, ')')
+$functionNameMapping = array(
+     'str_starts_with'          => array('(',0,')', '.', 'startsWith', '(', 1, ')')
     ,'str_ends_with'            => array('(',0,')', '.', 'endsWith', '(', 1, ')')
 
     ,'ltrim'                    => array('(',0,')', '.', 'ltrim', '(', 1, ')')
@@ -56,8 +58,8 @@ $functionNameMapping = array(
     ,'file_get_contents'        => 'sys.io.File.getContent'
     ,'file_put_contents'        => 'sys.io.File.putContent'
     ,'file_exists'              => 'sys.FileSystem.exists'
-    ,'is_file'                  => '!sys.FileSystem.isDirectory' // OR MAY BE: array('sys.FileSystem.kind(',0,')==sys.FileKind.kfile')
-    ,'is_dir'                   => 'sys.FileSystem.isDirectory'
+    ,'is_file'                  => array('sys.FileSystem.exists(', 0, ') && !sys.FileSystem.isDirectory(', 0, ')')
+    ,'is_dir'                   => array('sys.FileSystem.exists(', 0, ') && sys.FileSystem.isDirectory(', 0, ')')
     ,'realpath'                 => 'sys.FileSystem.fullPath'
     ,'unlink'                   => 'sys.FileSystem.deleteFile'
     ,'mkdir'                    => 'sys.FileSystem.createDirectory'
