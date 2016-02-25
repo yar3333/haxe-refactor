@@ -23,7 +23,7 @@ else
 	echo "$from => $to: ";
 	try
 	{
-		$phpToHaxe = new PhpToHaxe($typeNamesMapping, $varNamesMapping, $functionNameMapping, $mode=="extern");
+		$phpToHaxe = new PhpToHaxe($typeNamesMapping, $varNamesMapping, $functionNameMapping, $magickFunctionNameMapping, $mode=="extern");
 		if (!file_exists($from)) throw new Exception("Input file not exists.");
 		$inp = file_get_contents($from);
 		$out = $phpToHaxe->getHaxeCode($inp);
@@ -44,21 +44,24 @@ class PhpToHaxe
     private $varNamesMapping;
     private $wantExtern;
     
-    function __construct($typeNamesMapping, $varNamesMapping, $functionNameMapping, $wantExtern=false)
+    function __construct($typeNamesMapping, $varNamesMapping, $functionNameMapping, $magickFunctionNameMapping, $wantExtern=false)
     {
         $this->typeNamesMapping = $typeNamesMapping;
         $this->varNamesMapping = $varNamesMapping;
         $this->functionNameMapping = $functionNameMapping;
+        $this->magickFunctionNameMapping = $magickFunctionNameMapping;
         $this->wantExtern = $wantExtern;
     }
-
+	
     function getHaxeCode($text)
     {
         $text = str_replace("\r\n", "\n", $text);
         $text = str_replace("\r", "\n", $text);
         $text = preg_replace("/^(\\s*<[?]php)+/", "", $text);
         $tokens = token_get_all("<?php " . $text);
-
+        
+        //for ($i =0; $i<count($tokens); $i++) { $t = $tokens[$i]; echo (is_array($t) ? token_name($t[0]) . " => " . $t[1] . " / " . $t[2] : $t) . "\n"; }
+		
         $names = array();
         $values = array();
         foreach ($tokens as $token)
@@ -74,20 +77,20 @@ class PhpToHaxe
                 $values[] = $token;
             }
         }
-
+		
         if (count($names)>0 && $names[0]=='T_OPEN_TAG')
         {
             array_shift($names);
             array_shift($values);
         }
-
+		
         $this->changeProtectedToPrivate($names, $values);
-        
+		
         $r = $this->tokensToText($names, $values);
         if ($this->wantExtern) $r = preg_replace("/[\t ]*\n[\t ]*\n[\t ]*\n/", "\n\n", $r);
         return $r;
     }
-
+	
     private function changeProtectedToPrivate(&$names, &$values)
     {
         for ($i=0; $i<count($names); $i++)
@@ -117,7 +120,7 @@ class PhpToHaxe
         }
         return false;
     }
-
+	
     private function isAfterLexem($names, $n, $lexem, $dist)
     {
         for ($i=$n-1; $dist>0 && $i>=0; $i--)
@@ -135,7 +138,7 @@ class PhpToHaxe
         }
         return false;
     }
-
+	
     private function getPairPos($names, $i)
     {
         $stack = array();
@@ -154,7 +157,7 @@ class PhpToHaxe
         }
         die("Fatal error: pair not found.");
     }
-
+	
     private function findLexemPosOnCurrentLevel($names, $i, $lexem)
     {
         $stack = array();
@@ -164,22 +167,22 @@ class PhpToHaxe
             {
                 return $i;
             }
-
+			
             if (in_array($names[$i], array('(','{','['))) $stack[] = $names[$i];
             if (in_array($names[$i], array(')','}',']'))) array_pop($stack);
         }
         die("Fatal error: lexem '$lexem' not found from position $i.");
     }
-
+	
     private function splitTokensByComma($names, $values)
     {
         $params = array();
-
+		
         $param = array(
             'names' => array()
           , 'values' => array()
         );
-
+		
         $stack = array();
         for ($i=0; $i<count($names); $i++)
         {
@@ -204,10 +207,10 @@ class PhpToHaxe
             }
         }
         if (count($param['names']) > 0) $params[] = $param;
-
+		
         return $params;
     }
-
+	
     private function trimAndPad(&$names, &$values, $padLeft, $padRight)
     {
         while (count($names)>0 && $names[0]=='T_WHITESPACE')
@@ -231,7 +234,7 @@ class PhpToHaxe
             array_push($values, ' ');
         }
     }
-
+	
     private function isSolidExpression($names)
     {
         $k = 0;
@@ -246,7 +249,7 @@ class PhpToHaxe
         }
         return true;
     }
-
+	
     private function tokensToText($names, $values)
     {
         $text = '';
@@ -258,18 +261,18 @@ class PhpToHaxe
                 case '.':
                     $values[$i] = '+';
                     break;
-                
+					
                 case 'T_CONCAT_EQUAL':
                     $values[$i] = '+=';
                     break;
-                
+					
                 case 'T_CLASS':
                     if ($this->wantExtern)
                     {
                         $values[$i] = 'extern '.$values[$i];
                     }
                     break;
-
+					
                 case 'T_DOUBLE_COLON':
                     if ($i-1>=0 && $names[$i-1]=='T_STRING' && $values[$i-1]=='parent')
                     {
@@ -289,7 +292,7 @@ class PhpToHaxe
                         $values[$i] = '.';
                     }
                     break;
-
+					
                 case 'T_PRIVATE':
                     if ($this->wantExtern)
                     {
@@ -429,6 +432,12 @@ class PhpToHaxe
         $n = $i + 1;
         while ($names[$n]=='T_WHITESPACE') $n++;
         if ($names[$n]!='T_STRING') return;
+        
+        if (array_key_exists($values[$n], $this->magickFunctionNameMapping))
+        {
+			$values[$n] = $this->magickFunctionNameMapping[$values[$n]];
+        }
+        
         $methodName = $values[$n];
         
         $n++;
@@ -453,7 +462,7 @@ class PhpToHaxe
             $name = '';
             $defVal = '';
             
-            if (count($paramNames) > 1 && $paramNames[0] == 'T_STRING')
+            if (count($paramNames) > 1 && ($paramNames[0] == 'T_STRING' || $paramNames[0] == 'T_ARRAY'))
             {
                 $type = $paramValues[0];
                 array_shift($paramNames); array_shift($paramValues);
