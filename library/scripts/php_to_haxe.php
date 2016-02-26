@@ -621,7 +621,7 @@ class PhpToHaxe
             $values[$i] = $values[$i] . " : $type";
         }
 
-        if (
+        /*if (
             $i+3<count($names) && $names[$i+1]=='[' 
          && ($names[$i+2]=='T_CONSTANT_ENCAPSED_STRING' || $names[$i+2]=='T_ENCAPSED_AND_WHITESPACE')
         ) {
@@ -650,7 +650,7 @@ class PhpToHaxe
             {
                 $values[$i+1] = '.getset(';
             }
-        }
+        }*/
 
         if (isset($this->varNamesMapping[$values[$i]]))
         {
