@@ -56,7 +56,7 @@ $functionNameMapping = array(
 
     ,'dirname'                  => 'sys.io.Path.directory'
     ,'file_get_contents'        => 'sys.io.File.getContent'
-    ,'file_put_contents'        => 'sys.io.File.putContent'
+    ,'file_put_contents'        => 'sys.io.File.saveContent'
     ,'file_exists'              => 'sys.FileSystem.exists'
     ,'is_file'                  => array('sys.FileSystem.exists(', 0, ') && !sys.FileSystem.isDirectory(', 0, ')')
     ,'is_dir'                   => array('sys.FileSystem.exists(', 0, ') && sys.FileSystem.isDirectory(', 0, ')')
