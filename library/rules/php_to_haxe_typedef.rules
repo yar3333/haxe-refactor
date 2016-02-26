@@ -1,0 +1,15 @@
+// convert table in form "<name> <description>" into haxe typedef
+
+ID = [_a-zA-Z][_a-zA-Z0-9]*
+COMMENT_HEAD = [*]\s+[^\n]+?\b
+COMMENT_TAIL = \b[^\n]*?\n\s+[*]/\n\tvar\s+ID\s*[:]
+
+/^(ID)\s+(.+?)\r?(?:\n|$)/\t\/**\n\t * $2\n\t *\/\n\tvar $1 : UNKNOW;\n\t\n/m
+
+/^/typedef NAME =\n{\n/
+/\s*$/\n}/
+
+~(COMMENT_HEAD(?:array of objects)COMMENT_TAIL) UNKNOW~$1 TypedArray<Int, Dynamic>~i
+~(COMMENT_HEAD(?:true|false)COMMENT_TAIL) UNKNOW~$1 Bool~i
+~(COMMENT_HEAD(?:number)COMMENT_TAIL) UNKNOW~$1 Int~i
+~(COMMENT_HEAD(?:string)COMMENT_TAIL) UNKNOW~$1 String~i
