@@ -103,4 +103,6 @@ $functionNameMapping = array(
     //,'imagesx'                 => array('(',0,')', '.', 'getImageWidth()')
     //,'imagesy'                 => array('(',0,')', '.', 'getImageHeight()')
     //,'imagecreatetruecolor'    => 'new Imagick'
+    
+    ,'sha1'                     => 'haxe.crypto.Sha1.encode'
 );
