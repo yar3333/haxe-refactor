@@ -85,6 +85,9 @@ class PhpToHaxe
         }
 		
         $this->changeProtectedToPrivate($names, $values);
+        $this->changeStdValuesToLowerCase($names, $values);
+        $this->changeOctalNumberToHex($names, $values);
+        $this->changeReservedWords($names, $values);
 		
         $r = $this->tokensToText($names, $values);
         if ($this->wantExtern) $r = preg_replace("/[\t ]*\n[\t ]*\n[\t ]*\n/", "\n\n", $r);
@@ -98,7 +101,56 @@ class PhpToHaxe
             if ($names[$i]=='T_PROTECTED')
             {
                 $names[$i] = 'T_PRIVATE';
-                $values[$i] = 'protected';
+                $values[$i] = 'private';
+            }
+        }
+    }
+    
+    private function changeStdValuesToLowerCase(&$names, &$values)
+    {
+        for ($i=0; $i<count($names); $i++)
+        {
+            if ($names[$i]=='T_STRING')
+            {
+				$lc = strtolower($values[$i]);
+				switch ($lc)
+				{
+					case "true":
+					case "false":
+					case "null":
+						$values[$i] = $lc; 
+				}
+            }
+        }
+    }
+    
+    private function changeOctalNumberToHex(&$names, &$values)
+    {
+        for ($i=0; $i<count($names); $i++)
+        {
+            if ($names[$i]=='T_LNUMBER')
+            {
+				$s = $values[$i];
+				if ($s[0]=="0" && strlen($s)>1)
+				{
+					$values[$i] = "/*$s*/0x" . base_convert($s, 8, 16);
+				}
+            }
+        }
+    }
+    
+    private function changeReservedWords(&$names, &$values)
+    {
+        for ($i=0; $i<count($names); $i++)
+        {
+            if ($names[$i]=='T_VARIABLE')
+            {
+				$s = $values[$i];
+				switch ($s)
+				{
+					case '$new':
+						$values[$i] = $s. "_";
+				}
             }
         }
     }
