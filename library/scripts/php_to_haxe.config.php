@@ -105,4 +105,5 @@ $functionNameMapping = array(
     //,'imagecreatetruecolor'    => 'new Imagick'
     
     ,'sha1'                     => 'haxe.crypto.Sha1.encode'
+    ,'chr'						=> 'String.fromCharCode'
 );
