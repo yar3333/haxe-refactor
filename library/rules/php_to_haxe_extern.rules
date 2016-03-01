@@ -1,0 +1,11 @@
+ID = [_a-zA-Z][_a-zA-Z0-9]*
+INT = [0-9]+(?:e[-+][0-9]+)?
+FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
+NUMBER = (?:INT|FLOAT)
+STRING = (?:"(?:\\.|[^"])*?"|'(?:\\.|[^'])*?')
+
+VALUE = (?:untyped\s*__php__[(]STRING[)]|ID|NUMBER|STRING)
+
+/([,(]\s*)[?]?\s*(ID)\s*:\s*(ID)\s*=\s*VALUE/$1?$2:$3/
+
+/^(\s*)public\s+(static|var|function)\b/$1$2/m
