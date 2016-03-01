@@ -1,6 +1,7 @@
 import hant.FileSystemTools;
 import hant.Log;
 import hant.Path;
+import stdlib.Regex;
 import sys.FileSystem;
 import sys.io.File;
 using StringTools;
@@ -41,6 +42,26 @@ class RefactorOverride extends Refactor
 			overrideInType(type, baseLogLevel);
 		}
 		Log.finishSuccess();
+		
+		Log.start("Fix overloads", baseLogLevel);
+		for (type in types)
+		{
+			type.file.process(function(text, _)
+			{
+				return overloadsInText(text);
+			});
+		}
+		Log.finishSuccess();
+	}
+	
+	public function overloadsInText(text:String) : String
+	{
+		var reID = "\\b[_a-zA-Z][_a-zA-Z0-9]*\\b";
+		var reTYPE = "(?:(?:"+reID+"|\\{[^}]*\\})(?:\\[\\])*\\s*)";
+		var reTYPE_COMPLEX = "(?:" + reTYPE + "|\\(" + reID + "\\s[:]\\s*" + reTYPE + "(?:,\\s*" + reID + "\\s[:]\\s*" + reTYPE + ")\\)\\s*=>\\s*" + reTYPE + ")";
+		//                                 1                      2               3                                  4                             5                6
+		var reOverloads = new Regex("/\n([ \t]*)function\\s+(" + reID + ")\\s*\\((.*?)\n\\s*function\\s+\\2\\s*\\(([^)]*)\\)\\s*[:]\\s*(" + reTYPE_COMPLEX + ")\\s*;(.*)$/\n$1@:overload(function($4):$5{})\n$1function $2($3$6/sr");
+		return reOverloads.replace(text, Log.echo.bind(_, 1));
 	}
 	
 	function overrideInType(type:HaxeType, baseLogLevel:Int)
@@ -106,6 +127,8 @@ class RefactorOverride extends Refactor
 	
 	function processMethods(text:String, type:HaxeType, baseLogLevel:Int) : String
 	{
+		Log.start("Process methods");
+		
 		return new EReg(Regexs.FULL_FUNC_DECL_TEMPLATE.replace("{ID}", Regexs.ID), "gs").map(text, function(re)
 		{
 			var overloads = splitOverloads(re.matched(1));
@@ -113,7 +136,9 @@ class RefactorOverride extends Refactor
 			var funcName = re.matched(3);
 			var funcTail = re.matched(4);
 			
-			if (funcName != "new")
+			Log.start("Process method " + funcName);
+			
+			//if (funcName != "new")
 			{
 				var reBase = new EReg(Regexs.FULL_FUNC_DECL_TEMPLATE.replace("{ID}", funcName), "s");
 				var baseType = getMatchedBaseType(type, reBase);
@@ -135,8 +160,13 @@ class RefactorOverride extends Refactor
 					return resLines.map(function(s) return indentSpaces + s).join("\n");
 				}
 			}
+			
+			Log.finishSuccess();
+			
 			return re.matched(0);
 		});
+		
+		Log.finishSuccess();
 	}
 	
 	function splitOverloads(overloads:String) : Array<String>
