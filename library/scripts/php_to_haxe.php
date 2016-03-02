@@ -401,7 +401,7 @@ class PhpToHaxe
                     $this->processFunction($names, $values, $i);
                     break;
                 case 'T_CONST':
-                    $values[$i] = 'static inline public var';
+                    $values[$i] = 'public static inline var';
                     break;
                 case 'T_INCLUDE_ONCE':
                 case 'T_REQUIRE_ONCE':
