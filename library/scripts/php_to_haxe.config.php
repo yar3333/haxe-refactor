@@ -15,6 +15,8 @@ $typeNamesMapping = array(
     
     ,'true' => 'Bool'
     ,'false' => 'Bool'
+    
+    ,'scalar' => 'Dynamic'
 );
 
 $varNamesMapping = array(
@@ -105,5 +107,6 @@ $functionNameMapping = array(
     //,'imagecreatetruecolor'    => 'new Imagick'
     
     ,'sha1'                     => 'haxe.crypto.Sha1.encode'
+    ,'md5'                      => 'haxe.crypto.Md5.encode'
     ,'chr'						=> 'String.fromCharCode'
 );
