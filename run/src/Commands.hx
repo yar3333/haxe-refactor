@@ -617,6 +617,33 @@ class Commands extends BaseCommands
 		}
 	}
 	
+	public function overloadInFile(args:Array<String>)
+	{
+		var options = new CmdOptions();
+		
+		options.add("filePath", "", "Paths to haxe source file to process.");
+		
+		if (args.length > 0)
+		{
+			options.parse(args);
+			
+			var filePath = options.get("filePath");
+			
+			if (filePath == "") fail("<filePath> arg must be specified.");
+			
+			var refactor = new RefactorOverride(null, null);
+			refactor.overloadInFile(filePath);
+		}
+		else
+		{
+			Lib.println("Autofix overload/redefinition in haxe extern class members.");
+			Lib.println("Usage: haxelib run refactor [-v] overloadInFile <filePath>");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+		}
+	}
+	
 	public function reindent(args:Array<String>)
 	{
 		var options = new CmdOptions();
