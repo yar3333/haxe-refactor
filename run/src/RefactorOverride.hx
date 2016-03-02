@@ -48,19 +48,28 @@ class RefactorOverride extends Refactor
 		{
 			type.file.process(function(text, _)
 			{
-				return overloadsInText(text);
+				return overloadInText(text);
 			});
 		}
 		Log.finishSuccess();
 	}
 	
-	public function overloadsInText(text:String) : String
+	public function overloadInFile(filePath:String)
+	{
+		var file = new TextFile(filePath, filePath, 1);
+		file.process(function(text, _)
+		{
+			return overloadInText(text);
+		});
+	}
+	
+	public function overloadInText(text:String) : String
 	{
 		var reID = "\\b[_a-zA-Z][_a-zA-Z0-9]*\\b";
 		var reTYPE = "(?:(?:"+reID+"|\\{[^}]*\\})(?:\\[\\])*\\s*)";
 		var reTYPE_COMPLEX = "(?:" + reTYPE + "|\\(" + reID + "\\s[:]\\s*" + reTYPE + "(?:,\\s*" + reID + "\\s[:]\\s*" + reTYPE + ")\\)\\s*=>\\s*" + reTYPE + ")";
-		//                                 1                      2               3                                  4                             5                6
-		var reOverloads = new Regex("/\n([ \t]*)function\\s+(" + reID + ")\\s*\\((.*?)\n\\s*function\\s+\\2\\s*\\(([^)]*)\\)\\s*[:]\\s*(" + reTYPE_COMPLEX + ")\\s*;(.*)$/\n$1@:overload(function($4):$5{})\n$1function $2($3$6/sr");
+		//                                 1                                 2                                                 3               4                                5                             6                   7
+		var reOverloads = new Regex("/\n([ \t]*)((?:static\\s+)?(?:(?:public|private)\\s+)?(?:static\\s+)?function\\s+)(" + reID + ")\\s*\\((.*?)\n\\s*function\\s+\\2\\s*\\(([^)]*)\\)\\s*[:]\\s*(" + reTYPE_COMPLEX + ")\\s*;(.*)$/\n$1@:overload(function($5):$6{})\n$1$2$3($4$7/sr");
 		return reOverloads.replace(text, Log.echo.bind(_, 1));
 	}
 	

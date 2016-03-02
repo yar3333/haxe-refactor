@@ -53,6 +53,7 @@ class Main
 				case "processText":		commands.processText(args);
 				case "extract":			commands.extract(args);
 				case "override":		commands.doOverride(args);
+				case "overloadInFile":	commands.overloadInFile(args);
 				case "reindent":		commands.reindent(args);
 				case "reindentFile":	commands.reindentFile(args);
 				case "reindentText":	commands.reindentText(args);
@@ -92,6 +93,7 @@ class Main
 		Lib.println("    processText     Like processFile, but read from stdin and write to stdout.");
 		Lib.println("    extract         Search in files and save found texts into separate files.");
 		Lib.println("    override        Autofix override/overload/redefinition in haxe code.");
+		Lib.println("    overloadInFile  Autofix overload/redefinition in haxe code.");
 		Lib.println("    reindent        Recursive change indentation in files.");
 		Lib.println("    reindentFile    Change indentation in specified file.");
 		Lib.println("    reindentText    Like reindentFile, but read from stdin and write to stdout.");
