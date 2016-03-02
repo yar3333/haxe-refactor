@@ -77,8 +77,8 @@ $functionNameMapping = array(
     ,'strrpos'                  => array('(',0,')', '.', 'lastIndexOf', '(', 1, ', ', 2, ')')
     ,'strtolower'               => array('(',0,')', '.', 'toLowerCase', '(', ')')
     ,'strtoupper'               => array('(',0,')', '.', 'toUpperCase', '(', ')')
-    ,'json_encode'              => 'StringTools.jsonEncode'
-    ,'json_decode'              => 'StringTools.jsonDecode'
+    //,'json_encode'              => 'StringTools.jsonEncode'
+    //,'json_decode'              => 'StringTools.jsonDecode'
 
 
     ,'count'                    => array('(',0,')', '.', 'length')
