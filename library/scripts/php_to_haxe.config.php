@@ -17,6 +17,7 @@ $typeNamesMapping = array(
     ,'false' => 'Bool'
     
     ,'scalar' => 'Dynamic'
+    ,'callable' => 'haxe.Constraints.Function'
 );
 
 $varNamesMapping = array(
@@ -28,6 +29,12 @@ $varNamesMapping = array(
 
 $magickFunctionNameMapping = array(
      '__construct'              => 'new'
+);
+
+$reservedWords = array(
+	 'return'
+	,'function'
+	,'new'
 );
 
 $functionNameMapping = array(

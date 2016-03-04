@@ -23,7 +23,7 @@ else
 	echo "$from => $to: ";
 	try
 	{
-		$phpToHaxe = new PhpToHaxe($typeNamesMapping, $varNamesMapping, $functionNameMapping, $magickFunctionNameMapping, $mode=="extern");
+		$phpToHaxe = new PhpToHaxe($typeNamesMapping, $varNamesMapping, $functionNameMapping, $magickFunctionNameMapping, $reservedWords, $mode=="extern");
 		if (!file_exists($from)) throw new Exception("Input file not exists.");
 		$inp = file_get_contents($from);
 		$out = $phpToHaxe->getHaxeCode($inp);
@@ -43,14 +43,16 @@ class PhpToHaxe
     private $functionNameMapping;
     private $varNamesMapping;
     private $wantExtern;
+    private $reservedWords;
     
-    function __construct($typeNamesMapping, $varNamesMapping, $functionNameMapping, $magickFunctionNameMapping, $wantExtern=false)
+    function __construct($typeNamesMapping, $varNamesMapping, $functionNameMapping, $magickFunctionNameMapping, $reservedWords, $wantExtern=false)
     {
         $this->typeNamesMapping = $typeNamesMapping;
         $this->varNamesMapping = $varNamesMapping;
         $this->functionNameMapping = $functionNameMapping;
         $this->magickFunctionNameMapping = $magickFunctionNameMapping;
         $this->wantExtern = $wantExtern;
+        $this->reservedWords = $reservedWords;
     }
 	
     function getHaxeCode($text)
@@ -146,10 +148,9 @@ class PhpToHaxe
             if ($names[$i]=='T_VARIABLE')
             {
 				$s = $values[$i];
-				switch ($s)
+				if (in_array($s, $this->reservedWords, true))
 				{
-					case '$new':
-						$values[$i] = $s. "_";
+					$values[$i] = $s. "_";
 				}
             }
         }
