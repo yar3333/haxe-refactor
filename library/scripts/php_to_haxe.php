@@ -90,6 +90,7 @@ class PhpToHaxe
         $this->changeStdValuesToLowerCase($names, $values);
         $this->changeOctalNumberToHex($names, $values);
         $this->changeReservedWords($names, $values);
+        $this->changeIsIdenticalToIsEqual($names, $values);
 		
         $r = $this->tokensToText($names, $values);
         if ($this->wantExtern) $r = preg_replace("/[\t ]*\n[\t ]*\n[\t ]*\n/", "\n\n", $r);
@@ -152,6 +153,17 @@ class PhpToHaxe
 				{
 					$values[$i] = $s. "_";
 				}
+            }
+        }
+    }
+    
+    private function changeIsIdenticalToIsEqual(&$names, &$values)
+    {
+        for ($i=0; $i<count($names); $i++)
+        {
+            if ($names[$i]=='T_IS_IDENTICAL')
+            {
+				$values[$i] = '==';
             }
         }
     }

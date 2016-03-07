@@ -2,5 +2,3 @@ ID = [_a-zA-Z][_a-zA-Z0-9]*
 INT = [0-9]+(?:e[-+][0-9]+)?
 FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
 NUMBER = (?:INT|FLOAT)
-
-/[(]\s*(ID)\s*==\s*=\s*(ID|NUMBER)\s*[)]/(untyped __physeq__($1, $2))/
