@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Php to haxe improvements. Add `overloadInText` command. Haxe beauty rules minor fix.",
-  "version": "3.1.0",
+  "releasenote": "Convert `T_IS_IDENTICAL` to `T_IS_EQUAL`.",
+  "version": "3.1.1",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
