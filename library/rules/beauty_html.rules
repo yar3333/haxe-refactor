@@ -1,7 +1,7 @@
-ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
-VALUE = (?:LONGID|NUMBER)
-SPACE = [ \t]+
-OPTSPACE = [ \t]*
+ID = \b[_a-zA-Z0-9]+\b
+TAG = \b(?:ID[:])?ID(?:[-]ID)*\b
+ATTR = ID(?:[-]ID)*
+STRING = (?:"(?:\\.|[^"])*?"|'(?:\\.|[^'])*?')
 
 // ==================== regular expressions ========================
 
@@ -34,3 +34,6 @@ OPTSPACE = [ \t]*
 /\bstyle[=]"([^"]*?):\s+/style="$1:/
 
 /\bstyle[=]"([^"]*?):0px/style="$1:0/
+
+/([<]TAG\s+(?:ATTR\s*=\s*STRING\s+)*)(ATTR)([ \t\r\n]+[^=])/$1$2="$2"$3/r
+/([<]TAG\s+(?:ATTR\s*=\s*STRING\s+)*)(ATTR)\s*=\s*([^'"][^ \t\r\n>\\]*)/$1$2="$3"/r
