@@ -122,5 +122,5 @@ STD_TYPE = \b(?:Int|Float|String|Dynamic|Bool)\b
 /[{]\n(?:OPTSPACE\n)+(OPTSPACE)/{\n$1
 /\n(OPTSPACE)[}]\s*catch\s*[(]/\n$1}\n$1catch (/
 
-/([^ \r\n\t])[+]/$1 +/
-/[+]([^ \r\n\t])/+ $1/
+/([a-zA-Z0-9_"'()[\]{}])[+]([^+=])/$1 +$2/
+/[+]([a-zA-Z0-9_"'([{])/+ $1/
