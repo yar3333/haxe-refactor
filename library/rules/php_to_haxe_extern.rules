@@ -8,4 +8,5 @@ VALUE = (?:untyped\s*__php__[(]STRING[)]|ID|NUMBER|STRING)
 
 /([,(]\s*)[?]?\s*(ID)\s*:\s*(ID)\s*=\s*VALUE/$1?$2:$3/
 
+/\binline\s+var\s+(ID)\s+=/var $1(default, null); \/\/ =/
 /^(\s*)public\s+(static|var|function)\b/$1$2/m

@@ -222,7 +222,7 @@ class PhpToHaxe {
 		$__hx__spos = $GLOBALS['%s']->length;
 		$stack = (new _hx_array(array()));
 		while($i < $names->length) {
-			if(_hx_equal($names[$i], $lexem) && $stack->length === 0) {
+			if($names[$i] === $lexem && $stack->length === 0) {
 				$GLOBALS['%s']->pop();
 				return $i;
 			}
@@ -234,7 +234,7 @@ class PhpToHaxe {
 			}
 			$i++;
 		}
-		throw new HException("Fatal error: lexem '" . Std::string($lexem) . "' not found from position " . _hx_string_rec($i, "") . ".");
+		throw new HException("Fatal error: lexem '" . _hx_string_or_null($lexem) . "' not found from position " . _hx_string_rec($i, "") . ".");
 		$GLOBALS['%s']->pop();
 	}
 	public function splitTokensByComma($names, $values) {
@@ -542,6 +542,7 @@ class PhpToHaxe {
 		$endParamsIndex = $this->getPairPos($names, $n);
 		$params = $this->splitTokensByComma($names->slice($begParamsIndex + 1, $endParamsIndex), $values->slice($begParamsIndex + 1, $endParamsIndex));
 		$resParamsStr = (new _hx_array(array()));
+		$vars = (new _hx_array(array()));
 		{
 			$_g = 0;
 			while($_g < $params->length) {
@@ -608,7 +609,8 @@ class PhpToHaxe {
 						}
 					}
 				}
-				$resParamsStr->push(_hx_string_or_null($name) . _hx_string_or_null((PhpToHaxe_1($this, $_g, $begParamsIndex, $commentIndex, $commentVarTypes, $defVal, $endParamsIndex, $i, $methodName, $n, $name, $names, $param, $paramNames, $paramValues, $params, $phpEmptyArray, $resParamsStr, $returnType, $type, $values))) . _hx_string_or_null((PhpToHaxe_2($this, $_g, $begParamsIndex, $commentIndex, $commentVarTypes, $defVal, $endParamsIndex, $i, $methodName, $n, $name, $names, $param, $paramNames, $paramValues, $params, $phpEmptyArray, $resParamsStr, $returnType, $type, $values))));
+				$resParamsStr->push(_hx_string_or_null($name) . _hx_string_or_null((PhpToHaxe_1($this, $_g, $begParamsIndex, $commentIndex, $commentVarTypes, $defVal, $endParamsIndex, $i, $methodName, $n, $name, $names, $param, $paramNames, $paramValues, $params, $phpEmptyArray, $resParamsStr, $returnType, $type, $values, $vars))) . _hx_string_or_null((PhpToHaxe_2($this, $_g, $begParamsIndex, $commentIndex, $commentVarTypes, $defVal, $endParamsIndex, $i, $methodName, $n, $name, $names, $param, $paramNames, $paramValues, $params, $phpEmptyArray, $resParamsStr, $returnType, $type, $values, $vars))));
+				$vars->push($name);
 				unset($type,$paramValues,$paramNames,$param,$name,$defVal);
 			}
 		}
@@ -620,21 +622,44 @@ class PhpToHaxe {
 			stdlib_LambdaArray::spliceEx($values, $begParamsIndex + 3, 0, (new _hx_array(array(" : " . _hx_string_or_null($this->getHaxeType($returnType))))));
 			$i++;
 		}
-		if($this->wantExtern) {
-			$funcBeg = $i + 1;
-			while($names[$funcBeg] === "T_WHITESPACE") {
-				$funcBeg++;
-			}
-			if($values[$funcBeg] === "{") {
-				$funcEnd = $this->getPairPos($names, $funcBeg);
+		$funcBeg = $i + 1;
+		while($names[$funcBeg] === "T_WHITESPACE") {
+			$funcBeg++;
+		}
+		if($values[$funcBeg] === "{") {
+			$funcEnd = $this->getPairPos($names, $funcBeg);
+			if($this->wantExtern) {
 				stdlib_LambdaArray::spliceEx($names, $i + 1, $funcEnd - $i, (new _hx_array(array(";"))));
 				stdlib_LambdaArray::spliceEx($values, $i + 1, $funcEnd - $i, (new _hx_array(array(";"))));
 				$i = $funcBeg;
+			} else {
+				$this->processFunctionBody($names, $values, $vars, $funcBeg, $funcEnd);
 			}
 		}
 		{
 			$GLOBALS['%s']->pop();
 			return $i;
+		}
+		$GLOBALS['%s']->pop();
+	}
+	public function processFunctionBody($names, $values, $vars, $funcBeg, $funcEnd) {
+		$GLOBALS['%s']->push("PhpToHaxe::processFunctionBody");
+		$__hx__spos = $GLOBALS['%s']->length;
+		$i = $funcBeg;
+		while($i < $funcEnd) {
+			if($names[$i] === "T_VARIABLE" && $this->isAfterLexem($names, $i, (new _hx_array(array(";", "{", "}"))), 10) && !Lambda::has($vars, _hx_substr($values[$i], 1, null))) {
+				$varNameIndex = $i;
+				$i++;
+				while($names[$i] === "T_WHITESPACE") {
+					$i++;
+				}
+				if($values[$i] === "=") {
+					$vars->push(_hx_substr($values[$varNameIndex], 1, null));
+					$values[$varNameIndex] = "var " . _hx_string_or_null($values[$varNameIndex]);
+				}
+				unset($varNameIndex);
+			}
+			$i++;
 		}
 		$GLOBALS['%s']->pop();
 	}
@@ -735,15 +760,21 @@ class PhpToHaxe {
 	public function processVar($names, $values, $i) {
 		$GLOBALS['%s']->push("PhpToHaxe::processVar");
 		$__hx__spos = $GLOBALS['%s']->length;
-		$startI = $i;
-		if(_hx_substr($values[$i], 0, 1) === "\$") {
+		$prefix = null;
+		if(StringTools::startsWith($values[$i], "var ")) {
+			$prefix = "var ";
+		} else {
+			$prefix = "";
+		}
+		$values[$i] = _hx_substr($values[$i], strlen($prefix), null);
+		if(StringTools::startsWith($values[$i], "\$")) {
 			$values[$i] = _hx_substr($values[$i], 1, null);
 		}
 		$type = $this->detectVarType($names, $values, $i);
 		if($type !== "") {
 			$values[$i] = _hx_string_or_null($values[$i]) . " : " . _hx_string_or_null($type);
 		}
-		if(PhpToHaxe_5($this, $i, $names, $startI, $type, $values)) {
+		if(PhpToHaxe_5($this, $i, $names, $prefix, $type, $values)) {
 			$values[$i] = $this->varNamesMapping->get($values[$i]);
 		}
 		if($i - 1 >= 0 && $names[$i - 1] === "T_ENCAPSED_AND_WHITESPACE") {
@@ -766,7 +797,7 @@ class PhpToHaxe {
 		if(!$this->isAfterLexem($names, $i, (new _hx_array(array("T_FUNCTION"))), 3) && $this->isAfterLexem($names, $i, (new _hx_array(array("T_PUBLIC", "T_PRIVATE", "T_STATIC"))), 3)) {
 			$values[$i] = "var " . _hx_string_or_null($values[$i]);
 		}
-		stdlib_Debug::assert($startI === $i, null, _hx_anonymous(array("fileName" => "PhpToHaxe.hx", "lineNumber" => 732, "className" => "PhpToHaxe", "methodName" => "processVar")));
+		$values[$i] = _hx_string_or_null($prefix) . _hx_string_or_null($values[$i]);
 		$GLOBALS['%s']->pop();
 	}
 	public function processFunctionCall($names, $values, $i) {
@@ -847,14 +878,14 @@ function PhpToHaxe_0(&$__hx__this, &$_g, &$names, &$text, &$token, &$tokens, &$v
 		return token_name($token1);
 	}
 }
-function PhpToHaxe_1(&$__hx__this, &$_g, &$begParamsIndex, &$commentIndex, &$commentVarTypes, &$defVal, &$endParamsIndex, &$i, &$methodName, &$n, &$name, &$names, &$param, &$paramNames, &$paramValues, &$params, &$phpEmptyArray, &$resParamsStr, &$returnType, &$type, &$values) {
+function PhpToHaxe_1(&$__hx__this, &$_g, &$begParamsIndex, &$commentIndex, &$commentVarTypes, &$defVal, &$endParamsIndex, &$i, &$methodName, &$n, &$name, &$names, &$param, &$paramNames, &$paramValues, &$params, &$phpEmptyArray, &$resParamsStr, &$returnType, &$type, &$values, &$vars) {
 	if($type !== "") {
 		return ":" . _hx_string_or_null($__hx__this->getHaxeType($type));
 	} else {
 		return "";
 	}
 }
-function PhpToHaxe_2(&$__hx__this, &$_g, &$begParamsIndex, &$commentIndex, &$commentVarTypes, &$defVal, &$endParamsIndex, &$i, &$methodName, &$n, &$name, &$names, &$param, &$paramNames, &$paramValues, &$params, &$phpEmptyArray, &$resParamsStr, &$returnType, &$type, &$values) {
+function PhpToHaxe_2(&$__hx__this, &$_g, &$begParamsIndex, &$commentIndex, &$commentVarTypes, &$defVal, &$endParamsIndex, &$i, &$methodName, &$n, &$name, &$names, &$param, &$paramNames, &$paramValues, &$params, &$phpEmptyArray, &$resParamsStr, &$returnType, &$type, &$values, &$vars) {
 	if($defVal !== "") {
 		return "=" . _hx_string_or_null($defVal);
 	} else {
@@ -873,7 +904,7 @@ function PhpToHaxe_4(&$__hx__this, &$phpType) {
 		return isset($var_);
 	}
 }
-function PhpToHaxe_5(&$__hx__this, &$i, &$names, &$startI, &$type, &$values) {
+function PhpToHaxe_5(&$__hx__this, &$i, &$names, &$prefix, &$type, &$values) {
 	{
 		$var_ = $__hx__this->varNamesMapping->get($values[$i]);
 		return isset($var_);

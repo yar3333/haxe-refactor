@@ -1,2 +1,4 @@
-/\bprotected var\b/var/
-/\bprotected function\b/function/
+ID = [_a-zA-Z][_a-zA-Z0-9]*
+
+/\b(?:protected|private) var\b/var/
+/\b(?:protected|private) function\b/function/
