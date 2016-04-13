@@ -1,8 +1,10 @@
 import hant.FileSystemTools;
 import hant.Log;
 import hant.Path;
+import hant.Process;
 import haxe.CallStack;
 import neko.Lib;
+import sys.FileSystem;
 
 class Main 
 {
@@ -40,7 +42,8 @@ class Main
 		{
 			var commands = new Commands(exeDir);
 			
-			switch (args.shift())
+			var command = args.shift();
+			switch (command)
 			{
 				case "replace":			commands.replace(args);
 				case "replaceInFile":	commands.replaceInFile(args, 1);
@@ -58,7 +61,14 @@ class Main
 				case "reindentFile":	commands.reindentFile(args);
 				case "reindentText":	commands.reindentText(args);
 				default:
-					fail("Unknow command.");
+					var script = exeDir + "/scripts/" + command + (Sys.systemName() == "Windows" ? ".cmd" : "");
+					if (FileSystem.exists(script))
+					{
+						var r = Process.run(script, args);
+						return r.exitCode;
+						
+					}
+					fail("Unknow command '" + command + "'.");
 			}
 		}
 		else
@@ -66,13 +76,12 @@ class Main
 			summaryHelp();
 		}
 		
-		Sys.exit(0);
+		return 0;
 	}
 	
 	static function fail(message:String)
 	{
 		Lib.println("ERROR: " + message);
-		Lib.println(CallStack.toString(CallStack.callStack()));
 		Sys.exit(1);
 	}
 	

@@ -40,6 +40,10 @@ haxelib run refactor convert --exclude-string-literals csharp_src *.cs haxe_src 
 Examples of the rule files you can see in rules folder.
 
 Also library's *scripts* folder contain `*.cmd` helpers to quickly run predefined conversions.
+This helpers may be called by `haxelib run refactor <helper>`. For example:
+```
+haxelib run refactor beauty_haxe src
+```
 
 ### All commands ###
 Run `haxelib run refactor <command>` to get help about specified command:
