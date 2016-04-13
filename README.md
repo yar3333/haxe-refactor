@@ -43,10 +43,10 @@ Apply file cs_to_haxe.rules to the `*.cs` files found in *csharp_src* folder and
 ```bash
 haxelib run refactor convert --exclude-string-literals csharp_src *.cs haxe_src /[.]cs$/.hx/ cs_to_haxe.rules
 ```
-Examples of the rule files you can see in rules folder.
+Examples of the rule files you can see in **rules** folder.
 
-Also library's *scripts* folder contain `*.cmd` helpers to quickly run predefined conversions.
-This helpers may be called by `haxelib run refactor <helper>`. For example:
+Also library's **scripts** folder contain `*.cmd` helpers to quickly run predefined conversions.
+This helpers may be called by `haxelib run refactor <script>`. For example:
 ```
 haxelib run refactor beauty_haxe src
 ```
@@ -72,7 +72,7 @@ reindentText    Like reindentFile, but read from stdin and write to stdout.
 ```
 
 ### All scripts ###
-Scripts is just a `*.cmd` files in `script` directory to comfortable call `convert` or `process` commands with a predefined rules.
+Scripts is just a `*.cmd` files in `script` directory to comfortable call `convert` and `process` commands with a predefined rules.
 Run `haxelib run refactor <script>` to get help about specified script:
 ```
 as2_to_haxe          Convert ActionScript 2 code into Haxe code.
