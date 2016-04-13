@@ -5,6 +5,7 @@ import php.PcreNatives.preg_match_ex;
 import php.PcreNatives.preg_replace;
 import php.TokenizerNatives.token_get_all;
 import php.TokenizerNatives.token_name;
+import php.Tokens;
 import php.TypedArray;
 import php.VarNatives.is_array;
 import php.VarNatives.is_string;
@@ -146,7 +147,7 @@ class PhpToHaxe
         }
     }
     
-    private function isBeforeLexem(names:Array<String>, n:Int, lexems:Array<Dynamic>, dist:Int) : Bool
+    private function isBeforeLexem(names:Array<String>, n:Int, lexems:Array<String>, dist:Int) : Bool
     {
 		var i = n + 1;
 		while (dist > 0 && i < names.length)
@@ -160,7 +161,7 @@ class PhpToHaxe
         return false;
     }
 	
-    private function isAfterLexem(names:Array<String>, n:Int, lexems:Array<Dynamic>, dist:Int) : Bool
+    private function isAfterLexem(names:Array<String>, n:Int, lexems:Array<String>, dist:Int) : Bool
     {
 		var i = n - 1;
 		while (dist > 0 && i >= 0)
@@ -193,7 +194,7 @@ class PhpToHaxe
         throw "Fatal error: pair not found.";
     }
 	
-    private function findLexemPosOnCurrentLevel(names:Array<String>, i:Int, lexem:Dynamic) : Int
+    private function findLexemPosOnCurrentLevel(names:Array<String>, i:Int, lexem:String) : Int
     {
         var stack = [];
         while (i<names.length)
@@ -488,6 +489,7 @@ class PhpToHaxe
         );
         
         var resParamsStr = [];
+		var vars = [];
         for (param in params)
         {
             var paramNames = param.names;
@@ -507,7 +509,7 @@ class PhpToHaxe
             
             if (paramNames.length > 0 && paramNames[0] == 'T_VARIABLE')
             {
-                name = (paramValues[0]).substr(1);
+                name = paramValues[0].substr(1);
                 paramNames.shift(); paramValues.shift();
                 this.trimAndPad(paramNames, paramValues, 0, 0);
             }
@@ -553,7 +555,8 @@ class PhpToHaxe
                 if (defVal==phpEmptyArray) type = 'NativeArray';
             }
             
-            resParamsStr.push(name + (type!='' ? ':'+this.getHaxeType(type):'') + (defVal!='' ? '='+defVal : ''));
+            resParamsStr.push(name + (type != '' ? ':' + this.getHaxeType(type):'') + (defVal != '' ? '=' + defVal : ''));
+			vars.push(name);
         }
         
         names .spliceEx(begParamsIndex + 1, endParamsIndex - begParamsIndex - 1, ['T_COMMENT']);
@@ -568,23 +571,47 @@ class PhpToHaxe
             i++;
         }
         
-		if (this.wantExtern)
-        {
-            var funcBeg = i + 1;
-            while (names[funcBeg]=='T_WHITESPACE') funcBeg++;
-            if (values[funcBeg] == '{')
-            {
-                var funcEnd = this.getPairPos(names, funcBeg);
-                names .spliceEx(i+1, funcEnd-i, [';']);
-                values.spliceEx(i+1, funcEnd-i, [';']);
-                i = funcBeg;
-            }
+		var funcBeg = i + 1;
+		while (names[funcBeg]=='T_WHITESPACE') funcBeg++;
+		if (values[funcBeg] == '{')
+		{
+			var funcEnd = this.getPairPos(names, funcBeg);
+			if (this.wantExtern)
+			{
+					names .spliceEx(i+1, funcEnd-i, [';']);
+					values.spliceEx(i+1, funcEnd-i, [';']);
+					i = funcBeg;
+			}
+			else
+			{
+				processFunctionBody(names, values, vars, funcBeg, funcEnd);
+			}
 		}
 		
 		return i;
     }
+	
+	function processFunctionBody(names:Array<String>, values:Array<String>, vars:Array<String>, funcBeg:Int, funcEnd:Int)
+	{
+		var i = funcBeg; while (i < funcEnd)
+		{
+			if (names[i] == "T_VARIABLE" && isAfterLexem(names, i, [";", "{", "}"], 10) && !vars.has(values[i].substr(1)))
+			{
+				var varNameIndex = i;
+				i++;
+				while (names[i] == "T_WHITESPACE") i++;
+				if (values[i] == "=")
+				{
+					vars.push(values[varNameIndex].substr(1));
+					values[varNameIndex] = "var " + values[varNameIndex];
+				}
+			}
+			
+			i++;
+		}
+	}
     
-    private function getVarTypesByDocComment(comment:String) : TypedArray<String, String>
+    function getVarTypesByDocComment(comment:String) : TypedArray<String, String>
     {
         var r = new TypedArray();
         
@@ -600,7 +627,7 @@ class PhpToHaxe
         return r;
     }
     
-    private function getReturnTypesByDocComment(comment:String) : String
+    function getReturnTypesByDocComment(comment:String) : String
     {
 		var m : TypedArray<String, String> = null;
         if (preg_match_ex("/@return\\s+(?<type>[_a-zA-Z][_a-zA-Z0-9]*)/", comment, m)>0)
@@ -652,9 +679,10 @@ class PhpToHaxe
     
     private function processVar(names:Array<String>, values:Array<String>, i:Int) : Void
     {
-		var startI = i;
+        var prefix = values[i].startsWith("var ") ? "var " : "";
+		values[i] = values[i].substr(prefix.length);
 		
-        if ((values[i]).substr(0, 1)=='$') values[i] = (values[i]).substr(1);
+		if (values[i].startsWith('$')) values[i] = values[i].substr(1);
         
         var type = this.detectVarType(names, values, i);
         if (type!='')
@@ -729,7 +757,7 @@ class PhpToHaxe
             values[i] = 'var ' + values[i];
         }
 		
-		Debug.assert(startI == i);
+		values[i] = prefix + values[i];
     }
     
     private function processFunctionCall(names:Array<String>, values:Array<String>, i:Int) : Int

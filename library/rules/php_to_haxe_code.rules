@@ -3,4 +3,5 @@ INT = [0-9]+(?:e[-+][0-9]+)?
 FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
 NUMBER = (?:INT|FLOAT)
 
+/\binline\s+var\s+(ID)\s+=/var $1(default, never) =/
 /\bcatch\s*[(]\s*(ID)\s+(ID)\s*[)]/catch ($2:$1)/
