@@ -73,7 +73,7 @@ class Main
 		}
 		else
 		{
-			summaryHelp();
+			summaryHelp(exeDir);
 		}
 		
 		return 0;
@@ -85,12 +85,13 @@ class Main
 		Sys.exit(1);
 	}
 	
-	static function summaryHelp()
+	static function summaryHelp(exeDir:String)
 	{
 		Lib.println("Refactor is a refactoring and search/replace tool.");
-		Lib.println("Usage: haxelib run refactor [-v] <command> <args>");
-		Lib.println("where '-v' is the verbose key ('-vv' for more details) and <command> may be:");
+		Lib.println("Usage: haxelib run refactor [-v] (<command> | <script>) <args>");
+		Lib.println("where '-v' is the verbose key ('-vv' for more details).");
 		Lib.println("");
+		Lib.println("Commands:");
 		Lib.println("    replace         Recursive search&replace by regex in files.");
 		Lib.println("    replaceInFile   Search&replace by regex in specified file.");
 		Lib.println("    replaceInText   Like replaceInFile, but read from stdin and write to stdout.");
@@ -106,6 +107,19 @@ class Main
 		Lib.println("    reindent        Recursive change indentation in files.");
 		Lib.println("    reindentFile    Change indentation in specified file.");
 		Lib.println("    reindentText    Like reindentFile, but read from stdin and write to stdout.");
+		Lib.println("");
+		
+		var isWindows = Sys.systemName() == "Windows";
+		var scriptsDir = exeDir + "/scripts";
+		Lib.println("Scripts:");
+		for (file in FileSystem.readDirectory(scriptsDir))
+		{
+			if (isWindows && Path.extension(file) == "cmd" || !isWindows && Path.extension(file) == "")
+			{
+				Lib.println("    " + Path.withoutExtension(file));
+			}
+		}
+		
 		Lib.println("");
 		Lib.println("Type 'haxelib run refactor <command>' to get help about specified command.");
 	}

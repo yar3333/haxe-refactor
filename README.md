@@ -11,14 +11,20 @@ A tool to search&replace by regex in many files, refactor haxe code and convert 
 * Rename class
 * Move class to another package
 * Apply set of regex search&replace rules to files
+* Automatically fix overriding/overloading
 
 ### Predefined rule files ###
 
-* c# to haxe
-* js to haxe
-* haxe to c++
-* beauty html
-* beauty haxe
+* ActionScript 2 to Haxe
+* C# to Haxe
+* Haxe to C++
+* Haxe to TypeScript
+* JavaScript to Haxe
+* PHP to Haxe
+* TypeScript to Haxe
+* beauty C++
+* beauty HTML
+* beauty Haxe
 
 ### Simple search & replace ###
 Replace **aaa** to **bbb** in `*.hx` files found in *mydirA* and *mydirB* folders:
@@ -63,4 +69,22 @@ overloadInFile  Autofix overload/redefinition in haxe code.
 reindent        Recursive change indentation in files.
 reindentFile    Change indentation in specified file.
 reindentText    Like reindentFile, but read from stdin and write to stdout.
+```
+
+### All scripts ###
+Scripts is just a `*.cmd` files in `script` directory to comfortable call `convert` or `process` commands with a predefined rules.
+Run `haxelib run refactor <script>` to get help about specified script:
+```
+as2_to_haxe          Convert ActionScript 2 code into Haxe code.
+beauty_cpp           Beauty C++ code files.
+beauty_haxe          Beauty Haxe code files.
+beauty_html          Beauty HTML code files.
+cs_to_haxe           Convert C# code into Haxe code.
+haxe_to_cpp          Convert Haxe code into C++ code.
+haxe_to_ts           Convert Haxe code into TypeScript code.
+js_to_haxe           Convert JavaScript code into Haxe code.
+php_to_haxe_code     Convert PHP code into Haxe code.
+php_to_haxe_extern   Convert PHP code into Haxe externs.
+php_to_haxe_typedef  Convert table of properties from php.net site into Haxe typedef.
+ts_to_haxe           Convert TypeScript code into Haxe code.
 ```
