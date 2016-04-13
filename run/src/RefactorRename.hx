@@ -221,4 +221,43 @@ class RefactorRename extends RefactorReplace
 		
 		return null;
 	}
+	
+	public function renameFiles(filter:String, changeFileName:Regex, verbose:Bool)
+	{
+		if (new Rules([changeFileName]).check())
+		{
+			var reFilter = new EReg(filter, "i");
+			
+			for (baseDir in baseDirs)
+			{
+				if (verbose) Log.start("Rename files in '" + baseDir + "'");
+				
+				FileSystemTools.findFiles(baseDir, function(path)
+				{
+					var localPath = path.substr(baseDir.length + 1);
+					if (reFilter.match(localPath))
+					{
+						var outPath = getDestFilePath(path, localPath, changeFileName);
+						FileSystemTools.rename(path, outPath, verbose);
+					}
+				});
+				
+				if (verbose) Log.finishSuccess();
+			}
+		}
+	}
+	
+	function getDestFilePath(path:String, localPath:String, changeFileName:Regex) : String
+	{
+		if (outDir == null)
+		{
+			return Path.directory(path) + "/" + changeFileName.replace(Path.withoutDirectory(path));
+		}
+		else
+		{
+			var localDir = Path.directory(localPath);
+			return (outDir != null ? outDir + (localDir != "" ? localDir + "/" : "") : Path.directory(path) + "/")
+					+ changeFileName.replace(Path.withoutDirectory(path));
+		}
+	}
 }
