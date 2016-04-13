@@ -792,4 +792,45 @@ class Commands extends BaseCommands
 			Lib.println("    cat MyClass.hx | haxelib run refactor reindentInFile 4 4 1 4 | haxelib run refactor replaceInText \"/\\\\t/ /\" > MyClass.hx");
 		}
 	}
+	
+	public function renameFiles(args:Array<String>, verbose:Bool)
+	{
+		var options = new CmdOptions();
+		
+		options.add("baseDir", "", "Path to source folder.");
+		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
+		options.add("convertFileName", "", "Regex to find and replace in file name (/search/replacement/flags).\nUsed to produce output file name.");
+		options.add("outDir", "", "Output directory.");
+		
+		if (args.length > 0)
+		{
+			options.parse(args);
+			
+			var baseDir = options.get("baseDir");
+			var filter = filterToRegex(options.get("filter"));
+			var convertFileName = new Regex(options.get("convertFileName"));
+			var outDir = options.get("outDir");
+			
+			if (baseDir == "") fail("<baseDir> arg must be specified.");
+			if (filter == "") fail("<filter> arg must be specified.");
+			if (convertFileName == null) fail("<convertFileName> arg must be specified.");
+			if (outDir == "") outDir = null;
+			
+			var refactor = new RefactorRename(baseDir, outDir);
+			refactor.renameFiles(filter, convertFileName, verbose);
+		}
+		else
+		{
+			Lib.println("Recursive rename files by regex.");
+			Lib.println("Usage: haxelib run refactor [-v] renameFiles <baseDir> <filter> <convertFileName> [ <outDir> ]");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+			Lib.println("");
+			Lib.println("Examples:");
+			Lib.println("");
+			Lib.println("    haxelib run refactor renameFile src *.js /[.]js$/.hx/");
+			Lib.println("        Search for *.js files in the 'src' folder and rename its into *.hx.");
+		}
+	}
 }
