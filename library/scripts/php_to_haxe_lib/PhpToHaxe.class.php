@@ -50,6 +50,8 @@ class PhpToHaxe {
 			$names->shift();
 			$values->shift();
 		}
+		$this->processBasicValues($names, $values);
+		$this->processVarsInStrings($names, $values);
 		$this->changeProtectedToPrivate($names, $values);
 		$this->changeStdValuesToLowerCase($names, $values);
 		$this->changeOctalNumberToHex($names, $values);
@@ -62,6 +64,66 @@ class PhpToHaxe {
 		{
 			$GLOBALS['%s']->pop();
 			return $r;
+		}
+		$GLOBALS['%s']->pop();
+	}
+	public function processBasicValues($names, $values) {
+		$GLOBALS['%s']->push("PhpToHaxe::processBasicValues");
+		$__hx__spos = $GLOBALS['%s']->length;
+		$i = 0;
+		while($i < $names->length) {
+			if($names[$i] === "T_STRING") {
+				$_g = strtolower($values[$i]);
+				switch($_g) {
+				case "true":{
+					$values[$i] = "true";
+				}break;
+				case "false":{
+					$values[$i] = "false";
+				}break;
+				case "null":{
+					$values[$i] = "null";
+				}break;
+				}
+				unset($_g);
+			}
+			$i++;
+		}
+		$GLOBALS['%s']->pop();
+	}
+	public function processVarsInStrings($names, $values) {
+		$GLOBALS['%s']->push("PhpToHaxe::processVarsInStrings");
+		$__hx__spos = $GLOBALS['%s']->length;
+		$i = 0;
+		while($i < $names->length) {
+			{
+				$_g = $names[$i];
+				switch($_g) {
+				case "'":{
+					$names[$i] = "\"";
+					$values[$i] = "\"";
+				}break;
+				case "\"":{
+					$names[$i] = "'";
+					$values[$i] = "'";
+				}break;
+				case "T_DOLLAR_OPEN_CURLY_BRACES":{
+					$names[$i] = "T_ENCAPSED_AND_WHITESPACE";
+					$end = $this->findLexemPosOnCurrentLevel($names, $i, "}");
+					$names[$end] = "T_ENCAPSED_AND_WHITESPACE";
+					$i = $end;
+				}break;
+				case "T_CURLY_OPEN":{
+					$names[$i] = "T_ENCAPSED_AND_WHITESPACE";
+					$values[$i] = "\${";
+					$end1 = $this->findLexemPosOnCurrentLevel($names, $i, "}");
+					$names[$end1] = "T_ENCAPSED_AND_WHITESPACE";
+					$i = $end1;
+				}break;
+				}
+				unset($_g);
+			}
+			$i++;
 		}
 		$GLOBALS['%s']->pop();
 	}
@@ -692,8 +754,8 @@ class PhpToHaxe {
 		$GLOBALS['%s']->push("PhpToHaxe::getReturnTypesByDocComment");
 		$__hx__spos = $GLOBALS['%s']->length;
 		$m = null;
-		if(preg_match("/@return\\s+(?<type>[_a-zA-Z][_a-zA-Z0-9]*)/", $comment, $m, 0, 0) > 0) {
-			$tmp = $m["type"];
+		if(preg_match_all("/@return\\s+(?<type>[_a-zA-Z][_a-zA-Z0-9]*)/", $comment, $m, (((null === null)) ? PREG_PATTERN_ORDER : null), 0) > 0) {
+			$tmp = implode("|", $m["type"]);
 			$GLOBALS['%s']->pop();
 			return $tmp;
 		}
@@ -706,10 +768,47 @@ class PhpToHaxe {
 	public function getHaxeType($phpType) {
 		$GLOBALS['%s']->push("PhpToHaxe::getHaxeType");
 		$__hx__spos = $GLOBALS['%s']->length;
-		if(PhpToHaxe_4($this, $phpType)) {
-			$tmp = $this->typeNamesMapping->get($phpType);
+		if($this->wantExtern) {
+			$tmp = $this->getHaxeTypeForExtern($phpType);
 			$GLOBALS['%s']->pop();
 			return $tmp;
+		} else {
+			$tmp = $this->getHaxeTypeForCode($phpType);
+			$GLOBALS['%s']->pop();
+			return $tmp;
+		}
+		$GLOBALS['%s']->pop();
+	}
+	public function getHaxeTypeForExtern($phpType) {
+		$GLOBALS['%s']->push("PhpToHaxe::getHaxeTypeForExtern");
+		$__hx__spos = $GLOBALS['%s']->length;
+		$n = _hx_index_of($phpType, "|", null);
+		if($n <= 0) {
+			$tmp = $this->getHaxeTypeForCode($phpType);
+			$GLOBALS['%s']->pop();
+			return $tmp;
+		}
+		{
+			$tmp = "EitherType<" . _hx_string_or_null($this->getHaxeTypeForCode(_hx_substring($phpType, 0, $n))) . ", " . _hx_string_or_null($this->getHaxeTypeForExtern(_hx_substring($phpType, $n + 1, null))) . ">";
+			$GLOBALS['%s']->pop();
+			return $tmp;
+		}
+		$GLOBALS['%s']->pop();
+	}
+	public function getHaxeTypeForCode($phpType) {
+		$GLOBALS['%s']->push("PhpToHaxe::getHaxeTypeForCode");
+		$__hx__spos = $GLOBALS['%s']->length;
+		if(_hx_index_of($phpType, "|", null) >= 0) {
+			$GLOBALS['%s']->pop();
+			return "Dynamic";
+		}
+		if(PhpToHaxe_4($this, $phpType)) {
+			$key1 = strtolower($phpType);
+			{
+				$tmp = $this->typeNamesMapping->get($key1);
+				$GLOBALS['%s']->pop();
+				return $tmp;
+			}
 		}
 		{
 			$GLOBALS['%s']->pop();
@@ -900,8 +999,8 @@ function PhpToHaxe_3(&$__hx__this, &$comment, &$matches, &$r) {
 }
 function PhpToHaxe_4(&$__hx__this, &$phpType) {
 	{
-		$var_ = $__hx__this->typeNamesMapping->get($phpType);
-		return isset($var_);
+		$key = strtolower($phpType);
+		return $__hx__this->typeNamesMapping->exists($key);
 	}
 }
 function PhpToHaxe_5(&$__hx__this, &$i, &$names, &$prefix, &$type, &$values) {

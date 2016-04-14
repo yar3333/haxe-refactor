@@ -65,16 +65,66 @@ class PhpToHaxe
             values.shift();
         }
 		
-        this.changeProtectedToPrivate(names, values);
-        this.changeStdValuesToLowerCase(names, values);
-        this.changeOctalNumberToHex(names, values);
-        this.changeReservedWords(names, values);
-        this.changeIsIdenticalToIsEqual(names, values);
+		processBasicValues(names, values);
+		processVarsInStrings(names, values);
+        changeProtectedToPrivate(names, values);
+        changeStdValuesToLowerCase(names, values);
+        changeOctalNumberToHex(names, values);
+        changeReservedWords(names, values);
+        changeIsIdenticalToIsEqual(names, values);
 		
-		var r = this.tokensToText(names, values);
-        if (this.wantExtern) r = ~/[\t ]*\n[\t ]*\n[\t ]*\n/g.replace(r, "\n\n");
+		var r = tokensToText(names, values);
+        if (wantExtern) r = ~/[\t ]*\n[\t ]*\n[\t ]*\n/g.replace(r, "\n\n");
         return r;
     }
+	
+	function processBasicValues(names:Array<String>, values:Array<String>) : Void
+	{
+		var i = 0; while (i < names.length)
+		{
+			if (names[i] == "T_STRING")
+			{
+				switch (values[i].toLowerCase())
+				{
+					case "true": values[i] = "true";
+					case "false": values[i] = "false";
+					case "null": values[i] = "null";
+				}
+			}
+			i++;
+		}
+	}
+	
+	function processVarsInStrings(names:Array<String>, values:Array<String>) : Void
+	{
+		var i = 0; while (i < names.length)
+		{
+			switch (names[i])
+			{
+				case "'":
+					names[i] = '"';
+					values[i] = '"';
+					
+				case '"':
+					names[i] = "'";
+					values[i] = "'";
+					
+				case "T_DOLLAR_OPEN_CURLY_BRACES":
+					names[i] = "T_ENCAPSED_AND_WHITESPACE";
+					var end = findLexemPosOnCurrentLevel(names, i, "}");
+					names[end] = "T_ENCAPSED_AND_WHITESPACE";
+					i = end;
+					
+				case "T_CURLY_OPEN":
+					names[i] = "T_ENCAPSED_AND_WHITESPACE";
+					values[i] = "${";
+					var end = findLexemPosOnCurrentLevel(names, i, "}");
+					names[end] = "T_ENCAPSED_AND_WHITESPACE";
+					i = end;
+			}
+			i++;
+		}
+	}
 	
     private function changeProtectedToPrivate(names:Array<String>, values:Array<String>) : Void
     {
@@ -209,7 +259,7 @@ class PhpToHaxe
         throw "Fatal error: lexem '" + lexem + "' not found from position " + i + ".";
     }
 	
-    private function splitTokensByComma(names:Array<String>, values:Array<String>) : Array<{ names:Array<String>, values:Array<String> }>
+	private function splitTokensByComma(names:Array<String>, values:Array<String>) : Array<{ names:Array<String>, values:Array<String> }>
     {
         var params = [];
 		
@@ -220,7 +270,7 @@ class PhpToHaxe
         {
             if ([ '(','{','[' ].has(names[i])) stack.push(names[i]);
             if ([ ')','}',']' ].has(names[i])) stack.pop();
-
+			
             if (names[i]==',' && stack.length==0)
             {
                 params.push(param);
@@ -629,22 +679,39 @@ class PhpToHaxe
     
     function getReturnTypesByDocComment(comment:String) : String
     {
-		var m : TypedArray<String, String> = null;
-        if (preg_match_ex("/@return\\s+(?<type>[_a-zA-Z][_a-zA-Z0-9]*)/", comment, m)>0)
+		var m : TypedArray<String, TypedArray<Int, String>> = null;
+        if (preg_match_all_ex("/@return\\s+(?<type>[_a-zA-Z][_a-zA-Z0-9]*)/", comment, m)>0)
         {
-            return m['type'];
+			return m['type'].join("|");
         }
         return '';
     }
     
-    private function getHaxeType(phpType:String) : String
+    function getHaxeType(phpType:String) : String
     {
-        if (isset(this.typeNamesMapping[phpType]))
+		if (wantExtern) return getHaxeTypeForExtern(phpType);
+		else            return getHaxeTypeForCode(phpType);
+		
+    }
+	
+	function getHaxeTypeForExtern(phpType:String) : String
+	{
+		var n = phpType.indexOf("|");
+		if (n <= 0) return getHaxeTypeForCode(phpType);
+		return "EitherType<" + getHaxeTypeForCode(phpType.substring(0, n)) + ", " + getHaxeTypeForExtern(phpType.substring(n + 1)) + ">";
+		
+	}
+    
+	function getHaxeTypeForCode(phpType:String) : String
+    {
+		if (phpType.indexOf("|") >= 0) return "Dynamic";
+		
+		if (typeNamesMapping.exists(phpType.toLowerCase()))
         {
-            return this.typeNamesMapping[phpType];
+            return typeNamesMapping.get(phpType.toLowerCase());
         }
         return phpType;
-    }
+	}
     
     private function processDocComment(names:Array<String>, values:Array<String>, i:Int) : Void
     {
