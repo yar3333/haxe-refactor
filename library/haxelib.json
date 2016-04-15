@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Php to haxe improvements. Add `renameFiles` command.",
-  "version": "3.3.0",
+  "releasenote": "Scripts: process files in arguments. Scripts: dest file now optional. Readme improvements.",
+  "version": "3.3.1",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
