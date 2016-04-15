@@ -45,10 +45,22 @@ haxelib run refactor convert --exclude-string-literals csharp_src *.cs haxe_src 
 ```
 Examples of the rule files you can see in **rules** folder.
 
-Also library's **scripts** folder contain `*.cmd` helpers to quickly run predefined conversions.
-This helpers may be called by `haxelib run refactor <script>`. For example:
+### Convert code from language X to language Y ###
+Just use `*.cmd` helpers to run predefined conversions (placed in **scripts** folder).
+These helpers can be executed directly or through haxelib. Examples:
+```bash
+haxelib run refactor php_to_haxe_code MyClass.php
+haxelib run refactor php_to_haxe_extern MyClass.php DestClass.hx
+haxelib run refactor js_to_haxe MyClass.js
 ```
-haxelib run refactor beauty_haxe src
+
+### Beauty code on language X ###
+Just use `*.cmd` helpers to run predefined conversions (placed in **scripts** folder).
+These helpers can be executed directly or through haxelib. Examples:
+```bash
+haxelib run refactor beauty_haxe srcDir
+haxelib run refactor beauty_haxe MyClass.hx
+haxelib run refactor beauty_html index.html
 ```
 
 ### All commands ###
