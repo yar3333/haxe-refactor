@@ -1,12 +1,18 @@
 @echo off
 
 IF [%1]==[] GOTO :help
+IF EXIST %1\NUL GOTO :dir
 
-haxelib run refactor process "%1" *.html beauty_html.rules
+:file
+haxelib run refactor process "%1" %~dp0..\rules\beauty_html.rules
+goto exit
+
+:dir
+haxelib run refactor process "%1" *.html %~dp0..\rules\beauty_html.rules
 goto exit
 
 :help
-echo Using: %~n0 ^<srcDir^>
+echo Using: %~n0 ^<src^>
 echo.
 
 :exit
