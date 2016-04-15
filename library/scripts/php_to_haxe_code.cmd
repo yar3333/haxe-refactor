@@ -1,4 +1,5 @@
 @echo off
+SETLOCAL
 
 IF [%1]==[] GOTO :help
 
@@ -14,3 +15,4 @@ echo Using: %~n0 ^<srcFile.php^> [ ^<destFile.hx^> ]
 echo.
 
 :exit
+ENDLOCAL
