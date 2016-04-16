@@ -622,6 +622,10 @@ class PhpToHaxe {
 					$paramValues->shift();
 					$this->trimAndPad($paramNames, $paramValues, 0, 0);
 				}
+				while($paramNames->length > 0 && $paramNames[0] === "&") {
+					$paramNames->shift();
+					$paramValues->shift();
+				}
 				if($paramNames->length > 0 && $paramNames[0] === "T_VARIABLE") {
 					$name = _hx_substr($paramValues[0], 1, null);
 					$paramNames->shift();

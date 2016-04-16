@@ -35,16 +35,20 @@ class stdlib_Debug {
 					$s = "STRING(" . Std::string($v) . ")\x0A";
 				} else {
 					if((is_object($_t2 = $c) && !($_t2 instanceof Enum) ? $_t2 === _hx_qtype("Array") : $_t2 == _hx_qtype("Array"))) {
-						$s = "ARRAY(" . Std::string(_hx_len($v)) . ")\x0A";
-						{
-							$_g1 = 0;
-							$_g2 = null;
-							$_g2 = $v;
-							while($_g1 < $_g2->length) {
-								$item = $_g2[$_g1];
-								++$_g1;
-								$s .= _hx_string_or_null($prefix) . _hx_string_or_null(stdlib_Debug::getDump($item, $limit, $level + 1, $prefix));
-								unset($item);
+						if(is_array($v)) {
+							$s = stdlib_Debug::getDumpPhpArray($v, $limit, $level, $prefix);
+						} else {
+							$s = "ARRAY(" . Std::string(_hx_len($v)) . ")\x0A";
+							{
+								$_g1 = 0;
+								$_g2 = null;
+								$_g2 = $v;
+								while($_g1 < $_g2->length) {
+									$item = $_g2[$_g1];
+									++$_g1;
+									$s .= _hx_string_or_null($prefix) . _hx_string_or_null(stdlib_Debug::getDump($item, $limit, $level + 1, $prefix));
+									unset($item);
+								}
 							}
 						}
 					} else {
@@ -89,8 +93,11 @@ class stdlib_Debug {
 			case 4:{
 				$s = "OBJECT" . "\x0A" . _hx_string_or_null(stdlib_Debug::getObjectDump($v, $limit, $level + 1, $prefix));
 			}break;
-			case 5:case 8:{
-				$s = "FUNCTION OR UNKNOW\x0A";
+			case 5:{
+				$s = "FUNCTION\x0A";
+			}break;
+			case 8:{
+				$s = stdlib_Debug::getDumpPhpNative($v);
 			}break;
 			}
 		}
@@ -120,6 +127,61 @@ class stdlib_Debug {
 		}
 		$GLOBALS['%s']->pop();
 	}
+	static function getDumpPhpArray($v, $limit, $level, $prefix) {
+		$GLOBALS['%s']->push("stdlib.Debug::getDumpPhpArray");
+		$__hx__spos = $GLOBALS['%s']->length;
+		$s = null;
+		if(array_keys($v) !== range(0, count($v) - 1)) {
+			$s = "PHP_ASSOCIATIVE_ARRAY\x0A";
+			{
+				$_g = 0;
+				$_g1 = null;
+				{
+					$a = array_keys($v);
+					$_g1 = new _hx_array($a);
+				}
+				while($_g < $_g1->length) {
+					$k = $_g1[$_g];
+					++$_g;
+					$s .= _hx_string_or_null($prefix) . Std::string($k) . " => " . _hx_string_or_null(stdlib_Debug::getDump($v[$k], $limit, $level + 1, $prefix));
+					unset($k);
+				}
+			}
+		} else {
+			$s = "PHP_ARRAY(" . _hx_string_or_null((_hx_string_or_null(count($v)) . ")\x0A"));
+			{
+				$_g2 = 0;
+				$_g11 = null;
+				{
+					$a1 = array_keys($v);
+					$_g11 = new _hx_array($a1);
+				}
+				while($_g2 < $_g11->length) {
+					$k1 = $_g11[$_g2];
+					++$_g2;
+					$s .= _hx_string_or_null($prefix) . _hx_string_or_null(stdlib_Debug::getDump($v[$k1], $limit, $level + 1, $prefix));
+					unset($k1);
+				}
+			}
+		}
+		{
+			$GLOBALS['%s']->pop();
+			return $s;
+		}
+		$GLOBALS['%s']->pop();
+	}
+	static function getDumpPhpNative($v) {
+		$GLOBALS['%s']->push("stdlib.Debug::getDumpPhpNative");
+		$__hx__spos = $GLOBALS['%s']->length;
+		ob_start();
+		var_dump($v);
+		{
+			$tmp = ob_get_clean();
+			$GLOBALS['%s']->pop();
+			return $tmp;
+		}
+		$GLOBALS['%s']->pop();
+	}
 	static function assert($e, $message = null, $pos = null) {
 		$GLOBALS['%s']->push("stdlib.Debug::assert");
 		$__hx__spos = $GLOBALS['%s']->length;
@@ -142,7 +204,7 @@ class stdlib_Debug {
 		$GLOBALS['%s']->push("stdlib.Debug::traceStack");
 		$__hx__spos = $GLOBALS['%s']->length;
 		$stack = stdlib_StringTools::trim(stdlib_Debug_0($pos, $v), null);
-		haxe_Log::trace("TRACE " . _hx_string_or_null((((Std::is($v, _hx_qtype("String"))) ? $v : stdlib_StringTools::trim(stdlib_Debug::getDump($v, null, null, null), null)))) . "\x0AStack trace:\x0A" . _hx_string_or_null($stack), _hx_anonymous(array("fileName" => "Debug.hx", "lineNumber" => 136, "className" => "stdlib.Debug", "methodName" => "traceStack", "customParams" => (new _hx_array(array($pos))))));
+		haxe_Log::trace("TRACE " . _hx_string_or_null((((Std::is($v, _hx_qtype("String"))) ? $v : stdlib_StringTools::trim(stdlib_Debug::getDump($v, null, null, null), null)))) . "\x0AStack trace:\x0A" . _hx_string_or_null($stack), _hx_anonymous(array("fileName" => "Debug.hx", "lineNumber" => 187, "className" => "stdlib.Debug", "methodName" => "traceStack", "customParams" => (new _hx_array(array($pos))))));
 		$GLOBALS['%s']->pop();
 	}
 	static function methodMustBeOverriden($_this, $pos = null) {
