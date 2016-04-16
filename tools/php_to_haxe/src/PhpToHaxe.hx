@@ -557,6 +557,8 @@ class PhpToHaxe
                 this.trimAndPad(paramNames, paramValues, 0, 0);
             }
             
+			while (paramNames.length > 0 && paramNames[0] == "&") { paramNames.shift(); paramValues.shift(); }
+			
             if (paramNames.length > 0 && paramNames[0] == 'T_VARIABLE')
             {
                 name = paramValues[0].substr(1);

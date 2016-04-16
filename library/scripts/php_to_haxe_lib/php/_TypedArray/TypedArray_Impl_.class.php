@@ -144,7 +144,7 @@ class php__TypedArray_TypedArray_Impl_ {
 		$GLOBALS['%s']->push("php._TypedArray.TypedArray_Impl_::push");
 		$__hx__spos = $GLOBALS['%s']->length;
 		{
-			$tmp = array_push($v);
+			$tmp = array_push($this1, $v);
 			$GLOBALS['%s']->pop();
 			return $tmp;
 		}
@@ -154,7 +154,7 @@ class php__TypedArray_TypedArray_Impl_ {
 		$GLOBALS['%s']->push("php._TypedArray.TypedArray_Impl_::pop");
 		$__hx__spos = $GLOBALS['%s']->length;
 		{
-			$tmp = array_pop();
+			$tmp = array_pop($this1);
 			$GLOBALS['%s']->pop();
 			return $tmp;
 		}
@@ -164,7 +164,7 @@ class php__TypedArray_TypedArray_Impl_ {
 		$GLOBALS['%s']->push("php._TypedArray.TypedArray_Impl_::unshift");
 		$__hx__spos = $GLOBALS['%s']->length;
 		{
-			$tmp = array_unshift($v);
+			$tmp = array_unshift($this1, $v);
 			$GLOBALS['%s']->pop();
 			return $tmp;
 		}
@@ -174,7 +174,7 @@ class php__TypedArray_TypedArray_Impl_ {
 		$GLOBALS['%s']->push("php._TypedArray.TypedArray_Impl_::shift");
 		$__hx__spos = $GLOBALS['%s']->length;
 		{
-			$tmp = array_shift();
+			$tmp = array_shift($this1);
 			$GLOBALS['%s']->pop();
 			return $tmp;
 		}
