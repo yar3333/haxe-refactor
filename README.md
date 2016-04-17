@@ -35,6 +35,7 @@ haxelib run refactor replace mydirA;mydirB *.hx /aaa/bbb/
 
 
 ### Move class to another package ###
+
 Move class `MyClass` from `oldpack` to `newpack` (*src* is a source project folder to search class files):
 ```bash
 haxelib run refactor rename src oldpack.MyClass newpack.MyClass
@@ -42,6 +43,7 @@ haxelib run refactor rename src oldpack.MyClass newpack.MyClass
 
 
 ### Apply many regex rules to files ###
+
 Apply file cs_to_haxe.rules to the `*.cs` files found in *csharp_src* folder and save changed files as `*.hx` into *haxe_src* folder:
 ```bash
 haxelib run refactor convert --exclude-string-literals csharp_src *.cs haxe_src /[.]cs$/.hx/ cs_to_haxe.rules
@@ -52,6 +54,7 @@ Examples of the rule files you can see in **rules** folder.
 
 
 ### Convert code from language X to language Y ###
+
 Just use `*.cmd` helpers to run predefined conversions (placed in **scripts** folder).
 These helpers can be executed directly or through haxelib. Examples:
 ```bash
@@ -62,6 +65,7 @@ haxelib run refactor js_to_haxe MyClass.js
 
 
 ### Beauty code on language X ###
+
 Just use `*.cmd` helpers to run predefined conversions (placed in **scripts** folder).
 These helpers can be executed directly or through haxelib. Examples:
 ```bash
@@ -72,6 +76,7 @@ haxelib run refactor beauty_html index.html
 
 
 ### All commands ###
+
 Run `haxelib run refactor <command>` to get help about specified command:
 ```
 replace         Recursive search&replace by regex in files.
@@ -92,8 +97,10 @@ reindentText    Like reindentFile, but read from stdin and write to stdout.
 renameFiles     Rename files recursively by regex.
 ```
 
+
 ### All scripts ###
-Scripts is just a `*.cmd` files in `script` directory to comfortable call `convert` and `process` commands with a predefined rules.
+
+Scripts are just a `*.cmd` files in `scripts` directory to comfortable call `convert` and `process` commands with a predefined rules.
 Run `haxelib run refactor <script>` to get help about specified script:
 ```
 as2_to_haxe          Convert ActionScript 2 code into Haxe code.
