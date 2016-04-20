@@ -12,14 +12,15 @@ typedef FileApi =
 
 class TextFile
 {
+	var baseVerboseLevel : Int;
+	var originalLineEndings : String;
+	
+	public var lineEndings : String;
+	
 	public var inpPath(default, null) : String;
 	public var outPath(default, null) : String;
-	var baseVerboseLevel : Int;
 	
 	public var text(default, null) : String;
-	var isWinLineEndStyle : Bool;
-	var isMacLineEndStyle : Bool;
-	
 	
 	public function new(inpPath:String, outPath:String, baseVerboseLevel:Int)
 	{
@@ -29,11 +30,26 @@ class TextFile
 		
 		text = File.getContent(inpPath);
 		
-		isWinLineEndStyle = text.indexOf("\r\n") >= 0;
-		if (isWinLineEndStyle) text = text.replace("\r\n", "\n");
+		var isWindowsLineEndings = text.indexOf("\r\n") >= 0;
+		if (isWindowsLineEndings) text = text.replace("\r\n", "\n");
 		
-		isMacLineEndStyle = !isWinLineEndStyle && text.indexOf("\r") >= 0;
-		if (isMacLineEndStyle) text = text.replace("\r", "\n");
+		var isMacLineEndings = !isWindowsLineEndings && text.indexOf("\r") >= 0;
+		if (isMacLineEndings) text = text.replace("\r", "\n");
+		
+		if (isWindowsLineEndings)
+		{
+			lineEndings = "windows";
+		}
+		else
+		if (isMacLineEndings)
+		{
+			lineEndings = "mac";
+		}
+		else
+		{
+			lineEndings = "unix";
+		}
+		originalLineEndings = lineEndings;
 	}
 	
 	public function process(f:String->FileApi->String)
@@ -51,13 +67,18 @@ class TextFile
 	
 	function save(outPath:String, text:String) : Bool
 	{
-		if (inpPath == outPath && text == this.text) return false;
+		if (originalLineEndings == lineEndings && inpPath == outPath && text == this.text) return false;
 		
 		this.text = text;		
 		
-		if (isMacLineEndStyle) text = text.replace("\n", "\r");
-		else
-		if (isWinLineEndStyle) text = text.replace("\n", "\r\n");
+		switch (lineEndings)
+		{
+			case "windows":
+				text = text.replace("\n", "\r\n");
+				
+			case "mac":
+				text = text.replace("\n", "\r");
+		}
 		
 		var r = false;
 		var isHidden = FileSystemTools.getHiddenFileAttribute(outPath);
