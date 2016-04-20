@@ -90,4 +90,26 @@ class RefactorReplace extends Refactor
 		}
 		return text;
 	}
+	
+	public function lineEndings(filter:EReg, lineEndings:String)
+	{
+		for (baseDir in baseDirs)
+		{
+			Log.start("Replace in '" + baseDir + "'", 1);
+			
+			FileSystemTools.findFiles(baseDir, function(path)
+			{
+				var localPath = path.substr(baseDir.length + 1);
+				if (filter.match(localPath))
+				{
+					
+					var file = new TextFile(path, path, 2);
+					file.lineEndings = lineEndings;
+					file.process(function(text, _) return text);
+				}
+			});
+			
+			Log.finishSuccess();
+		}
+	}
 }

@@ -61,6 +61,7 @@ class Main
 				case "reindentFile":	commands.reindentFile(args);
 				case "reindentText":	commands.reindentText(args);
 				case "renameFiles":		commands.renameFiles(args, verboseLevel > 0);
+				case "lineEndings":		commands.lineEndings(args);
 				default:
 					var script = exeDir + "/scripts/" + command + (Sys.systemName() == "Windows" ? ".cmd" : "");
 					if (FileSystem.exists(script))
@@ -109,6 +110,7 @@ class Main
 		Lib.println("    reindentFile    Change indentation in specified file.");
 		Lib.println("    reindentText    Like reindentFile, but read from stdin and write to stdout.");
 		Lib.println("    renameFiles     Rename files recursively by regex.");
+		Lib.println("    lineEndings     Recursive fix line endings in files.");
 		Lib.println("");
 		
 		var isWindows = Sys.systemName() == "Windows";

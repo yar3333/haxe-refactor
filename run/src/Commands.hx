@@ -833,4 +833,46 @@ class Commands extends BaseCommands
 			Lib.println("        Search for *.js files in the 'src' folder and rename its into *.hx.");
 		}
 	}
+	
+	public function lineEndings(args:Array<String>)
+	{
+		var options = new CmdOptions();
+		
+		options.add("baseDirs", "", "Paths to base folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
+		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
+		options.add("type", "", "Line endings type ('windows', 'unix' or 'mac').");
+		
+		if (args.length > 0)
+		{
+			options.parse(args);
+			
+			var baseDirs = options.get("baseDirs");
+			var filter = filterToRegex(options.get("filter"));
+			var type = options.get("type");
+			
+			var types = [ "windows", "unix", "mac" ];
+			
+			if (baseDirs == "") fail("<baseDirs> arg must be specified.");
+			if (filter == "") fail("<filter> arg must be specified.");
+			if (types.indexOf(type) < 0) fail("<type> arg must be specified.");
+			
+			var refactor = new RefactorReplace(baseDirs, null);
+			refactor.lineEndings(new EReg(filter, "i"), type);
+		}
+		else
+		{
+			Lib.println("Recursive fix line endings in files.");
+			Lib.println("Usage: haxelib run refactor [-v] lineEndings <baseDirs> <filter> ( windows | unix | mac )");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+			Lib.println("");
+			Lib.println("Examples:");
+			Lib.println("");
+			Lib.println("    haxelib run refactor replace src *.htm;*.html windows");
+			Lib.println("        Files will be recursively found in 'src' folder.");
+			Lib.println("        Only HTML files will be processed.");
+			Lib.println("        Line endings will be fixed to CR/LF.");
+		}
+	}
 }
