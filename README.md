@@ -95,6 +95,7 @@ reindent        Recursive change indentation in files.
 reindentFile    Change indentation in specified file.
 reindentText    Like reindentFile, but read from stdin and write to stdout.
 renameFiles     Rename files recursively by regex.
+lineEndings     Recursive fix line endings in files.
 ```
 
 
