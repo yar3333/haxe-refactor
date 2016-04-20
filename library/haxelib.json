@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Php to Haxe: support args by reference.",
-  "version": "3.3.2",
+  "releasenote": "Add `lineEndings` command.",
+  "version": "3.4.0",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
