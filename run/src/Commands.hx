@@ -187,7 +187,7 @@ class Commands extends BaseCommands
 			if (destPackAndFilter == null) fail("<dest> specified in disk path form, but do not starts with one of base dirs.");
 			
 			var srcPacks = srcPackAndFilter.pack.split(".");
-			if (~/^[a-z]/.match(srcPacks[srcPacks.length - 1]))
+			if (~/^[_a-z]/.match(srcPacks[srcPacks.length - 1]))
 			{
 				new RefactorRename(baseDir, null).renamePackage
 				(
@@ -199,7 +199,7 @@ class Commands extends BaseCommands
 				);
 			}
 			else
-			if (~/^[A-Z]/.match(srcPacks[srcPacks.length - 1]))
+			if (~/^[_A-Z]/.match(srcPacks[srcPacks.length - 1]))
 			{
 				var destPacks = destPackAndFilter.pack.split(".");
 				if (!(~/^[A-Z]/.match(destPacks[destPacks.length - 1])))
