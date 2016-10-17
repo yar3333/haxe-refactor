@@ -346,7 +346,7 @@ class Commands extends BaseCommands
 		else
 		{
 			Lib.println("Recursive find and replace in files using rule files.");
-			Lib.println("Usage: haxelib run refactor [-v] convert [ -es ] [ -ec ] <inpFilePath> <outFilePath> <rulesFile1> [ ... <rulesFileN> ]");
+			Lib.println("Usage: haxelib run refactor [-v] convertFile [ -es ] [ -ec ] <inpFilePath> <outFilePath> <rulesFile1> [ ... <rulesFileN> ]");
 			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
