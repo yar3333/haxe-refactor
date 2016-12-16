@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Rename: underscores in names bugfix.",
-  "version": "3.4.1",
+  "releasenote": "Add haxe-to-cs simple rules.",
+  "version": "3.4.2",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
