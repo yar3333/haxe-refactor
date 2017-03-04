@@ -186,12 +186,12 @@ class RefactorRename extends RefactorReplace
 		
 		if (hg == null)
 		{
-			hg = Process.run("hg", [ "--version" ], null, false, false).exitCode == 0;
+			try { hg = Process.run("hg", [ "--version" ], null, false, false).exitCode == 0; } catch (_:Dynamic) {}
 		}
 		
 		if (git == null)
 		{
-			git = Process.run("git", [ "--version" ], null, false, false).exitCode == 0;
+			try { git = Process.run("git", [ "--version" ], null, false, false).exitCode == 0; } catch (_:Dynamic) {}
 		}
 		
 		if (hg)
