@@ -1,0 +1,37 @@
+// Java to C#
+
+ID = [_a-zA-Z][_a-zA-Z0-9]*
+LONGID = ID(?:[.]ID)*
+
+/(?:\b)final static String(?:\b)/static readonly string/
+
+/(?:\b)String(?:\b)/string/
+/(?:\b)boolean(?:\b)/bool/
+
+/(?:\b)final\s+//
+/(?:\b)(extends|implements)(?:\b)/:/
+
+/(?:\b)(throws\s+LONGID)/\/* $1 *\//
+
+/(?:\b)StringBuffer(?:\b)/StringBuilder/
+/(?:\b)NodeList(?:\b)/XmlNodeList/
+
+
+/(?:\b)Method(?:\b)/MethodInfo/
+/(?:\b)Document(?:\b)/XmlDocument/
+/(?:\b)Element(?:\b)/XmlElement/
+/(?:\b)length(?:\b)/Length/
+/(?:\b)append(?:\b)/Append/
+/(?:\b)Class(?:\b)/Type/
+/(?:\b)HashMap(?:\b)/Dictionary/
+/(?:\b)Vector(?:\b)/List/
+/(?:\b)Object(?:\b)/object/
+/(?:\b)[.]getMessage[(][)]/.Message/
+/(?:\b)[.]getClass[(][)]/.GetType()/
+/(?:\b)[.]getLength[(][)]/.Count/
+/(?:\b)hashCode[(][)]/GetHashCode()/
+/(?:\b)instanceof(?:\b)/is/
+/(?:\b)compareTo(?:\b)/CompareTo/
+/(?:\b)equals(?:\b)/Equals/
+
+/(?:\b)XMLUtil.getNodeListByXPath(?:\b)/STUBE.SelectNodes/
