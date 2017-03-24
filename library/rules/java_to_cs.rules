@@ -18,6 +18,7 @@ LONGID = ID(?:[.]ID)*
 
 
 /(?:\b)Method(?:\b)/MethodInfo/
+/(?:\b)super(?:\b)/base/
 /(?:\b)Document(?:\b)/XmlDocument/
 /(?:\b)Element(?:\b)/XmlElement/
 /(?:\b)length(?:\b)/Length/
@@ -33,5 +34,15 @@ LONGID = ID(?:[.]ID)*
 /(?:\b)instanceof(?:\b)/is/
 /(?:\b)compareTo(?:\b)/CompareTo/
 /(?:\b)equals(?:\b)/Equals/
+/(?:\b)createElement(?:\b)/CreateElement/
+/(?:\b)createTextNode(?:\b)/CreateTextNode/
+/(?:\b)setAttribute(?:\b)/SetAttribute/
+/(?:\b)appendChild(?:\b)/AppendChild/
+/(?:\b)Node(?:\b)/XmlNode/
+/(?:\b)contains(?:\b)/Ñontains/
+/(?:\b)substring(?:\b)/Substring/
+/(?:\b)toLowerCase(?:\b)/ToLowerInvariant/
+/(?:\b)indexOf(?:\b)/IndexOf/
+/(?:\b)importNode(?:\b)/ImportNode/
 
 /(?:\b)XMLUtil.getNodeListByXPath(?:\b)/STUBE.SelectNodes/
