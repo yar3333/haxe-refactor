@@ -21,7 +21,7 @@ LONGID = ID(?:[.]ID)*
 /(?:\b)super(?:\b)/base/
 /(?:\b)Document(?:\b)/XmlDocument/
 /(?:\b)Element(?:\b)/XmlElement/
-/(?:\b)length(?:\b)/Length/
+/(?:\b)length(?:[(][)])?(?:\b)/Length/
 /(?:\b)append(?:\b)/Append/
 /(?:\b)Class(?:\b)/Type/
 /(?:\b)HashMap(?:\b)/Dictionary/
@@ -44,5 +44,7 @@ LONGID = ID(?:[.]ID)*
 /(?:\b)toLowerCase(?:\b)/ToLowerInvariant/
 /(?:\b)indexOf(?:\b)/IndexOf/
 /(?:\b)importNode(?:\b)/ImportNode/
+/(?:\b)trim(?:\b)/Trim/
 
 /(?:\b)XMLUtil.getNodeListByXPath(?:\b)/STUBE.SelectNodes/
+/(?:\b)Date(?:\b)/DateTime/
