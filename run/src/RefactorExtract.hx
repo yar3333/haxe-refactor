@@ -2,10 +2,12 @@ import hant.FileSystemTools;
 import hant.Log;
 import haxe.io.Path;
 import stdlib.Regex;
+import sys.FileSystem;
+import sys.io.File;
 
 class RefactorExtract extends RefactorReplace
 {
-	public function extract(filter:String, regexs:Array<Regex>, ?postRegexs:Array<Regex>, baseLogLevel:Int)
+	public function extract(filter:String, regexs:Array<Regex>, ?postRegexs:Array<Regex>, append:Bool, saveNotExtracted:String, baseLogLevel:Int)
 	{
 		for (baseDir in baseDirs)
 		{
@@ -17,13 +19,13 @@ class RefactorExtract extends RefactorReplace
 				if (reFilter.match(localPath))
 				{
 					var localDir = Path.directory(localPath);
-					extractFromFile(path, regexs, Path.removeTrailingSlashes(outDir) + (localDir != "" ? "/" + localDir : ""), postRegexs, baseLogLevel);
+					extractFromFile(path, regexs, Path.removeTrailingSlashes(outDir) + (localDir != "" ? "/" + localDir : ""), postRegexs, append, saveNotExtracted, baseLogLevel);
 				}
 			});
 		}
 	}
 	
-	function extractFromFile(inpPath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>, baseLogLevel:Int)
+	function extractFromFile(inpPath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>, append:Bool, saveNotExtracted:String, baseLogLevel:Int)
 	{
 		Log.start("Extract from '" + inpPath, baseLogLevel);
 		
@@ -32,28 +34,42 @@ class RefactorExtract extends RefactorReplace
 		{
 			for (regex in regexs)
 			{
+				var blocks = new Array<{ beg:Int, end:Int }>();
+				
 				for (match in regex.matchAll(text))
 				{
 					var destPath = outDir + "/" + match.replacement;
-					var pos = match.pos + match.len;
-					var begText = text.substr(match.pos, match.len);
-					var endText = "([{".indexOf(begText.substr(-1)) >= 0 
-						? text.substr(pos, findCloseBracketIndex(text, pos - 1) - pos)
-						: "";
-						
-					var text = begText + endText;
-						
+					var endPos = "([{".indexOf(text.charAt(match.pos + match.len - 1)) >= 0 
+						? findCloseBracketIndex(text, match.pos + match.len - 1)
+						: match.pos + match.len;
+					
+					blocks.push({ beg:match.pos, end:endPos });
+					
+					var s = text.substring(match.pos, endPos);
+					
 					if (postRegexs != null)
 					{
-						text = new RefactorReplace(null, null).replaceInText(text, postRegexs, true, true, baseLogLevel + 2);
+						s = new RefactorReplace(null, null).replaceInText(s, postRegexs, true, true, baseLogLevel + 2);
 					}
 					
-					if (fileApi.save(destPath, text))
+					if (fileApi.save(destPath, (append && FileSystem.exists(destPath) ? File.getContent(destPath) + "\n" : "") + s))
 					{
 						Log.echo(destPath, baseLogLevel + 2);
 					}
 				}
+				
+				blocks.reverse();
+				for (block in blocks)
+				{
+					text = text.substring(0, block.beg) + text.substring(block.end);
+				}
 			}
+			
+			if (saveNotExtracted != null && saveNotExtracted != "")
+			{
+				File.saveContent((append && FileSystem.exists(saveNotExtracted) ? File.getContent(saveNotExtracted) + "\n" : "") + saveNotExtracted, text);
+			}
+			
 			return null;
 		});
 		

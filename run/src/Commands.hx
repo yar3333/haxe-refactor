@@ -507,6 +507,8 @@ class Commands extends BaseCommands
 	{
 		var options = new CmdOptions();
 		
+		options.add("append", false, [ "--append" ], "Append to destination files (default is overwrite).");
+		options.add("saveNotExtracted", "", [ "--save-not-extracted" ], "Save not extracted to specified file.");
 		options.add("baseDir", "", "Path to source folder.");
 		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
 		options.add("outDir", "", "Output directory.");
@@ -517,6 +519,8 @@ class Commands extends BaseCommands
 		{
 			options.parse(args);
 			
+			var append = options.get("append");
+			var saveNotExtracted = options.get("saveNotExtracted");
 			var baseDir = options.get("baseDir");
 			var filter = filterToRegex(options.get("filter"));
 			var outDir = options.get("outDir");
@@ -534,6 +538,8 @@ class Commands extends BaseCommands
 				filter,
 				Rules.fromFile(getRulesFilePath(exeDir, extractRulesFile)).regexs,
 				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile)).regexs : null,
+				append,
+				saveNotExtracted,
 				1
 			);
 		}
