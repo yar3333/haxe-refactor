@@ -55,6 +55,7 @@ class Main
 				case "processFile":		commands.processFile(args);
 				case "processText":		commands.processText(args);
 				case "extract":			commands.extract(args);
+				case "extractFromFile":	commands.extractFromFile(args);
 				case "override":		commands.doOverride(args);
 				case "overloadInFile":	commands.overloadInFile(args);
 				case "reindent":		commands.reindent(args);
@@ -62,6 +63,7 @@ class Main
 				case "reindentText":	commands.reindentText(args);
 				case "renameFiles":		commands.renameFiles(args, verboseLevel > 0);
 				case "lineEndings":		commands.lineEndings(args);
+				case "fixPackage":		commands.fixPackage(args);
 				default:
 					var script = exeDir + "/scripts/" + command + (Sys.systemName() == "Windows" ? ".cmd" : "");
 					if (FileSystem.exists(script))
@@ -104,6 +106,7 @@ class Main
 		Lib.println("    processFile     Shortcut for \"convertFile\" for changing in-place.");
 		Lib.println("    processText     Like processFile, but read from stdin and write to stdout.");
 		Lib.println("    extract         Search in files and save found texts into separate files.");
+		Lib.println("    extractFromFile Save parts of specified text file into separate files.");
 		Lib.println("    override        Autofix override/overload/redefinition in haxe code.");
 		Lib.println("    overloadInFile  Autofix overload/redefinition in haxe code.");
 		Lib.println("    reindent        Recursive change indentation in files.");
@@ -111,6 +114,7 @@ class Main
 		Lib.println("    reindentText    Like reindentFile, but read from stdin and write to stdout.");
 		Lib.println("    renameFiles     Rename files recursively by regex.");
 		Lib.println("    lineEndings     Recursive fix line endings in files.");
+		Lib.println("    fixPackage      Fix package in haxe files from relative directory path.");
 		Lib.println("");
 		
 		var isWindows = Sys.systemName() == "Windows";

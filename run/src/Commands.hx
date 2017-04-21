@@ -567,6 +567,68 @@ class Commands extends BaseCommands
 		}
 	}
 	
+	public function extractFromFile(args:Array<String>)
+	{
+		var options = new CmdOptions();
+		
+		options.add("append", false, [ "--append" ], "Append to destination files (default is overwrite).");
+		options.add("saveNotExtracted", "", [ "--save-not-extracted" ], "Save not extracted to specified file.");
+		options.add("srcFile", "", "Path to source file.");
+		options.add("outDir", "", "Output directory.");
+		options.add("extractRulesFile", "", "Path to rules file (see 'convert' command).\nEach rule must match begin of the extracted text and return a new file name.\nFor example: \"/class (\\w+) \\{/$1.hx\".\nIf matched text ends by open bracket '(', '[' or '{'\nwhen extracted text will be extended to matched close bracket.");
+		options.add("postRulesFile", "", "Rules to postprocess generated files.");
+		
+		if (args.length > 0)
+		{
+			options.parse(args);
+			
+			var append = options.get("append");
+			var saveNotExtracted = options.get("saveNotExtracted");
+			var srcFile = options.get("srcFile");
+			var outDir = options.get("outDir");
+			var extractRulesFile = options.get("extractRulesFile");
+			var postRulesFile = options.get("postRulesFile");
+			
+			if (srcFile == "") fail("<srcFile> arg must be specified.");
+			if (outDir == "") fail("<outDir> arg must be specified.");
+			if (extractRulesFile == "") fail("<extractRulesFile> arg must be specified.");
+			
+			var refactor = new RefactorExtract(null, outDir);
+			refactor.extractFromFile
+			(
+				srcFile,
+				Rules.fromFile(getRulesFilePath(exeDir, extractRulesFile)).regexs,
+				outDir,
+				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile)).regexs : null,
+				append,
+				saveNotExtracted,
+				1
+			);
+		}
+		else
+		{
+			Lib.println("Extract parts of text file into separate files.");
+			Lib.println("For example, you can split file contains many classes into separate class files.");
+			Lib.println("Regular expressions in rule file can match:");
+			Lib.println("\t1) start of text block to save (must ends with open bracket);");
+			Lib.println("\t2) whole text block (must NOT ends with open bracket).");
+			Lib.println("In all cases regular expression 'replacement' part must specify a new file name to save text block.");
+			Lib.println("Usage: haxelib run refactor [-v] extractFromFile <srcFile> <outDir> <extractRulesFile> [ <postRulesFile> ]");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+			Lib.println("");
+			Lib.println("Examples:");
+			Lib.println("");
+			Lib.println("    haxelib run refactor extractFromFile BigModule.hx out split_haxe.rules");
+			Lib.println("        This command extract classes to separate files.");
+			Lib.println("        Content of the 'split_haxe.rules' file:");
+			Lib.println("            ID = [_a-zA-Z][_a-zA-Z0-9]*");
+			Lib.println("            SPACE = [ \\t\\n]");
+			Lib.println("            /class(?:SPACE+)(ID)(?:SPACE*){/$1.hx");
+		}
+	}
+	
 	public function doOverride(args:Array<String>)
 	{
 		var options = new CmdOptions();
@@ -864,6 +926,42 @@ class Commands extends BaseCommands
 			
 			var refactor = new RefactorReplace(baseDirs, null);
 			refactor.lineEndings(new EReg(filter, "i"), type);
+		}
+		else
+		{
+			Lib.println("Recursive fix line endings in files.");
+			Lib.println("Usage: haxelib run refactor [-v] lineEndings <baseDirs> <filter> ( windows | unix | mac )");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+			Lib.println("");
+			Lib.println("Examples:");
+			Lib.println("");
+			Lib.println("    haxelib run refactor replace src *.htm;*.html windows");
+			Lib.println("        Files will be recursively found in 'src' folder.");
+			Lib.println("        Only HTML files will be processed.");
+			Lib.println("        Line endings will be fixed to CR/LF.");
+		}
+	}
+	
+	public function fixPackage(args:Array<String>)
+	{
+		var options = new CmdOptions();
+		
+		options.add("baseDirs", "", "Paths to base folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
+		options.add("filter", "*.hx", "File path's filter (regex or '*.ext;*.ext'). Default is '*.hx'.");
+		
+		if (args.length > 0)
+		{
+			options.parse(args);
+			
+			var baseDirs = options.get("baseDirs");
+			var filter = filterToRegex(options.get("filter"));
+			
+			if (baseDirs == "") fail("<baseDirs> arg must be specified.");
+			
+			var refactor = new RefactorPackage(baseDirs, null);
+			refactor.fixPackage(new EReg(filter, "i"));
 		}
 		else
 		{

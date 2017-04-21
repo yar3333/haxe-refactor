@@ -25,11 +25,11 @@ class RefactorExtract extends RefactorReplace
 		}
 	}
 	
-	function extractFromFile(inpPath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>, append:Bool, saveNotExtracted:String, baseLogLevel:Int)
+	public function extractFromFile(inpFilePath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>, append:Bool, saveNotExtracted:String, baseLogLevel:Int)
 	{
-		Log.start("Extract from '" + inpPath, baseLogLevel);
+		Log.start("Extract from '" + inpFilePath, baseLogLevel);
 		
-		var file = new TextFile(inpPath, null, baseLogLevel + 1);
+		var file = new TextFile(inpFilePath, null, baseLogLevel + 1);
 		file.process(function(text, fileApi)
 		{
 			for (regex in regexs)
@@ -38,7 +38,7 @@ class RefactorExtract extends RefactorReplace
 				
 				for (match in regex.matchAll(text))
 				{
-					var destPath = outDir + "/" + match.replacement;
+					var destPath = Path.join([ outDir,  match.replacement ]);
 					var endPos = "([{".indexOf(text.charAt(match.pos + match.len - 1)) >= 0 
 						? findCloseBracketIndex(text, match.pos + match.len - 1)
 						: match.pos + match.len;
@@ -67,7 +67,7 @@ class RefactorExtract extends RefactorReplace
 			
 			if (saveNotExtracted != null && saveNotExtracted != "")
 			{
-				File.saveContent((append && FileSystem.exists(saveNotExtracted) ? File.getContent(saveNotExtracted) + "\n" : "") + saveNotExtracted, text);
+				File.saveContent(saveNotExtracted, (append && FileSystem.exists(saveNotExtracted) ? File.getContent(saveNotExtracted) + "\n" : "") + text);
 			}
 			
 			return null;
