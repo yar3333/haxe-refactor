@@ -509,6 +509,7 @@ class Commands extends BaseCommands
 		
 		options.add("append", false, [ "--append" ], "Append to destination files (default is overwrite).");
 		options.add("saveNotExtracted", "", [ "--save-not-extracted" ], "Save not extracted to specified file.");
+		options.add("moduleNameIsPackage", false, [ "--module-name-is-package" ], "Use source file name as relative destination folder.");
 		options.add("baseDir", "", "Path to source folder.");
 		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
 		options.add("outDir", "", "Output directory.");
@@ -519,8 +520,9 @@ class Commands extends BaseCommands
 		{
 			options.parse(args);
 			
-			var append = options.get("append");
-			var saveNotExtracted = options.get("saveNotExtracted");
+			var append : Bool = options.get("append");
+			var saveNotExtracted : String = options.get("saveNotExtracted");
+			var moduleNameIsPackage : Bool = options.get("moduleNameIsPackage");
 			var baseDir = options.get("baseDir");
 			var filter = filterToRegex(options.get("filter"));
 			var outDir = options.get("outDir");
@@ -540,6 +542,7 @@ class Commands extends BaseCommands
 				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile)).regexs : null,
 				append,
 				saveNotExtracted,
+				moduleNameIsPackage,
 				1
 			);
 		}
@@ -573,6 +576,7 @@ class Commands extends BaseCommands
 		
 		options.add("append", false, [ "--append" ], "Append to destination files (default is overwrite).");
 		options.add("saveNotExtracted", "", [ "--save-not-extracted" ], "Save not extracted to specified file.");
+		options.add("moduleNameIsPackage", false, [ "--module-name-is-package" ], "Use source file name as relative destination folder.");
 		options.add("srcFile", "", "Path to source file.");
 		options.add("outDir", "", "Output directory.");
 		options.add("extractRulesFile", "", "Path to rules file (see 'convert' command).\nEach rule must match begin of the extracted text and return a new file name.\nFor example: \"/class (\\w+) \\{/$1.hx\".\nIf matched text ends by open bracket '(', '[' or '{'\nwhen extracted text will be extended to matched close bracket.");
@@ -582,8 +586,9 @@ class Commands extends BaseCommands
 		{
 			options.parse(args);
 			
-			var append = options.get("append");
-			var saveNotExtracted = options.get("saveNotExtracted");
+			var append : Bool = options.get("append");
+			var saveNotExtracted : String = options.get("saveNotExtracted");
+			var moduleNameIsPackage : Bool = options.get("moduleNameIsPackage");
 			var srcFile = options.get("srcFile");
 			var outDir = options.get("outDir");
 			var extractRulesFile = options.get("extractRulesFile");
@@ -602,6 +607,7 @@ class Commands extends BaseCommands
 				postRulesFile != "" ? Rules.fromFile(getRulesFilePath(exeDir, postRulesFile)).regexs : null,
 				append,
 				saveNotExtracted,
+				moduleNameIsPackage,
 				1
 			);
 		}

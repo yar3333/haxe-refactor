@@ -7,7 +7,7 @@ import sys.io.File;
 
 class RefactorExtract extends RefactorReplace
 {
-	public function extract(filter:String, regexs:Array<Regex>, ?postRegexs:Array<Regex>, append:Bool, saveNotExtracted:String, baseLogLevel:Int)
+	public function extract(filter:String, regexs:Array<Regex>, ?postRegexs:Array<Regex>, append:Bool, saveNotExtracted:String, moduleNameIsPackage:Bool, baseLogLevel:Int)
 	{
 		for (baseDir in baseDirs)
 		{
@@ -19,13 +19,13 @@ class RefactorExtract extends RefactorReplace
 				if (reFilter.match(localPath))
 				{
 					var localDir = Path.directory(localPath);
-					extractFromFile(path, regexs, Path.removeTrailingSlashes(outDir) + (localDir != "" ? "/" + localDir : ""), postRegexs, append, saveNotExtracted, baseLogLevel);
+					extractFromFile(path, regexs, Path.removeTrailingSlashes(outDir) + (localDir != "" ? "/" + localDir : ""), postRegexs, append, saveNotExtracted, moduleNameIsPackage, baseLogLevel);
 				}
 			});
 		}
 	}
 	
-	public function extractFromFile(inpFilePath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>, append:Bool, saveNotExtracted:String, baseLogLevel:Int)
+	public function extractFromFile(inpFilePath:String, regexs:Array<Regex>, outDir:String, ?postRegexs:Array<Regex>, append:Bool, saveNotExtracted:String, moduleNameIsPackage:Bool, baseLogLevel:Int)
 	{
 		Log.start("Extract from '" + inpFilePath, baseLogLevel);
 		
@@ -38,7 +38,11 @@ class RefactorExtract extends RefactorReplace
 				
 				for (match in regex.matchAll(text))
 				{
-					var destPath = Path.join([ outDir,  match.replacement ]);
+					var destPathParts = [ outDir ];
+					if (moduleNameIsPackage) destPathParts.push(Path.withoutDirectory(Path.withoutExtension(inpFilePath)));
+					destPathParts.push(match.replacement);
+					var destPath = Path.join(destPathParts);
+					
 					var endPos = "([{".indexOf(text.charAt(match.pos + match.len - 1)) >= 0 
 						? findCloseBracketIndex(text, match.pos + match.len - 1)
 						: match.pos + match.len;
@@ -67,7 +71,7 @@ class RefactorExtract extends RefactorReplace
 			
 			if (saveNotExtracted != null && saveNotExtracted != "")
 			{
-				File.saveContent(saveNotExtracted, (append && FileSystem.exists(saveNotExtracted) ? File.getContent(saveNotExtracted) + "\n" : "") + text);
+				File.saveContent(saveNotExtracted, text);
 			}
 			
 			return null;
