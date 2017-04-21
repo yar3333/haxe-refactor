@@ -4,7 +4,8 @@ ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
 LONGID = ID(?:[.]ID)*
 STRUCT = \{[^}]*\}
 TYPE = (?:(?:LONGID|STRUCT)(?:\[\])*\s*)
-TYPE_COMPLEX = (?:TYPE|\((?:\s*ID\s*[:]\s*TYPE(?:,\s*ID\s*[:]\s*TYPE)*)?\)\s*[=][>]\s*TYPE)
+TYPE_GENERIC = (?:(?:TYPE\s*[<]\s*TYPE(?:,\s*TYPE)*[>])(?:\[\])*\s*)
+TYPE_COMPLEX = (?:TYPE_GENERIC|TYPE|\((?:\s*ID\s*[:]\s*TYPE(?:,\s*ID\s*[:]\s*TYPE)*)?\)\s*[=][>]\s*TYPE)
 
 TEMPLATE = (?:\s*[<]TYPE\s+extends\s+TYPE[>]\s*)
 TYPE_COMPLEX_EX = TYPE_COMPLEX(?:TEMPLATE)?
@@ -14,6 +15,8 @@ SPACE = [ \t]*
 
 EXPORT = (?:[ \t]*\bexport\s+)?
 
+MODIFIER = (?:\s*(?:public|protected|private|static)\s+)
+
 /(\benum\s+)(ID)\s*\{\s*\}((?:\s*EXPORT\bvar\s+ID[:]\s*\2\s*;)+)/$1$2\n\t{$3\n\t}/s
 /(\benum\s+)(ID)(\s*{[^}]*?)EXPORT\bvar\s+(ID)\s*[:]\s*\2;/$1$2$3\t$4;/r
 
@@ -21,9 +24,10 @@ EXPORT = (?:[ \t]*\bexport\s+)?
 /\n(SPACE)EXPORT((?:class|interface|enum)\b)/\n$1extern $2/
 /\n(SPACE)constructor\s*(FORMALPARAMS)/\n$1function new$2 : Void/s
 /\n(SPACE)(ID)[?]\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1@:optional var $2 : $3;/
-/\n(SPACE(?:\s*static\s+)?)(ID)\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1var $2 : $3;/
-/\n(SPACE(?:static\s+)?)(ID[?]?(?:TEMPLATE)?)\s*\(/\n$1function $2(/
-/\n(SPACE)((?:static\s+)?function\s+ID)[?]/\n$1@:optional $2/
+/\n(SPACE(?:MODIFIER*))(ID)\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1var $2 : $3;/
+/\n(SPACE(?:MODIFIER*))(ID)\s*;/\n$1var $2 : Dynamic\/*UNKNOW_TYPE*\/;/
+/\n(SPACE(?:MODIFIER*))(ID[?]?(?:TEMPLATE)?)\s*\(/\n$1function $2(/
+/\n(SPACE)(MODIFIER*function\s+ID)[?]/\n$1@:optional $2/
 
 /[:](\s*)\{([^}]*ID[?]?\s*[:]\s*TYPE);/:$1{$2,/sr
 /SPACE,(\s*)\}/$1}/
@@ -91,3 +95,7 @@ HAXE_TYPE = HAXE_LONGID(?:[<]\s*HAXE_LONGID(?:\s*,\s*HAXE_LONGID)*\s*[>])?
 
 
 /[<](TYPE)\s+extends\s+(TYPE)[>]/<$1:$2>/
+
+/\b(implements[ \t\n]+LONGID)[ \t\n]*,[ \t\n]*/$1 implements /r
+
+/([(,]\s*)(ID)[?](\s*[),])/$1?$2$3/
