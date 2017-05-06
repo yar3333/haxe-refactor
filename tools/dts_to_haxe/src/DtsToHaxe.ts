@@ -9,7 +9,7 @@ import { CmdOptions } from "./CmdOptions";
 var options = new CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.")
 options.add("outDir", "hxclasses", ["--out-dir"], "Output directory. Default is 'hxclasses'.")
-options.addRepeatable("filePaths", null, "Typescript definition file paths or source directory");
+options.addRepeatable("filePaths", null, "Source typescript definition file path or directory.");
 
 if (process.argv.length <= 2)
 {
