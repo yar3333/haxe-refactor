@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "noImplicitAny": false,
+        "sourceMap": false,
+        "outDir": "../../library/scripts/dts_to_haxe"
+    },
+    "files": [
+        "src/DtsToHaxe.ts"
+    ]    
+}
