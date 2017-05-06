@@ -1,0 +1,17 @@
+{
+  "name": "dts-to-haxe",
+  "version": "1.0.0",
+  "description": "",
+  "main": "../../library/scripts/dts_to_haxe/DtsToHaxe.js",
+  "devDependencies": {
+    "typescript": "^2.0.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "..\\..\\library\\scripts\\dts_to_haxe.cmd tests",
+    "build-and-start": "npm run build && npm start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
