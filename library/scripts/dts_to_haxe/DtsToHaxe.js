@@ -8,7 +8,7 @@ const CmdOptions_1 = require("./CmdOptions");
 var options = new CmdOptions_1.CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.");
 options.add("outDir", "hxclasses", ["--out-dir"], "Output directory. Default is 'hxclasses'.");
-options.addRepeatable("filePaths", null, "Typescript definition file paths or source directory");
+options.addRepeatable("filePaths", null, "Source typescript definition file path or directory.");
 if (process.argv.length <= 2) {
     console.log("TypeScript definition files (*.d.ts) to haxe convertor.");
     console.log("Usage: dts_to_haxe <options> <filePaths> ...");
