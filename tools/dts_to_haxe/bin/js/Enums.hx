@@ -1,14 +1,15 @@
 package js;
 
-class Enums
+@:native("THREE.js.Enums")
+extern class Enums
 {
 	/**
 	 * MyJsDoc3
 	 */
-	public static var CullFaceNone(default, null) : CullFace;
-	public static var CullFaceBack(default, null) : CullFace;
-	public static var CullFaceFront(default, null) : CullFace;
-	public static var CullFaceFrontBack(default, null) : CullFace;
-	public static var FrontFaceDirectionCW(default, null) : FrontFaceDirection;
-	public static var FrontFaceDirectionCCW(default, null) : FrontFaceDirection;
+	static var CullFaceNone(default, null) : CullFace;
+	static var CullFaceBack(default, null) : CullFace;
+	static var CullFaceFront(default, null) : CullFace;
+	static var CullFaceFrontBack(default, null) : CullFace;
+	static var FrontFaceDirectionCW(default, null) : FrontFaceDirection;
+	static var FrontFaceDirectionCCW(default, null) : FrontFaceDirection;
 }

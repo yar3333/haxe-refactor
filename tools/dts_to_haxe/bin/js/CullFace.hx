@@ -3,6 +3,7 @@ package js;
 /**
  * MyJsDoc2
  */
-enum CullFace
+@:native("THREE.CullFace")
+extern enum CullFace
 {
 }

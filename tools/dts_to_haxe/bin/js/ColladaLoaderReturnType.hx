@@ -1,8 +1,11 @@
 package js;
 
-interface ColladaLoaderReturnType extends js.BaseInt, js.Abc
+@:native("THREE.ColladaLoaderReturnType")
+extern interface ColladaLoaderReturnType
+	extends BaseInt
+	extends Abc
 {
-	public var myfield : String;
+	var myfield : haxe.extern.EitherType<Float, String>;
 
-	public function myfunc(a:Float, b:Dynamic) : Void;
+	function myfunc(a:Float, b:Dynamic) : Void;
 }

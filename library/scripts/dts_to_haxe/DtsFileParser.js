@@ -6,10 +6,11 @@ const Tokens_1 = require("./Tokens");
 const TsToHaxeStdTypes_1 = require("./TsToHaxeStdTypes");
 const HaxeTypeDeclaration_1 = require("./HaxeTypeDeclaration");
 class DtsFileParser {
-    constructor(sourceFile, typeChecker, rootPackage) {
+    constructor(sourceFile, typeChecker, rootPackage, nativeNamespace) {
         this.sourceFile = sourceFile;
         this.typeChecker = typeChecker;
         this.rootPackage = rootPackage;
+        this.nativeNamespace = nativeNamespace;
         this.indent = "";
         this.imports = new Array();
         this.classesAndInterfaces = new Array();
@@ -72,7 +73,7 @@ class DtsFileParser {
         var item = new HaxeTypeDeclaration_1.HaxeTypeDeclaration("interface");
         this.processChildren(node, new Map([
             [ts.SyntaxKind.ExportKeyword, (x) => { }],
-            [ts.SyntaxKind.Identifier, (x) => item.fullClassName = this.makeFullClassPath([this.rootPackage, x.text])],
+            [ts.SyntaxKind.Identifier, (x) => this.processTypeDeclarationIdentifier(x, item)],
             [ts.SyntaxKind.HeritageClause, (x) => item.baseFullInterfaceNames = x.types.map(y => this.makeFullClassPath([this.rootPackage, y.getText()]))],
             [ts.SyntaxKind.PropertySignature, (x) => this.processPropertySignature(x, item)],
             [ts.SyntaxKind.MethodSignature, (x) => this.processMethodSignature(x, item)]
@@ -84,7 +85,7 @@ class DtsFileParser {
         item.docComment = this.getJsDoc(node.name);
         this.processChildren(node, new Map([
             [ts.SyntaxKind.ExportKeyword, (x) => { }],
-            [ts.SyntaxKind.Identifier, (x) => item.fullClassName = this.makeFullClassPath([this.rootPackage, x.text])],
+            [ts.SyntaxKind.Identifier, (x) => this.processTypeDeclarationIdentifier(x, item)],
             [ts.SyntaxKind.HeritageClause, (x) => this.processHeritageClauseForClass(x, item)],
             [ts.SyntaxKind.PropertyDeclaration, (x) => this.processPropertyDeclaration(x, item)],
             [ts.SyntaxKind.MethodDeclaration, (x) => this.processMethodDeclaration(x, item)],
@@ -97,7 +98,7 @@ class DtsFileParser {
         item.docComment = this.getJsDoc(node.name);
         this.processChildren(node, new Map([
             [ts.SyntaxKind.ExportKeyword, (x) => { }],
-            [ts.SyntaxKind.Identifier, (x) => item.fullClassName = this.makeFullClassPath([this.rootPackage, x.text])],
+            [ts.SyntaxKind.Identifier, (x) => this.processTypeDeclarationIdentifier(x, item)],
             [ts.SyntaxKind.EnumMember, (x) => this.processEnumMember(x, item)],
         ]));
         this.classesAndInterfaces.push(item);
@@ -188,10 +189,19 @@ class DtsFileParser {
                     let t = node;
                     return "Array<" + this.convertType(t.elementType) + ">";
                 }
+            case ts.SyntaxKind.UnionType:
+                {
+                    return this.convertUnionType(node.types);
+                }
             default:
                 var s = node.getText();
                 return this.typeMapper.get(s) ? this.typeMapper.get(s) : s;
         }
+    }
+    convertUnionType(types) {
+        if (types.length == 1)
+            return this.convertType(types[0]);
+        return "haxe.extern.EitherType<" + this.convertType(types[0]) + ", " + this.convertUnionType(types.slice(1)) + ">";
     }
     getJsDoc(node) {
         var symbol = this.typeChecker.getSymbolAtLocation(node);
@@ -206,8 +216,11 @@ class DtsFileParser {
     getModuleClass(node) {
         var moduleName = this.makeFullClassPath([this.rootPackage, this.capitalize(path_1.basename(node.getSourceFile().fileName, ".d.ts"))]);
         var moduleClass = this.classesAndInterfaces.find(x => x.fullClassName == moduleName);
-        if (!moduleClass)
-            this.classesAndInterfaces.push(moduleClass = new HaxeTypeDeclaration_1.HaxeTypeDeclaration("class", moduleName));
+        if (!moduleClass) {
+            moduleClass = new HaxeTypeDeclaration_1.HaxeTypeDeclaration("class", moduleName);
+            moduleClass.addMeta('@:native("' + this.makeFullClassPath([this.nativeNamespace, moduleName]) + '")');
+            this.classesAndInterfaces.push(moduleClass);
+        }
         return moduleClass;
     }
     makeFullClassPath(parts) {
@@ -218,6 +231,10 @@ class DtsFileParser {
             s += p;
         }
         return s;
+    }
+    processTypeDeclarationIdentifier(x, dest) {
+        dest.fullClassName = this.makeFullClassPath([this.rootPackage, x.text]);
+        dest.addMeta('@:native("' + this.makeFullClassPath([this.nativeNamespace, x.text]) + '")');
     }
 }
 exports.DtsFileParser = DtsFileParser;

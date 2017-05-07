@@ -3,7 +3,8 @@ package js;
 /**
  * MyJsDoc1
  */
-enum MOUSE
+@:native("THREE.MOUSE")
+extern enum MOUSE
 {
 	LEFT;
 	MIDDLE;

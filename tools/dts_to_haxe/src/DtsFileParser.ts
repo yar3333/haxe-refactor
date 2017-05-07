@@ -15,7 +15,7 @@ export class DtsFileParser
     private imports = new Array<string>();
     private classesAndInterfaces = new Array<HaxeTypeDeclaration>();
 
-    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private rootPackage:string)
+    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private rootPackage:string, private nativeNamespace:string)
     {
         this.tokens = Tokens.getAll();
         this.typeMapper = TsToHaxeStdTypes.getAll();
@@ -97,7 +97,7 @@ export class DtsFileParser
         this.processChildren(node, new Map<number, (node:any) => void>(
         [
             [ ts.SyntaxKind.ExportKeyword, (x) => {} ],
-            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => item.fullClassName = this.makeFullClassPath([ this.rootPackage, x.text ]) ],
+            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => this.processTypeDeclarationIdentifier(x, item) ],
             [ ts.SyntaxKind.HeritageClause, (x:ts.HeritageClause) => item.baseFullInterfaceNames = x.types.map(y => this.makeFullClassPath([ this.rootPackage, y.getText() ])) ],
             [ ts.SyntaxKind.PropertySignature, (x:ts.PropertySignature) => this.processPropertySignature(x, item) ],
             [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]
@@ -115,7 +115,7 @@ export class DtsFileParser
         this.processChildren(node, new Map<number, (node:any) => void>(
         [
             [ ts.SyntaxKind.ExportKeyword, (x) => {} ],
-            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => item.fullClassName = this.makeFullClassPath([ this.rootPackage, x.text ]) ],
+            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => this.processTypeDeclarationIdentifier(x, item) ],
             [ ts.SyntaxKind.HeritageClause, (x:ts.HeritageClause) => this.processHeritageClauseForClass(x, item) ],
             [ ts.SyntaxKind.PropertyDeclaration, (x:ts.PropertyDeclaration) => this.processPropertyDeclaration(x, item) ],
             [ ts.SyntaxKind.MethodDeclaration, (x:ts.MethodDeclaration) => this.processMethodDeclaration(x, item) ],
@@ -134,7 +134,7 @@ export class DtsFileParser
         this.processChildren(node, new Map<number, (node:any) => void>(
         [
             [ ts.SyntaxKind.ExportKeyword, (x) => {} ],
-            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => item.fullClassName = this.makeFullClassPath([ this.rootPackage, x.text ]) ],
+            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => this.processTypeDeclarationIdentifier(x, item) ],
             [ ts.SyntaxKind.EnumMember, (x:ts.EnumMember) => this.processEnumMember(x, item) ],
         ]));
 
@@ -283,11 +283,22 @@ export class DtsFileParser
                 let t = <ts.ArrayTypeNode>node;
                 return "Array<" + this.convertType(t.elementType) + ">";
             }
-
+            
+            case ts.SyntaxKind.UnionType:
+            {
+                return this.convertUnionType((<ts.UnionTypeNode>node).types);
+            }
+            
             default:
                 var s = node.getText();
                 return this.typeMapper.get(s) ? this.typeMapper.get(s) : s;
         }
+    }
+
+    private convertUnionType(types:Array<ts.TypeNode>) : string
+    {
+        if (types.length == 1) return this.convertType(types[0]);
+        return "haxe.extern.EitherType<" + this.convertType(types[0])+", " +  this.convertUnionType(types.slice(1)) + ">";
     }
 
     private getJsDoc(node:ts.Node)
@@ -310,7 +321,12 @@ export class DtsFileParser
     {
         var moduleName = this.makeFullClassPath([ this.rootPackage, this.capitalize(basename(node.getSourceFile().fileName, ".d.ts")) ]);
         var moduleClass = this.classesAndInterfaces.find(x => x.fullClassName == moduleName);
-        if (!moduleClass) this.classesAndInterfaces.push(moduleClass = new HaxeTypeDeclaration("class", moduleName));
+        if (!moduleClass)
+        {
+            moduleClass = new HaxeTypeDeclaration("class", moduleName);
+            moduleClass.addMeta('@:native("' + this.makeFullClassPath([ this.nativeNamespace, moduleName ]) + '")');
+            this.classesAndInterfaces.push(moduleClass);
+        }
         return moduleClass;
     }
 
@@ -323,5 +339,11 @@ export class DtsFileParser
             s += p;
         }
         return s;
+    }
+
+    private processTypeDeclarationIdentifier(x:ts.Identifier, dest:HaxeTypeDeclaration)
+    {
+        dest.fullClassName = this.makeFullClassPath([ this.rootPackage, x.text ]);
+        dest.addMeta('@:native("' + this.makeFullClassPath([ this.nativeNamespace, x.text ]) + '")');
     }
 }

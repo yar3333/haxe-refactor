@@ -1,5 +1,6 @@
 package js;
 
-class BaseInt
+@:native("THREE.BaseInt")
+extern class BaseInt
 {
 }

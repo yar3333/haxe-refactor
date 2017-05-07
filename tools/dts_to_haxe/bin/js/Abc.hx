@@ -1,5 +1,6 @@
 package js;
 
-interface Abc
+@:native("THREE.Abc")
+extern interface Abc
 {
 }
