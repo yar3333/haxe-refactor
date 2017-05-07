@@ -308,7 +308,7 @@ export class DtsFileParser
 
     private getModuleClass(node:ts.Node) : HaxeTypeDeclaration
     {
-        var moduleName = this.capitalize(basename(node.getSourceFile().fileName, ".d.ts"));
+        var moduleName = this.makeFullClassPath([ this.rootPackage, this.capitalize(basename(node.getSourceFile().fileName, ".d.ts")) ]);
         var moduleClass = this.classesAndInterfaces.find(x => x.fullClassName == moduleName);
         if (!moduleClass) this.classesAndInterfaces.push(moduleClass = new HaxeTypeDeclaration("class", moduleName));
         return moduleClass;
