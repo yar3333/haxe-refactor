@@ -15,7 +15,7 @@ export interface HaxeVarGetter
 
 export class HaxeTypeDeclaration
 {
-	public type : "class" | "interface" | "enum";
+	public type : "class" | "interface" | "enum" | "";
 
 	docComment = "";
 	fullClassName = "";
@@ -29,7 +29,7 @@ export class HaxeTypeDeclaration
 	private customs = new Array<string>();
 	private enumMembers = new Array<string>();
 	
-	constructor(type:"class"|"interface"|"enum", fullClassName="")
+	constructor(type:"class"|"interface"|"enum"|"", fullClassName="")
 	{
 		this.type = type;
 		this.fullClassName = fullClassName;
@@ -125,33 +125,36 @@ export class HaxeTypeDeclaration
 		
 		var s = "";
 
-		if (clas.packageName) s += "package " + clas.packageName + ";\n\n";
 		
-		s += this.imports.join("\n") + (this.imports.length > 0 ? "\n\n" : "");
-		
-		s += this.jsDocToString(this.docComment);
-
-		s += this.metas.map(m => m + "\n").join("\n");
-		s += "extern " + this.type + " " + clas.className;
-
-		switch (this.type)
+		if (this.type != "")
 		{
-			case "class":
-				s += (this.baseFullClassName ? " extends " + this.getShortClassName(clas.packageName, this.baseFullClassName) : "") + "\n";
-				if (this.baseFullInterfaceNames.length > 0) s += "\timplements " + this.baseFullInterfaceNames.map(x => this.getShortClassName(clas.packageName, x)).join(", ") + "\n";
-				break;
+			if (clas.packageName) s += "package " + clas.packageName + ";\n\n";
+			
+			s += this.imports.join("\n") + (this.imports.length > 0 ? "\n\n" : "");
+			
+			s += this.jsDocToString(this.docComment);
 
-			case "interface":
-				if (this.baseFullInterfaceNames.length == 1) s += " extends " + this.baseFullInterfaceNames.map(x => this.getShortClassName(clas.packageName, x)).join(", ");
-				else if (this.baseFullInterfaceNames.length > 1) s += "\n\t" + this.baseFullInterfaceNames.map(x => "extends " + this.getShortClassName(clas.packageName, x)).join("\n\t");
-				s += "\n"
-				break;
+			s += this.metas.map(m => m + "\n").join("\n");
+			s += "extern " + this.type + " " + clas.className;
 
-			case "enum":
-				s += "\n";
-				break;
+			switch (this.type)
+			{
+				case "class":
+					s += (this.baseFullClassName ? " extends " + this.getShortClassName(clas.packageName, this.baseFullClassName) : "") + "\n";
+					if (this.baseFullInterfaceNames.length > 0) s += "\timplements " + this.baseFullInterfaceNames.map(x => this.getShortClassName(clas.packageName, x)).join(", ") + "\n";
+					break;
+
+				case "interface":
+					if (this.baseFullInterfaceNames.length == 1) s += " extends " + this.baseFullInterfaceNames.map(x => this.getShortClassName(clas.packageName, x)).join(", ");
+					else if (this.baseFullInterfaceNames.length > 1) s += "\n\t" + this.baseFullInterfaceNames.map(x => "extends " + this.getShortClassName(clas.packageName, x)).join("\n\t");
+					s += "\n"
+					break;
+
+				case "enum":
+					s += "\n";
+					break;
+			}
 		}
-
 		s += "{\n";
 		s += (this.vars.length > 0 ? "\t" + (this.vars.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n\n" : "");
 		s += (this.methods.length > 0 ? "\t" + (this.methods.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
@@ -161,6 +164,8 @@ export class HaxeTypeDeclaration
 		if (s.endsWith("\n\n")) s = s.substring(0, s.length-1);
 
 		s += "}";
+
+		if (this.type == "") s = s.replace(/[ \t\n]+/g," ");
 
 		return s;
 	}
