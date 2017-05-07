@@ -124,3 +124,4 @@ class HaxeTypeDeclaration {
     }
 }
 exports.HaxeTypeDeclaration = HaxeTypeDeclaration;
+//# sourceMappingURL=HaxeTypeDeclaration.js.map
