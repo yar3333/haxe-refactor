@@ -1,4 +1,6 @@
-interface ColladaLoaderReturnType extends BaseInt, Abc
+package js;
+
+interface ColladaLoaderReturnType extends js.BaseInt, js.Abc
 {
 	public var myfield : String;
 

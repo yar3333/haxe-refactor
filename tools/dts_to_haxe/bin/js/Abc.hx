@@ -1,3 +1,5 @@
+package js;
+
 interface Abc
 {
 }

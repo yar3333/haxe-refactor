@@ -78,7 +78,7 @@ class CmdOptions {
         var arg = this.args.shift();
         if (arg != "--") {
             if (arg.substr(0, 1) == "-" && arg != "-") {
-                let match = ~/^(--?.+)=(.+)$/.exec(arg);
+                let match = /^(--?.+)=(.+)$/.exec(arg);
                 if (match) {
                     this.args.unshift(match[2]);
                     arg = match[1];
@@ -147,3 +147,4 @@ class CmdOptions {
     }
 }
 exports.CmdOptions = CmdOptions;
+//# sourceMappingURL=CmdOptions.js.map

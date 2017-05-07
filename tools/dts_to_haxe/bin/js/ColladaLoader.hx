@@ -1,9 +1,11 @@
+package js;
+
 /**
  * My_JS_Doc
  * And Second line
  */
-class ColladaLoader extends BaseInt
-	implements Abc
+class ColladaLoader extends js.BaseInt
+	implements js.Abc
 {
 	public var animations : Array<Dynamic>;
 	/**

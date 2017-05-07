@@ -221,3 +221,4 @@ class DtsFileParser {
     }
 }
 exports.DtsFileParser = DtsFileParser;
+//# sourceMappingURL=DtsFileParser.js.map
