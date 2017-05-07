@@ -25,7 +25,7 @@ export class ColladaLoader extends BaseInt implements Abc {
      * My_JS_Doc
      * And Second line
      */
-    constructor();
+    constructor(a?:number);
 
     load(url: string, onLoad: (model: ColladaModel) => void, onProgress?: (request: ProgressEvent) => void): void;
     setCrossOrigin(value: any): void;
