@@ -10,6 +10,8 @@ var options = new CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.")
 options.add("outDir", "hxclasses", ["--out-dir"], "Output directory. Default is 'hxclasses'.")
 options.add("rootPackage", "", ["--root-package"], "Root package for generated classes. Default is empty.")
+options.add("nativeNamespace", "", ["--native-namespace"], "Prefix package for @:native meta.")
+options.addRepeatable("imports", ["--import"], "Add import for each generated file.")
 options.addRepeatable("filePaths", null, "Source typescript definition file path or directory.");
 
 if (process.argv.length <= 2)
@@ -59,9 +61,11 @@ const typeChecker = program.getTypeChecker();
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
     
-    var parser = new DtsFileParser(sourceFile, typeChecker, params.get("rootPackage"));
+    var parser = new DtsFileParser(sourceFile, typeChecker, params.get("rootPackage"), params.get("nativeNamespace"));
     for (var klass of parser.parse())
     {
+        klass.addImports(params.get("imports"));
+
         let destFilePath = params.get("outDir") + "/" + klass.fullClassName.split(".").join("/") + ".hx";
         mkdirp(path.dirname(destFilePath));
         fs.writeFileSync(destFilePath, klass.toString());

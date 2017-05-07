@@ -7,6 +7,7 @@ class TsToHaxeStdTypes {
             ["void", "Void"],
             ["string", "String"],
             ["number", "Float"],
+            ["boolean", "Bool"],
         ]);
     }
     ;

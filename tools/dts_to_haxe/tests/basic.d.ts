@@ -1,7 +1,7 @@
 import { Scene, MyIden2 } from "./three-core";
 
 export interface ColladaLoaderReturnType extends BaseInt, Abc {
-    myfield: string;
+    myfield: number|string;
     myfunc(a:number, b) : void;
 }
 

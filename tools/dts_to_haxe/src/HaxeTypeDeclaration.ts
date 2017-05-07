@@ -35,9 +35,18 @@ export class HaxeTypeDeclaration
 		this.fullClassName = fullClassName;
 	}
 	
-	public addImport(packageName:string) : void
+	public addImport(packageName:string, append=true) : void
 	{
-		this.imports.push("import " + packageName + ";");
+		var s = "import " + packageName + ";";
+		if (append) this.imports.push(s);
+		else        this.imports.unshift(s);
+	}
+	
+	public addImports(packageNames:Array<string>, append=true) : void
+	{
+		var arr = packageNames.slice(0);
+		if (!append) arr.reverse();
+		for (let p of arr) this.addImport(p);
 	}
 	
 	public addMeta(meta:string) : void
@@ -48,7 +57,7 @@ export class HaxeTypeDeclaration
 	public addVar(v:HaxeVar, isPrivate:boolean=false, isStatic=false, isReadOnlyProperty=false) : void
 	{
 		var s = this.jsDocToString(v.jsDoc);
-		s += (isPrivate ? "" : "public ");
+		s += (isPrivate ? "private " : "");
 		s += (isStatic ? "static " : "");
 		s += "var " + v.haxeName + (isReadOnlyProperty ? "(default, null)" : "") + " : " + v.haxeType
 			  + (isStatic && v.haxeDefVal != null ? " = " + v.haxeDefVal : "")
@@ -59,7 +68,7 @@ export class HaxeTypeDeclaration
 	public addVarGetter(v:HaxeVarGetter, isPrivate = false, isStatic = false, isInline = false) : void
 	{
 		var s = "\n\t"
-		      + (isPrivate ? "" : "public ")
+		      + (isPrivate ? "private " : "")
 			  + (isStatic ? "static " : "")
 			  + "var " + v.haxeName + "(get_" + v.haxeName + ", null)" + " : " + v.haxeType
 			  + ";\n";
@@ -77,7 +86,7 @@ export class HaxeTypeDeclaration
 	{
 		var header = 
 			    this.jsDocToString(jsDoc)
-			  + (isPrivate ? '' : 'public ')
+			  + (isPrivate ? 'private ' : '')
 			  + (isStatic ? 'static  ' : '')
 			  + 'function ' + name + '('
 			  + vars.map((v:HaxeVar) => v.haxeName + ":" + v.haxeType + (v.haxeDefVal != null ? '=' + v.haxeDefVal : '')).join(', ')
@@ -123,17 +132,18 @@ export class HaxeTypeDeclaration
 		s += this.jsDocToString(this.docComment);
 
 		s += this.metas.map(m => m + "\n").join("\n");
-		s += this.type + " " + clas.className;
+		s += "extern " + this.type + " " + clas.className;
 
 		switch (this.type)
 		{
 			case "class":
-				s += (this.baseFullClassName ? " extends " + this.baseFullClassName : "") + "\n";
-				if (this.baseFullInterfaceNames.length > 0) s += "\timplements " + this.baseFullInterfaceNames.join(", ") + "\n";
+				s += (this.baseFullClassName ? " extends " + this.getShortClassName(clas.packageName, this.baseFullClassName) : "") + "\n";
+				if (this.baseFullInterfaceNames.length > 0) s += "\timplements " + this.baseFullInterfaceNames.map(x => this.getShortClassName(clas.packageName, x)).join(", ") + "\n";
 				break;
 
 			case "interface":
-				if (this.baseFullInterfaceNames.length > 0) s += " extends " + this.baseFullInterfaceNames.join(", ");
+				if (this.baseFullInterfaceNames.length == 1) s += " extends " + this.baseFullInterfaceNames.map(x => this.getShortClassName(clas.packageName, x)).join(", ");
+				else if (this.baseFullInterfaceNames.length > 1) s += "\n\t" + this.baseFullInterfaceNames.map(x => "extends " + this.getShortClassName(clas.packageName, x)).join("\n\t");
 				s += "\n"
 				break;
 
@@ -144,8 +154,8 @@ export class HaxeTypeDeclaration
 
 		s += "{\n";
 		s += (this.vars.length > 0 ? "\t" + (this.vars.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n\n" : "");
-		s += (this.methods.length > 0 ? "\t" + (this.methods.map(x => x.split("\n").join("\n\t"))).join("\n\n\t") + "\n" : "");
-		s += (this.customs.length > 0 ? "\t" + (this.customs.map(x => x.split("\n").join("\n\t"))).join("\n\n\t") + "\n" : "");
+		s += (this.methods.length > 0 ? "\t" + (this.methods.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
+		s += (this.customs.length > 0 ? "\t" + (this.customs.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
 		s += (this.enumMembers.length > 0 ? "\t" + (this.enumMembers.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
 
 		if (s.endsWith("\n\n")) s = s.substring(0, s.length-1);
@@ -179,5 +189,22 @@ export class HaxeTypeDeclaration
 	{
 		if (jsDoc === null || jsDoc === "") return "";
 		return "/"+"**\n * " + jsDoc.split("\r\n").join("\n").split("\n").join("\n * ") + "\n *" + "/\n";
+	}
+
+	private getShortClassName(pack:string, fullClassName:string) : string
+	{
+		if (pack === null || pack === "") return fullClassName;
+		
+		var partsA = pack.split(".");
+		var partsB = fullClassName.split(".");
+		
+		if (partsB.length == 1 || partsB.length >= partsA.length)
+
+		for (var i = 0; i < partsB.length - 1; i++)
+		{
+			if (partsA[i] !== partsB[i]) return fullClassName;
+		}
+
+		return partsB[partsB.length - 1];
 	}
 }

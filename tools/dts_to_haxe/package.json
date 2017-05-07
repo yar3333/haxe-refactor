@@ -8,9 +8,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "..\\..\\library\\scripts\\dts_to_haxe.cmd --out-dir bin --root-package js tests",
+    "start": "..\\..\\library\\scripts\\dts_to_haxe.cmd --out-dir bin --root-package js --native-namespace THREE tests",
     "build-and-start": "npm run build && npm start",
-    "debug": "run-node --nolazy --debug-brk=5858 ../../library/scripts/dts_to_haxe/DtsToHaxe.js --out-dir bin --root-package js tests"
+    "debug": "run-node --nolazy --debug-brk=5858 ../../library/scripts/dts_to_haxe/DtsToHaxe.js --out-dir bin --root-package js --native-namespace THREE tests"
   },
   "keywords": [],
   "author": "",

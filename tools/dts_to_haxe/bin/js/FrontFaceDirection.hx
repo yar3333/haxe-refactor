@@ -3,6 +3,7 @@ package js;
 /**
  * MyJsDoc4
  */
-enum FrontFaceDirection
+@:native("THREE.FrontFaceDirection")
+extern enum FrontFaceDirection
 {
 }
