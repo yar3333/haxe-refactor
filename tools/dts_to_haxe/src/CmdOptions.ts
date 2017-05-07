@@ -129,7 +129,7 @@ export class CmdOptions
 		{
 			if (arg.substr(0, 1) == "-" && arg != "-")
 			{
-				let match = ~/^(--?.+)=(.+)$/.exec(arg);
+				let match = /^(--?.+)=(.+)$/.exec(arg);
 				if (match)
 				{
 					this.args.unshift(match[2]);
