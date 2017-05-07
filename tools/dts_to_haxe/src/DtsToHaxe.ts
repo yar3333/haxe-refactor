@@ -9,6 +9,7 @@ import { CmdOptions } from "./CmdOptions";
 var options = new CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.")
 options.add("outDir", "hxclasses", ["--out-dir"], "Output directory. Default is 'hxclasses'.")
+options.add("rootPackage", "", ["--root-package"], "Root package for generated classes. Default is empty.")
 options.addRepeatable("filePaths", null, "Source typescript definition file path or directory.");
 
 if (process.argv.length <= 2)
@@ -58,7 +59,7 @@ const typeChecker = program.getTypeChecker();
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
     
-    var parser = new DtsFileParser(sourceFile, typeChecker);
+    var parser = new DtsFileParser(sourceFile, typeChecker, params.get("rootPackage"));
     for (var klass of parser.parse())
     {
         let destFilePath = params.get("outDir") + "/" + klass.fullClassName.split(".").join("/") + ".hx";
@@ -105,7 +106,7 @@ function walkSync(start:string, callback:WalkSyncCallback) : void
         coll.dirs.forEach(function (d)
         {
             var abspath = path.join(start, d);
-            exports.walkSync(abspath, callback);
+            walkSync(abspath, callback);
         });
     }
     else

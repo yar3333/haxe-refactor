@@ -8,6 +8,7 @@ const CmdOptions_1 = require("./CmdOptions");
 var options = new CmdOptions_1.CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.");
 options.add("outDir", "hxclasses", ["--out-dir"], "Output directory. Default is 'hxclasses'.");
+options.add("rootPackage", "", ["--root-package"], "Root package for generated classes. Default is empty.");
 options.addRepeatable("filePaths", null, "Source typescript definition file path or directory.");
 if (process.argv.length <= 2) {
     console.log("TypeScript definition files (*.d.ts) to haxe convertor.");
@@ -54,7 +55,7 @@ const program = ts.createProgram(filePaths, compilerOptions);
 const typeChecker = program.getTypeChecker();
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
-    var parser = new DtsFileParser_1.DtsFileParser(sourceFile, typeChecker);
+    var parser = new DtsFileParser_1.DtsFileParser(sourceFile, typeChecker, params.get("rootPackage"));
     for (var klass of parser.parse()) {
         let destFilePath = params.get("outDir") + "/" + klass.fullClassName.split(".").join("/") + ".hx";
         mkdirp(path.dirname(destFilePath));
@@ -82,7 +83,7 @@ function walkSync(start, callback) {
         callback(start, coll.dirs, coll.names);
         coll.dirs.forEach(function (d) {
             var abspath = path.join(start, d);
-            exports.walkSync(abspath, callback);
+            walkSync(abspath, callback);
         });
     }
     else {
