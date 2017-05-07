@@ -289,10 +289,14 @@ export class DtsFileParser
                 return this.convertUnionType((<ts.UnionTypeNode>node).types);
             }
             
-            default:
-                var s = node.getText();
-                return this.typeMapper.get(s) ? this.typeMapper.get(s) : s;
+            case ts.SyntaxKind.TypeLiteral:
+            {
+                return this.processTypeLiteral(<ts.TypeLiteralNode>node);
+            }
         }
+
+        var s = node.getText();
+        return this.typeMapper.get(s) ? this.typeMapper.get(s) : s;
     }
 
     private convertUnionType(types:Array<ts.TypeNode>) : string
@@ -345,5 +349,24 @@ export class DtsFileParser
     {
         dest.fullClassName = this.makeFullClassPath([ this.rootPackage, x.text ]);
         dest.addMeta('@:native("' + this.makeFullClassPath([ this.nativeNamespace, x.text ]) + '")');
+    }
+
+    private processTypeLiteral(node:ts.TypeLiteralNode) : string
+    {
+        if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature)
+        {
+            let tt = <ts.IndexSignatureDeclaration>node.members[0];
+            if (tt.parameters.length == 1) return "Dynamic<" + this.convertType(tt.type) + ">";
+        }
+    
+       var item = new HaxeTypeDeclaration("");
+        
+        this.processChildren(node, new Map<number, (node:any) => void>(
+        [
+            [ ts.SyntaxKind.PropertySignature, (x:ts.PropertySignature) => this.processPropertySignature(x, item) ],
+            [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]
+        ]));
+
+        return item.toString();
     }
 }

@@ -193,10 +193,13 @@ class DtsFileParser {
                 {
                     return this.convertUnionType(node.types);
                 }
-            default:
-                var s = node.getText();
-                return this.typeMapper.get(s) ? this.typeMapper.get(s) : s;
+            case ts.SyntaxKind.TypeLiteral:
+                {
+                    return this.processTypeLiteral(node);
+                }
         }
+        var s = node.getText();
+        return this.typeMapper.get(s) ? this.typeMapper.get(s) : s;
     }
     convertUnionType(types) {
         if (types.length == 1)
@@ -235,6 +238,19 @@ class DtsFileParser {
     processTypeDeclarationIdentifier(x, dest) {
         dest.fullClassName = this.makeFullClassPath([this.rootPackage, x.text]);
         dest.addMeta('@:native("' + this.makeFullClassPath([this.nativeNamespace, x.text]) + '")');
+    }
+    processTypeLiteral(node) {
+        if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature) {
+            let tt = node.members[0];
+            if (tt.parameters.length == 1)
+                return "Dynamic<" + this.convertType(tt.type) + ">";
+        }
+        var item = new HaxeTypeDeclaration_1.HaxeTypeDeclaration("");
+        this.processChildren(node, new Map([
+            [ts.SyntaxKind.PropertySignature, (x) => this.processPropertySignature(x, item)],
+            [ts.SyntaxKind.MethodSignature, (x) => this.processMethodSignature(x, item)]
+        ]));
+        return item.toString();
     }
 }
 exports.DtsFileParser = DtsFileParser;

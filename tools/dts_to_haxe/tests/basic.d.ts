@@ -1,6 +1,8 @@
 import { Scene, MyIden2 } from "./three-core";
 
 export interface ColladaLoaderReturnType extends BaseInt, Abc {
+    info: {render: {vertices: number; faces: number;};};
+    pointMap: { [id: string]: number[]; };
     myfield: number|string;
     myfunc(a:number, b) : void;
 }
