@@ -1,3 +1,5 @@
+package js;
+
 class Enums
 {
 	/**

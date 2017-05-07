@@ -204,7 +204,7 @@ class DtsFileParser {
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
     getModuleClass(node) {
-        var moduleName = this.capitalize(path_1.basename(node.getSourceFile().fileName, ".d.ts"));
+        var moduleName = this.makeFullClassPath([this.rootPackage, this.capitalize(path_1.basename(node.getSourceFile().fileName, ".d.ts"))]);
         var moduleClass = this.classesAndInterfaces.find(x => x.fullClassName == moduleName);
         if (!moduleClass)
             this.classesAndInterfaces.push(moduleClass = new HaxeTypeDeclaration_1.HaxeTypeDeclaration("class", moduleName));
