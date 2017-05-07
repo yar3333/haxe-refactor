@@ -90,7 +90,7 @@ export class HaxeTypeDeclaration
 		var header = 
 			    this.jsDocToString(jsDoc)
 			  + (isPrivate ? 'private ' : '')
-			  + (isStatic ? 'static  ' : '')
+			  + (isStatic ? 'static ' : '')
 			  + 'function ' + name + '('
 			  + vars.map((v:HaxeVar) => (v.isOptional ? "?" : "") + v.haxeName + ":" + v.haxeType + (v.haxeDefVal != null ? '=' + v.haxeDefVal : '')).join(', ')
 			  + ') : ' + retType;
