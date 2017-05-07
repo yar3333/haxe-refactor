@@ -5,12 +5,14 @@ import * as path from "path";
 import * as ts from "typescript";
 import { DtsFileParser } from "./DtsFileParser";
 import { CmdOptions } from "./CmdOptions";
+import { Logger } from "./Logger";
 
 var options = new CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.")
 options.add("outDir", "hxclasses", ["--out-dir"], "Output directory. Default is 'hxclasses'.")
 options.add("rootPackage", "", ["--root-package"], "Root package for generated classes. Default is empty.")
 options.add("nativeNamespace", "", ["--native-namespace"], "Prefix package for @:native meta.")
+options.add("logLevel", "warn", ["--log-level"], "Verbose level: 'none', 'warn' or 'debug'. Default is 'warn'.")
 options.addRepeatable("imports", ["--import"], "Add import for each generated file.")
 options.addRepeatable("filePaths", null, "Source typescript definition file path or directory.");
 
@@ -62,7 +64,7 @@ for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
     
     var parser = new DtsFileParser(sourceFile, typeChecker, params.get("rootPackage"), params.get("nativeNamespace"));
-    for (var klass of parser.parse())
+    for (var klass of parser.parse(new Logger(params.get("logLevel"))))
     {
         klass.addImports(params.get("imports"));
 

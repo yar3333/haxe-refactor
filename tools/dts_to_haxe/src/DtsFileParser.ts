@@ -5,9 +5,12 @@ import * as ts from "typescript";
 import { Tokens } from "./Tokens";
 import { TsToHaxeStdTypes } from "./TsToHaxeStdTypes";
 import { HaxeTypeDeclaration, HaxeVar } from "./HaxeTypeDeclaration";
+import { ILogger } from "./ILogger";
 
 export class DtsFileParser
 {
+    private logger : ILogger;
+
     private tokens : string[];
     private typeMapper : Map<string, string>;
     private indent = "";
@@ -21,8 +24,10 @@ export class DtsFileParser
         this.typeMapper = TsToHaxeStdTypes.getAll();
     }
 
-    public parse() : Array<HaxeTypeDeclaration>
+    public parse(logger:ILogger) : Array<HaxeTypeDeclaration>
     {
+        this.logger = logger;
+
         const node = this.sourceFile;
 
         this.processNode(node, () => {
@@ -40,7 +45,7 @@ export class DtsFileParser
                     break;
 
                 default:
-                    console.log(this.indent + "^----- UNKNOW ROOT ELEMENT");
+                    this.logger.log(this.indent + "^----- UNKNOW ROOT ELEMENT");
                     this.logSubTree(node);
             }
         });
@@ -51,9 +56,10 @@ export class DtsFileParser
     private processVariableStatement(node:ts.VariableStatement)
     {
         if (!this.isFlag(node, ts.NodeFlags.Export)) return;
-        
+
         for (var decl of node.declarationList.declarations)
         {
+            this.logger.log(this.indent + "| " + decl.name.getText())
             var isReadOnly = this.isFlag(node.declarationList, ts.NodeFlags.Const) || this.isFlag(node.declarationList, ts.NodeFlags.Readonly);
             this.getModuleClass(node).addVar(this.createVar(decl.name.getText(), decl.type, null, this.getJsDoc(decl.name), false), false, true, isReadOnly);
         }
@@ -219,9 +225,11 @@ export class DtsFileParser
                  this.processNode(x, () => f(x));
              }
              else {
-                console.log(this.indent + "vvvvv----IGNORE ----vvvvv");
+                this.logger.beginWarn();
+                this.logger.log(this.indent + "vvvvv----IGNORE ----vvvvv");
                 this.processNode(x, () => this.logSubTree(x));
-                console.log(this.indent + "^^^^^----IGNORE ----^^^^^");
+                this.logger.log(this.indent + "^^^^^----IGNORE ----^^^^^");
+                this.logger.endWarn();
              }
          });
     }
@@ -236,17 +244,17 @@ export class DtsFileParser
 
     private processNode(node: ts.Node, callb:any)
     {
-        console.log(this.indent + this.tokens[node.kind]);
+        this.logger.log(this.indent + this.tokens[node.kind] + ((<any>node).name && (<any>node).name.getText() ? " | " + (<any>node).name.getText() : ""));
         this.indent += "    ";
         callb();
         this.indent = this.indent.substring(0, this.indent.length - 4);
     }
 
-    private report(node: ts.Node, message: string)
-    {
-        let obj = this.sourceFile.getLineAndCharacterOfPosition(node.getStart());
-        console.log(`${this.sourceFile.fileName} (${obj.line + 1},${obj.character + 1}): ${message}`);
-    }
+    //private report(node: ts.Node, message: string)
+    //{
+    //    let obj = this.sourceFile.getLineAndCharacterOfPosition(node.getStart());
+    //    this.logger.log(`${this.sourceFile.fileName} (${obj.line + 1},${obj.character + 1}): ${message}`);
+    //}
 
     private addImports(moduleFilePath:string, ids:Array<string>)
     {

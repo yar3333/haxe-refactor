@@ -17,7 +17,8 @@ class DtsFileParser {
         this.tokens = Tokens_1.Tokens.getAll();
         this.typeMapper = TsToHaxeStdTypes_1.TsToHaxeStdTypes.getAll();
     }
-    parse() {
+    parse(logger) {
+        this.logger = logger;
         const node = this.sourceFile;
         this.processNode(node, () => {
             switch (node.kind) {
@@ -32,7 +33,7 @@ class DtsFileParser {
                     ]));
                     break;
                 default:
-                    console.log(this.indent + "^----- UNKNOW ROOT ELEMENT");
+                    this.logger.log(this.indent + "^----- UNKNOW ROOT ELEMENT");
                     this.logSubTree(node);
             }
         });
@@ -42,6 +43,7 @@ class DtsFileParser {
         if (!this.isFlag(node, ts.NodeFlags.Export))
             return;
         for (var decl of node.declarationList.declarations) {
+            this.logger.log(this.indent + "| " + decl.name.getText());
             var isReadOnly = this.isFlag(node.declarationList, ts.NodeFlags.Const) || this.isFlag(node.declarationList, ts.NodeFlags.Readonly);
             this.getModuleClass(node).addVar(this.createVar(decl.name.getText(), decl.type, null, this.getJsDoc(decl.name), false), false, true, isReadOnly);
         }
@@ -138,9 +140,11 @@ class DtsFileParser {
                 this.processNode(x, () => f(x));
             }
             else {
-                console.log(this.indent + "vvvvv----IGNORE ----vvvvv");
+                this.logger.beginWarn();
+                this.logger.log(this.indent + "vvvvv----IGNORE ----vvvvv");
                 this.processNode(x, () => this.logSubTree(x));
-                console.log(this.indent + "^^^^^----IGNORE ----^^^^^");
+                this.logger.log(this.indent + "^^^^^----IGNORE ----^^^^^");
+                this.logger.endWarn();
             }
         });
     }
@@ -150,15 +154,16 @@ class DtsFileParser {
         });
     }
     processNode(node, callb) {
-        console.log(this.indent + this.tokens[node.kind]);
+        this.logger.log(this.indent + this.tokens[node.kind] + (node.name && node.name.getText() ? " | " + node.name.getText() : ""));
         this.indent += "    ";
         callb();
         this.indent = this.indent.substring(0, this.indent.length - 4);
     }
-    report(node, message) {
-        let obj = this.sourceFile.getLineAndCharacterOfPosition(node.getStart());
-        console.log(`${this.sourceFile.fileName} (${obj.line + 1},${obj.character + 1}): ${message}`);
-    }
+    //private report(node: ts.Node, message: string)
+    //{
+    //    let obj = this.sourceFile.getLineAndCharacterOfPosition(node.getStart());
+    //    this.logger.log(`${this.sourceFile.fileName} (${obj.line + 1},${obj.character + 1}): ${message}`);
+    //}
     addImports(moduleFilePath, ids) {
         for (let id of ids)
             this.imports.push(moduleFilePath.replace("/", ".") + "." + id);
