@@ -15,7 +15,7 @@ export class DtsFileParser
     private imports = new Array<string>();
     private classesAndInterfaces = new Array<HaxeTypeDeclaration>();
 
-    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker)
+    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private rootPackage:string)
     {
         this.tokens = Tokens.getAll();
         this.typeMapper = TsToHaxeStdTypes.getAll();
@@ -97,10 +97,10 @@ export class DtsFileParser
         this.processChildren(node, new Map<number, (node:any) => void>(
         [
             [ ts.SyntaxKind.ExportKeyword, (x) => {} ],
-            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => item.fullClassName = x.text ],
-            [ ts.SyntaxKind.HeritageClause, (x:ts.HeritageClause) => item.baseFullInterfaceNames = x.types.map(y => y.getText()) ],
+            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => item.fullClassName = this.makeFullClassPath([ this.rootPackage, x.text ]) ],
+            [ ts.SyntaxKind.HeritageClause, (x:ts.HeritageClause) => item.baseFullInterfaceNames = x.types.map(y => this.makeFullClassPath([ this.rootPackage, y.getText() ])) ],
             [ ts.SyntaxKind.PropertySignature, (x:ts.PropertySignature) => this.processPropertySignature(x, item) ],
-            [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item)]
+            [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]
         ]));
 
         this.classesAndInterfaces.push(item);
@@ -115,11 +115,11 @@ export class DtsFileParser
         this.processChildren(node, new Map<number, (node:any) => void>(
         [
             [ ts.SyntaxKind.ExportKeyword, (x) => {} ],
-            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => item.fullClassName = x.text ],
+            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => item.fullClassName = this.makeFullClassPath([ this.rootPackage, x.text ]) ],
             [ ts.SyntaxKind.HeritageClause, (x:ts.HeritageClause) => this.processHeritageClauseForClass(x, item) ],
             [ ts.SyntaxKind.PropertyDeclaration, (x:ts.PropertyDeclaration) => this.processPropertyDeclaration(x, item) ],
-            [ ts.SyntaxKind.MethodDeclaration, (x:ts.MethodDeclaration) => this.processMethodDeclaration(x, item)],
-            [ ts.SyntaxKind.Constructor, (x:ts.ConstructorDeclaration) => this.processConstructor(x, item)]
+            [ ts.SyntaxKind.MethodDeclaration, (x:ts.MethodDeclaration) => this.processMethodDeclaration(x, item) ],
+            [ ts.SyntaxKind.Constructor, (x:ts.ConstructorDeclaration) => this.processConstructor(x, item) ]
         ]));
 
         this.classesAndInterfaces.push(item);
@@ -134,7 +134,7 @@ export class DtsFileParser
         this.processChildren(node, new Map<number, (node:any) => void>(
         [
             [ ts.SyntaxKind.ExportKeyword, (x) => {} ],
-            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => item.fullClassName = x.text ],
+            [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => item.fullClassName = this.makeFullClassPath([ this.rootPackage, x.text ]) ],
             [ ts.SyntaxKind.EnumMember, (x:ts.EnumMember) => this.processEnumMember(x, item) ],
         ]));
 
@@ -151,11 +151,11 @@ export class DtsFileParser
         switch (x.token)
         {
             case ts.SyntaxKind.ExtendsKeyword:
-                dest.baseFullClassName = x.types.map(y => y.getText()).toString();
+                dest.baseFullClassName = x.types.map(y => this.makeFullClassPath([ this.rootPackage, y.getText() ])).toString();
                 break;
 
             case ts.SyntaxKind.ImplementsKeyword:
-                dest.baseFullInterfaceNames = x.types.map(y => y.getText());
+                dest.baseFullInterfaceNames = x.types.map(y => this.makeFullClassPath([ this.rootPackage, y.getText() ]));
                 break;
         }
     }
@@ -312,5 +312,16 @@ export class DtsFileParser
         var moduleClass = this.classesAndInterfaces.find(x => x.fullClassName == moduleName);
         if (!moduleClass) this.classesAndInterfaces.push(moduleClass = new HaxeTypeDeclaration("class", moduleName));
         return moduleClass;
+    }
+
+    private makeFullClassPath(parts:Array<string>) : string
+    {
+        var s = "";
+        for (var p of parts)
+        {
+            if (p !== null && p !== "" && s != "") s += ".";
+            s += p;
+        }
+        return s;
     }
 }
