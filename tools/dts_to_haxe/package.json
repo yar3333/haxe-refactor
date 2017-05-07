@@ -8,8 +8,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "..\\..\\library\\scripts\\dts_to_haxe.cmd tests",
-    "build-and-start": "npm run build && npm start"
+    "start": "..\\..\\library\\scripts\\dts_to_haxe.cmd --out-dir bin --root-package js tests",
+    "build-and-start": "npm run build && npm start",
+    "debug": "run-node --nolazy --debug-brk=5858 ../../library/scripts/dts_to_haxe/DtsToHaxe.js --out-dir bin --root-package js tests"
   },
   "keywords": [],
   "author": "",
