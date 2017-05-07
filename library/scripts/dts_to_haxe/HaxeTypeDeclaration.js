@@ -33,19 +33,26 @@ class HaxeTypeDeclaration {
     }
     addVar(v, isPrivate = false, isStatic = false, isReadOnlyProperty = false) {
         var s = this.jsDocToString(v.jsDoc);
-        s += (isPrivate ? "private " : "");
-        s += (isStatic ? "static " : "");
+        if (v.isOptional)
+            s += "@:optional ";
+        if (isPrivate)
+            s += "private ";
+        if (isStatic)
+            s += "static ";
         s += "var " + v.haxeName + (isReadOnlyProperty ? "(default, null)" : "") + " : " + v.haxeType
             + (isStatic && v.haxeDefVal != null ? " = " + v.haxeDefVal : "")
             + ";";
         this.vars.push(s);
     }
     addVarGetter(v, isPrivate = false, isStatic = false, isInline = false) {
-        var s = "\n\t"
-            + (isPrivate ? "private " : "")
-            + (isStatic ? "static " : "")
-            + "var " + v.haxeName + "(get_" + v.haxeName + ", null)" + " : " + v.haxeType
-            + ";\n";
+        var s = "\n\t";
+        if (v.isOptional)
+            s += "@:optional ";
+        if (isPrivate)
+            s += "private ";
+        if (isStatic)
+            s += "static ";
+        s += "var " + v.haxeName + "(get_" + v.haxeName + ", null)" + " : " + v.haxeType + ";\n";
         s += (isInline ? "\tinline " : "\t")
             + "function get_" + v.haxeName + "() : " + v.haxeType + "\n"
             + "\t{\n"
@@ -58,7 +65,7 @@ class HaxeTypeDeclaration {
             + (isPrivate ? 'private ' : '')
             + (isStatic ? 'static  ' : '')
             + 'function ' + name + '('
-            + vars.map((v) => v.haxeName + ":" + v.haxeType + (v.haxeDefVal != null ? '=' + v.haxeDefVal : '')).join(', ')
+            + vars.map((v) => (v.isOptional ? "?" : "") + v.haxeName + ":" + v.haxeType + (v.haxeDefVal != null ? '=' + v.haxeDefVal : '')).join(', ')
             + ') : ' + retType;
         var s = header;
         if (body !== null) {

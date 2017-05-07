@@ -55,7 +55,7 @@ export class DtsFileParser
         for (var decl of node.declarationList.declarations)
         {
             var isReadOnly = this.isFlag(node.declarationList, ts.NodeFlags.Const) || this.isFlag(node.declarationList, ts.NodeFlags.Readonly);
-            this.getModuleClass(node).addVar(this.createVar(decl.name.getText(), decl.type, null, this.getJsDoc(decl.name)), false, true, isReadOnly);
+            this.getModuleClass(node).addVar(this.createVar(decl.name.getText(), decl.type, null, this.getJsDoc(decl.name), false), false, true, isReadOnly);
         }
     }
 
@@ -162,14 +162,14 @@ export class DtsFileParser
 
     private processPropertySignature(x:ts.PropertySignature, dest:HaxeTypeDeclaration)
     {
-        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name)));
+        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null));
     }
 
     private processMethodSignature(x:ts.MethodSignature, dest:HaxeTypeDeclaration)
     {
         dest.addMethod(
             x.name.getText(),
-            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name))),
+            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null)),
             this.convertType(x.type),
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
@@ -180,14 +180,14 @@ export class DtsFileParser
 
     private processPropertyDeclaration(x:ts.PropertyDeclaration, dest:HaxeTypeDeclaration)
     {
-        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name)));
+        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null));
     }
 
     private processMethodDeclaration(x:ts.MethodDeclaration, dest:HaxeTypeDeclaration)
     {
         dest.addMethod(
             x.name.getText(),
-            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name))),
+            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null)),
             this.convertType(x.type),
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
@@ -200,7 +200,7 @@ export class DtsFileParser
     {
         dest.addMethod(
             "new",
-            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name))),
+            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null)),
             "Void",
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
@@ -253,13 +253,14 @@ export class DtsFileParser
         for (let id of ids) this.imports.push(moduleFilePath.replace("/", ".") + "." + id);
     }
 
-    private createVar(name:string, type:ts.Node, defaultValue:string, jsDoc:string) : HaxeVar
+    private createVar(name:string, type:ts.Node, defaultValue:string, jsDoc:string, isOptional:boolean) : HaxeVar
     {
         return {
             haxeName: name,
             haxeType: this.convertType(type),
             haxeDefVal: defaultValue,
-            jsDoc: jsDoc
+            jsDoc: jsDoc,
+            isOptional: isOptional
         };
     }
 

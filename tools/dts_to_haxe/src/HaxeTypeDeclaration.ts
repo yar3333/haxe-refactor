@@ -4,6 +4,7 @@ export interface HaxeVar
 	haxeType : string;
 	haxeDefVal : string;
 	jsDoc : string;
+	isOptional : boolean;
 }
 
 export interface HaxeVarGetter
@@ -11,6 +12,7 @@ export interface HaxeVarGetter
 	haxeName : string;
 	haxeType : string;
 	haxeBody : string;
+	isOptional : boolean;
 }
 
 export class HaxeTypeDeclaration
@@ -54,11 +56,12 @@ export class HaxeTypeDeclaration
 		this.metas.push(meta);
 	}
 	
-	public addVar(v:HaxeVar, isPrivate:boolean=false, isStatic=false, isReadOnlyProperty=false) : void
+	public addVar(v:HaxeVar, isPrivate=false, isStatic=false, isReadOnlyProperty=false) : void
 	{
 		var s = this.jsDocToString(v.jsDoc);
-		s += (isPrivate ? "private " : "");
-		s += (isStatic ? "static " : "");
+		if (v.isOptional) s += "@:optional ";
+		if (isPrivate) s += "private ";
+		if (isStatic) s += "static ";
 		s += "var " + v.haxeName + (isReadOnlyProperty ? "(default, null)" : "") + " : " + v.haxeType
 			  + (isStatic && v.haxeDefVal != null ? " = " + v.haxeDefVal : "")
 			  + ";";
@@ -67,11 +70,11 @@ export class HaxeTypeDeclaration
 	
 	public addVarGetter(v:HaxeVarGetter, isPrivate = false, isStatic = false, isInline = false) : void
 	{
-		var s = "\n\t"
-		      + (isPrivate ? "private " : "")
-			  + (isStatic ? "static " : "")
-			  + "var " + v.haxeName + "(get_" + v.haxeName + ", null)" + " : " + v.haxeType
-			  + ";\n";
+		var s = "\n\t";
+		if (v.isOptional) s += "@:optional ";
+		if (isPrivate) s += "private ";
+		if (isStatic) s += "static ";
+		s += "var " + v.haxeName + "(get_" + v.haxeName + ", null)" + " : " + v.haxeType + ";\n";
 		
 		s += (isInline ? "\tinline " : "\t")
 		   + "function get_" + v.haxeName + "() : " + v.haxeType + "\n"
@@ -89,7 +92,7 @@ export class HaxeTypeDeclaration
 			  + (isPrivate ? 'private ' : '')
 			  + (isStatic ? 'static  ' : '')
 			  + 'function ' + name + '('
-			  + vars.map((v:HaxeVar) => v.haxeName + ":" + v.haxeType + (v.haxeDefVal != null ? '=' + v.haxeDefVal : '')).join(', ')
+			  + vars.map((v:HaxeVar) => (v.isOptional ? "?" : "") + v.haxeName + ":" + v.haxeType + (v.haxeDefVal != null ? '=' + v.haxeDefVal : '')).join(', ')
 			  + ') : ' + retType;
 		var s = header;
 		if (body !== null)

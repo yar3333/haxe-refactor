@@ -43,7 +43,7 @@ class DtsFileParser {
             return;
         for (var decl of node.declarationList.declarations) {
             var isReadOnly = this.isFlag(node.declarationList, ts.NodeFlags.Const) || this.isFlag(node.declarationList, ts.NodeFlags.Readonly);
-            this.getModuleClass(node).addVar(this.createVar(decl.name.getText(), decl.type, null, this.getJsDoc(decl.name)), false, true, isReadOnly);
+            this.getModuleClass(node).addVar(this.createVar(decl.name.getText(), decl.type, null, this.getJsDoc(decl.name), false), false, true, isReadOnly);
         }
     }
     processImportDeclaration(node) {
@@ -117,19 +117,19 @@ class DtsFileParser {
         }
     }
     processPropertySignature(x, dest) {
-        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name)));
+        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null));
     }
     processMethodSignature(x, dest) {
-        dest.addMethod(x.name.getText(), x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name))), this.convertType(x.type), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name));
+        dest.addMethod(x.name.getText(), x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null)), this.convertType(x.type), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name));
     }
     processPropertyDeclaration(x, dest) {
-        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name)));
+        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null));
     }
     processMethodDeclaration(x, dest) {
-        dest.addMethod(x.name.getText(), x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name))), this.convertType(x.type), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name));
+        dest.addMethod(x.name.getText(), x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null)), this.convertType(x.type), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name));
     }
     processConstructor(x, dest) {
-        dest.addMethod("new", x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name))), "Void", null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.getFirstToken()));
+        dest.addMethod("new", x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null)), "Void", null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.getFirstToken()));
     }
     processChildren(node, map) {
         ts.forEachChild(node, x => {
@@ -163,12 +163,13 @@ class DtsFileParser {
         for (let id of ids)
             this.imports.push(moduleFilePath.replace("/", ".") + "." + id);
     }
-    createVar(name, type, defaultValue, jsDoc) {
+    createVar(name, type, defaultValue, jsDoc, isOptional) {
         return {
             haxeName: name,
             haxeType: this.convertType(type),
             haxeDefVal: defaultValue,
-            jsDoc: jsDoc
+            jsDoc: jsDoc,
+            isOptional: isOptional
         };
     }
     convertType(node) {

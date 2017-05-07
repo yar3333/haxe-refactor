@@ -20,7 +20,7 @@ extern class ColladaLoader extends BaseInt
 	 * My_JS_Doc
 	 * And Second line
 	 */
-	function new() : Void;
+	function new(?a:Float) : Void;
 	function load(url:String, onLoad:ColladaModel->Void, onProgress:ProgressEvent->Void) : Void;
 	function setCrossOrigin(value:Dynamic) : Void;
 	/**
