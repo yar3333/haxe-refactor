@@ -63,7 +63,7 @@ class HaxeTypeDeclaration {
     addMethod(name, vars, retType, body, isPrivate, isStatic, jsDoc) {
         var header = this.jsDocToString(jsDoc)
             + (isPrivate ? 'private ' : '')
-            + (isStatic ? 'static  ' : '')
+            + (isStatic ? 'static ' : '')
             + 'function ' + name + '('
             + vars.map((v) => (v.isOptional ? "?" : "") + v.haxeName + ":" + v.haxeType + (v.haxeDefVal != null ? '=' + v.haxeDefVal : '')).join(', ')
             + ') : ' + retType;
