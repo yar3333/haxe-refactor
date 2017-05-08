@@ -80,6 +80,10 @@ export class DtsFileParser
         [
             [ ts.SyntaxKind.ModuleDeclaration, (x:ts.ModuleDeclaration) => this.processModuleDeclaration(x) ],
             [ ts.SyntaxKind.ModuleBlock, (x:ts.ModuleBlock) => this.processModuleBlock(x) ],
+            [ ts.SyntaxKind.FunctionDeclaration, (x:ts.FunctionDeclaration) => this.processFunctionDeclaration(x) ],
+            [ ts.SyntaxKind.InterfaceDeclaration, (x:ts.InterfaceDeclaration) => this.processInterfaceDeclaration(x) ],
+            [ ts.SyntaxKind.ClassDeclaration, (x:ts.ClassDeclaration) => this.processClassDeclaration(x) ],
+            [ ts.SyntaxKind.VariableStatement, (x:ts.VariableStatement) => this.processVariableStatement(x) ],
         ]));
 
         this.curPackage = savePack;
@@ -186,6 +190,7 @@ export class DtsFileParser
         [
             [ ts.SyntaxKind.ExportKeyword, (x) => {} ],
             [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => {} ],
+            [ ts.SyntaxKind.TypeParameter, (x:ts.TypeParameterDeclaration) => this.processTypeParameter(x, item) ],
             [ ts.SyntaxKind.HeritageClause, (x:ts.HeritageClause) => this.processHeritageClauseForClass(x, item) ],
             [ ts.SyntaxKind.PropertyDeclaration, (x:ts.PropertyDeclaration) => this.processPropertyDeclaration(x, item) ],
             [ ts.SyntaxKind.MethodDeclaration, (x:ts.MethodDeclaration) => this.processMethodDeclaration(x, item) ],
@@ -193,6 +198,11 @@ export class DtsFileParser
         ]));
 
         this.allHaxeTypes.push(item);
+    }
+    
+    private processTypeParameter(node:ts.TypeParameterDeclaration, dest:HaxeTypeDeclaration)
+    {
+        dest.addTypeParameter(node.name.getText(), this.convertType(node.constraint));
     }
 
     private processEnumDeclaration(node:ts.EnumDeclaration)

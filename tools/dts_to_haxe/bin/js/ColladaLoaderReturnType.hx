@@ -9,5 +9,6 @@ extern interface ColladaLoaderReturnType
 	var pointMap : Dynamic<Array<Float>>;
 	var myfield : haxe.extern.EitherType<Float, String>;
 
+	function dispatchEvent(event:{ var type : String; }) : Void;
 	function myfunc(a:Float, b:Dynamic) : Void;
 }
