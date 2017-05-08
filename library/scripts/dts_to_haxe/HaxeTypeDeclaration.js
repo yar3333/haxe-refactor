@@ -11,6 +11,7 @@ class HaxeTypeDeclaration {
         this.methods = new Array();
         this.customs = new Array();
         this.enumMembers = new Array();
+        this.typeParameters = new Array();
         this.type = type;
         this.fullClassName = fullClassName;
     }
@@ -30,16 +31,6 @@ class HaxeTypeDeclaration {
     }
     addMeta(meta) {
         this.metas.push(meta);
-    }
-    replaceMeta(meta) {
-        var n = meta.indexOf("(");
-        var prefix = n > 0 ? meta.substring(0, n) : meta;
-        for (var i = 0; i < this.metas.length; i++) {
-            if (this.metas[i] == prefix || this.metas[i].startsWith(prefix + "(")) {
-                this.metas[i] = meta;
-                break;
-            }
-        }
     }
     addVar(v, isPrivate = false, isStatic = false, isReadOnlyProperty = false) {
         var s = this.jsDocToString(v.jsDoc);
@@ -97,6 +88,9 @@ class HaxeTypeDeclaration {
     addCustom(code) {
         this.customs.push(code);
     }
+    addTypeParameter(name, constraint) {
+        this.typeParameters.push({ name: name, constraint: constraint });
+    }
     toString() {
         var clas = this.splitFullClassName(this.fullClassName);
         var s = "";
@@ -107,6 +101,9 @@ class HaxeTypeDeclaration {
             s += this.jsDocToString(this.docComment);
             s += this.metas.map(m => m + "\n").join("\n");
             s += "extern " + this.type + " " + clas.className;
+            if (this.typeParameters.length > 0) {
+                s += "<" + this.typeParameters.map(x => x.name + ":" + x.constraint).join(", ") + ">";
+            }
             switch (this.type) {
                 case "class":
                     s += (this.baseFullClassName ? " extends " + this.getShortClassName(clas.packageName, this.baseFullClassName) : "") + "\n";

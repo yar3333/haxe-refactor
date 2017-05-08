@@ -1,6 +1,10 @@
 import { Scene, MyIden2 } from "./three-core";
 
+export class Curve<T extends Vector> {
+}
+
 export interface ColladaLoaderReturnType extends BaseInt, Abc {
+    dispatchEvent(event: { type: string; [attachment: string]: any; }): void;
     info: {render: {vertices: number; faces: number;};};
     pointMap: { [id: string]: number[]; };
     myfield: number|string;

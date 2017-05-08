@@ -55,6 +55,10 @@ class DtsFileParser {
         this.processChildren(node.body, new Map([
             [ts.SyntaxKind.ModuleDeclaration, (x) => this.processModuleDeclaration(x)],
             [ts.SyntaxKind.ModuleBlock, (x) => this.processModuleBlock(x)],
+            [ts.SyntaxKind.FunctionDeclaration, (x) => this.processFunctionDeclaration(x)],
+            [ts.SyntaxKind.InterfaceDeclaration, (x) => this.processInterfaceDeclaration(x)],
+            [ts.SyntaxKind.ClassDeclaration, (x) => this.processClassDeclaration(x)],
+            [ts.SyntaxKind.VariableStatement, (x) => this.processVariableStatement(x)],
         ]));
         this.curPackage = savePack;
     }
@@ -126,12 +130,16 @@ class DtsFileParser {
         this.processChildren(node, new Map([
             [ts.SyntaxKind.ExportKeyword, (x) => { }],
             [ts.SyntaxKind.Identifier, (x) => { }],
+            [ts.SyntaxKind.TypeParameter, (x) => this.processTypeParameter(x, item)],
             [ts.SyntaxKind.HeritageClause, (x) => this.processHeritageClauseForClass(x, item)],
             [ts.SyntaxKind.PropertyDeclaration, (x) => this.processPropertyDeclaration(x, item)],
             [ts.SyntaxKind.MethodDeclaration, (x) => this.processMethodDeclaration(x, item)],
             [ts.SyntaxKind.Constructor, (x) => this.processConstructor(x, item)]
         ]));
         this.allHaxeTypes.push(item);
+    }
+    processTypeParameter(node, dest) {
+        dest.addTypeParameter(node.name.getText(), this.convertType(node.constraint));
     }
     processEnumDeclaration(node) {
         var item = this.getHaxeTypeDeclarationByShort("enum", node.name.getText());

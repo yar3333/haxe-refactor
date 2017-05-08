@@ -30,6 +30,7 @@ export class HaxeTypeDeclaration
 	private methods = new Array<string>();
 	private customs = new Array<string>();
 	private enumMembers = new Array<string>();
+	private typeParameters = new Array<{ name:string, constraint:string }>();
 	
 	constructor(type:"class"|"interface"|"enum"|"", fullClassName="")
 	{
@@ -121,6 +122,11 @@ export class HaxeTypeDeclaration
 	{
 		this.customs.push(code);
 	}
+
+	public addTypeParameter(name:string, constraint:string)
+	{
+		this.typeParameters.push({ name:name, constraint:constraint });
+	}
 	
 	public toString() : string
 	{
@@ -139,6 +145,11 @@ export class HaxeTypeDeclaration
 
 			s += this.metas.map(m => m + "\n").join("\n");
 			s += "extern " + this.type + " " + clas.className;
+
+			if (this.typeParameters.length > 0)
+			{
+				s += "<" + this.typeParameters.map(x => x.name + ":" + x.constraint).join(", ") + ">";
+			}
 
 			switch (this.type)
 			{
