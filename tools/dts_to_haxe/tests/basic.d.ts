@@ -3,6 +3,8 @@ import { Scene, MyIden2 } from "./three-core";
 export class Curve<T extends Vector> {
     width : number;
     height: string;
+    arr: Array<number>;
+    arr2: number[];
 
     test(width:number, height:string) : void;
 }
