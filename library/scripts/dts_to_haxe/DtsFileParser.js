@@ -2,19 +2,18 @@
 "use strict";
 const ts = require("typescript");
 const Tokens_1 = require("./Tokens");
-const TsToHaxeStdTypes_1 = require("./TsToHaxeStdTypes");
 const HaxeTypeDeclaration_1 = require("./HaxeTypeDeclaration");
 class DtsFileParser {
-    constructor(sourceFile, typeChecker, rootPackage, nativeNamespace) {
+    constructor(sourceFile, typeChecker, typeConvertor, rootPackage, nativeNamespace) {
         this.sourceFile = sourceFile;
         this.typeChecker = typeChecker;
+        this.typeConvertor = typeConvertor;
         this.rootPackage = rootPackage;
         this.nativeNamespace = nativeNamespace;
         this.indent = "";
         this.imports = new Array();
         this.curModuleClass = null;
         this.tokens = Tokens_1.Tokens.getAll();
-        this.typeMapper = TsToHaxeStdTypes_1.TsToHaxeStdTypes.getAll();
     }
     parse(allHaxeTypes, logger) {
         this.allHaxeTypes = allHaxeTypes;
@@ -79,14 +78,18 @@ class DtsFileParser {
         for (var decl of node.declarationList.declarations) {
             this.logger.log(this.indent + "| " + decl.name.getText());
             var isReadOnly = this.isFlag(node.declarationList, ts.NodeFlags.Const) || this.isFlag(node.declarationList, ts.NodeFlags.Readonly);
-            this.getModuleClass(node).addVar(this.createVar(decl.name.getText(), decl.type, null, this.getJsDoc(decl.name), false), false, true, isReadOnly);
+            var klass = this.getModuleClass(node);
+            var varName = decl.name.getText();
+            klass.addVar(this.createVar(varName, decl.type, null, this.getJsDoc(decl.name), false, klass.fullClassName + "@" + varName), false, true, isReadOnly);
         }
     }
     processFunctionDeclaration(node) {
         if (!this.isFlag(node, ts.NodeFlags.Export))
             return;
         this.logger.log(this.indent + "| " + node.name.getText());
-        this.getModuleClass(node).addMethod(node.name.getText(), node.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), node.questionToken != null)), this.convertType(node.type), null, false, // private
+        var item = this.getModuleClass(node);
+        var methodName = node.name.getText();
+        item.addMethod(methodName, node.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), node.questionToken != null, item.fullClassName + "@" + methodName + "." + p.name.getText())), this.convertType(node.type, item.fullClassName + "@" + node.name.getText()), null, false, // private
         true, // static
         this.getJsDoc(node.name));
     }
@@ -139,7 +142,7 @@ class DtsFileParser {
         this.allHaxeTypes.push(item);
     }
     processTypeParameter(node, dest) {
-        dest.addTypeParameter(node.name.getText(), this.convertType(node.constraint));
+        dest.addTypeParameter(node.name.getText(), this.convertType(node.constraint, dest.fullClassName + "<" + node.name.getText()));
     }
     processEnumDeclaration(node) {
         var item = this.getHaxeTypeDeclarationByShort("enum", node.name.getText());
@@ -165,19 +168,22 @@ class DtsFileParser {
         }
     }
     processPropertySignature(x, dest) {
-        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null));
+        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null, dest.fullClassName + "@" + x.name.getText()));
     }
     processMethodSignature(x, dest) {
-        dest.addMethod(x.name.getText(), x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null)), this.convertType(x.type), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name));
+        var methodName = x.name.getText();
+        dest.addMethod(methodName, x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())), this.convertType(x.type, dest.fullClassName + "@" + methodName), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name));
     }
     processPropertyDeclaration(x, dest) {
-        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null));
+        var varName = x.name.getText();
+        dest.addVar(this.createVar(varName, x.type, null, this.getJsDoc(x.name), x.questionToken != null, dest.fullClassName + "@" + varName));
     }
     processMethodDeclaration(x, dest) {
-        dest.addMethod(x.name.getText(), x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null)), this.convertType(x.type), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name));
+        var methodName = x.name.getText();
+        dest.addMethod(methodName, x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())), this.convertType(x.type, dest.fullClassName + "@" + methodName), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name));
     }
     processConstructor(x, dest) {
-        dest.addMethod("new", x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null)), "Void", null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.getFirstToken()));
+        dest.addMethod("new", x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@new." + p.name.getText())), "Void", null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.getFirstToken()));
     }
     processChildren(node, map) {
         ts.forEachChild(node, x => {
@@ -214,49 +220,14 @@ class DtsFileParser {
         for (let id of ids)
             this.imports.push(moduleFilePath.replace("/", ".") + "." + id);
     }
-    createVar(name, type, defaultValue, jsDoc, isOptional) {
+    createVar(name, type, defaultValue, jsDoc, isOptional, typeLocalePath) {
         return {
             haxeName: name,
-            haxeType: this.convertType(type),
+            haxeType: this.convertType(type, typeLocalePath),
             haxeDefVal: defaultValue,
             jsDoc: jsDoc,
             isOptional: isOptional
         };
-    }
-    convertType(node) {
-        if (!node)
-            return "Dynamic";
-        switch (node.kind) {
-            case ts.SyntaxKind.FunctionType:
-                {
-                    let t = node;
-                    let types = [];
-                    for (var p of t.parameters)
-                        types.push(this.convertType(p.type));
-                    types.push(this.convertType(t.type));
-                    return types.join("->");
-                }
-            case ts.SyntaxKind.ArrayType:
-                {
-                    let t = node;
-                    return "Array<" + this.convertType(t.elementType) + ">";
-                }
-            case ts.SyntaxKind.UnionType:
-                {
-                    return this.convertUnionType(node.types);
-                }
-            case ts.SyntaxKind.TypeLiteral:
-                {
-                    return this.processTypeLiteral(node);
-                }
-        }
-        var s = node.getText();
-        return this.typeMapper.get(s) ? this.typeMapper.get(s) : s;
-    }
-    convertUnionType(types) {
-        if (types.length == 1)
-            return this.convertType(types[0]);
-        return "haxe.extern.EitherType<" + this.convertType(types[0]) + ", " + this.convertUnionType(types.slice(1)) + ">";
     }
     getJsDoc(node) {
         var symbol = this.typeChecker.getSymbolAtLocation(node);
@@ -276,19 +247,6 @@ class DtsFileParser {
             s += p;
         }
         return s;
-    }
-    processTypeLiteral(node) {
-        if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature) {
-            let tt = node.members[0];
-            if (tt.parameters.length == 1)
-                return "Dynamic<" + this.convertType(tt.type) + ">";
-        }
-        var item = new HaxeTypeDeclaration_1.HaxeTypeDeclaration("");
-        this.processChildren(node, new Map([
-            [ts.SyntaxKind.PropertySignature, (x) => this.processPropertySignature(x, item)],
-            [ts.SyntaxKind.MethodSignature, (x) => this.processMethodSignature(x, item)]
-        ]));
-        return item.toString();
     }
     getHaxeTypeDeclarationByShort(type, shortClassName) {
         return this.getHaxeTypeDeclarationByFull(type, this.makeFullClassPath([this.curPackage, shortClassName]));
@@ -316,6 +274,60 @@ class DtsFileParser {
             this.allHaxeTypes.push(this.curModuleClass);
         }
         return this.curModuleClass;
+    }
+    /**
+     * localePath:
+     *  `mypack.MyClas<T` - type of class <TypeParameter>
+     *  `mypack.MyClas@myFunc` - return type of the function or variable
+     *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
+     */
+    convertType(node, localePath) {
+        if (!node)
+            return "Dynamic";
+        switch (node.kind) {
+            case ts.SyntaxKind.FunctionType:
+                {
+                    let t = node;
+                    let types = [];
+                    for (var p of t.parameters)
+                        types.push(this.convertType(p.type, p.name.getText()));
+                    types.push(this.convertType(t.type, null));
+                    return types.join("->");
+                }
+            case ts.SyntaxKind.ArrayType:
+                {
+                    let t = node;
+                    return "Array<" + this.convertType(t.elementType, null) + ">";
+                }
+            case ts.SyntaxKind.UnionType:
+                {
+                    return this.convertUnionType(node.types);
+                }
+            case ts.SyntaxKind.TypeLiteral:
+                {
+                    return this.processTypeLiteral(node);
+                }
+        }
+        var s = node.getText();
+        return this.typeConvertor.convert(s, localePath);
+    }
+    convertUnionType(types) {
+        if (types.length == 1)
+            return this.convertType(types[0], null);
+        return "haxe.extern.EitherType<" + this.convertType(types[0], null) + ", " + this.convertUnionType(types.slice(1)) + ">";
+    }
+    processTypeLiteral(node) {
+        if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature) {
+            let tt = node.members[0];
+            if (tt.parameters.length == 1)
+                return "Dynamic<" + this.convertType(tt.type, null) + ">";
+        }
+        var item = new HaxeTypeDeclaration_1.HaxeTypeDeclaration("");
+        this.processChildren(node, new Map([
+            [ts.SyntaxKind.PropertySignature, (x) => this.processPropertySignature(x, item)],
+            [ts.SyntaxKind.MethodSignature, (x) => this.processMethodSignature(x, item)]
+        ]));
+        return item.toString();
     }
 }
 exports.DtsFileParser = DtsFileParser;

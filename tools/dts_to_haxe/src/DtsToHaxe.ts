@@ -8,6 +8,7 @@ import { CmdOptions } from "./CmdOptions";
 import { Logger } from "./Logger";
 import { HaxeTypeDeclaration } from "./HaxeTypeDeclaration";
 import * as FsTools from "./FsTools";
+import { TypeConvertor } from "./TypeConvertor";
 
 var options = new CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.")
@@ -16,6 +17,7 @@ options.add("rootPackage", "", ["--root-package"], "Root package for generated c
 options.add("nativeNamespace", "", ["--native-namespace"], "Prefix package for @:native meta.")
 options.add("logLevel", "warn", ["--log-level"], "Verbose level: 'none', 'warn' or 'debug'. Default is 'warn'.")
 options.addRepeatable("imports", ["--import"], "Add import for each generated file.")
+options.addRepeatable("typeMappers", ["--type-mapper"], "Add mapper file.")
 options.addRepeatable("filePaths", null, "Source typescript definition file path or directory.");
 
 if (process.argv.length <= 2)
@@ -59,6 +61,21 @@ for (var i = 0; i < filePaths.length; i++)
     }
 }
 
+var typeMapper = new Map<string, string>();
+for (let fileName of params.get("typeMappers"))
+{
+    var lines = fs.readFileSync(fileName).toString().split("\r\n").join("\n").split("\r").join("\n").split("\n");
+    for (let line of lines)
+    {
+        line = line.trim();
+        if (line === "" || line.startsWith("#") || line.startsWith("//")) continue;
+        var p = line.split("=>");
+        if (p.length == 2) typeMapper.set(p[0].trim(), p[1].trim());
+        else console.log("ERROR in file '" + fileName + "': bad string '" + line + "'.");
+    }
+}
+var typeConvertor = new TypeConvertor(typeMapper);
+
 const program = ts.createProgram(filePaths, compilerOptions);
 const typeChecker = program.getTypeChecker();
 
@@ -67,7 +84,7 @@ var results = new Array<HaxeTypeDeclaration>();
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
     
-    let parser = new DtsFileParser(sourceFile, typeChecker, params.get("rootPackage"), params.get("nativeNamespace"));
+    let parser = new DtsFileParser(sourceFile, typeChecker, typeConvertor, params.get("rootPackage"), params.get("nativeNamespace"));
     parser.parse(results, new Logger(params.get("logLevel")));
 }
 
