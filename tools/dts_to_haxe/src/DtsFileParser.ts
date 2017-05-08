@@ -1,18 +1,16 @@
 /// <reference path="../typings/globals/node/index.d.ts" />
 
-import { basename } from "path";
 import * as ts from "typescript";
 import { Tokens } from "./Tokens";
-import { TsToHaxeStdTypes } from "./TsToHaxeStdTypes";
 import { HaxeTypeDeclaration, HaxeVar } from "./HaxeTypeDeclaration";
 import { ILogger } from "./ILogger";
+import { TypeConvertor } from "./TypeConvertor";
 
 export class DtsFileParser
 {
     private logger : ILogger;
 
     private tokens : string[];
-    private typeMapper : Map<string, string>;
     private indent = "";
 
     private imports = new Array<string>();
@@ -22,10 +20,9 @@ export class DtsFileParser
 
     private curModuleClass: HaxeTypeDeclaration = null;
 
-    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private rootPackage:string, private nativeNamespace:string)
+    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private typeConvertor:TypeConvertor, private rootPackage:string, private nativeNamespace:string)
     {
         this.tokens = Tokens.getAll();
-        this.typeMapper = TsToHaxeStdTypes.getAll();
     }
 
     public parse(allHaxeTypes:Array<HaxeTypeDeclaration>, logger:ILogger) : void
@@ -111,7 +108,9 @@ export class DtsFileParser
         {
             this.logger.log(this.indent + "| " + decl.name.getText())
             var isReadOnly = this.isFlag(node.declarationList, ts.NodeFlags.Const) || this.isFlag(node.declarationList, ts.NodeFlags.Readonly);
-            this.getModuleClass(node).addVar(this.createVar(decl.name.getText(), decl.type, null, this.getJsDoc(decl.name), false), false, true, isReadOnly);
+            var klass = this.getModuleClass(node);
+            var varName = decl.name.getText();
+            klass.addVar(this.createVar(varName, decl.type, null, this.getJsDoc(decl.name), false, klass.fullClassName + "@" + varName), false, true, isReadOnly);
         }
     }
     
@@ -121,11 +120,14 @@ export class DtsFileParser
 
         this.logger.log(this.indent + "| " + node.name.getText())
 
-        this.getModuleClass(node).addMethod
+        var item = this.getModuleClass(node);
+        var methodName = node.name.getText();
+        
+        item.addMethod
         (
-            node.name.getText(),
-            node.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), node.questionToken != null)),
-            this.convertType(node.type),
+            methodName,
+            node.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), node.questionToken != null, item.fullClassName + "@" + methodName+"." + p.name.getText())),
+            this.convertType(node.type, item.fullClassName + "@" + node.name.getText()),
             null,
             false, // private
             true, // static
@@ -202,7 +204,7 @@ export class DtsFileParser
     
     private processTypeParameter(node:ts.TypeParameterDeclaration, dest:HaxeTypeDeclaration)
     {
-        dest.addTypeParameter(node.name.getText(), this.convertType(node.constraint));
+        dest.addTypeParameter(node.name.getText(), this.convertType(node.constraint, dest.fullClassName + "<" + node.name.getText()));
     }
 
     private processEnumDeclaration(node:ts.EnumDeclaration)
@@ -242,16 +244,18 @@ export class DtsFileParser
 
     private processPropertySignature(x:ts.PropertySignature, dest:HaxeTypeDeclaration)
     {
-        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null));
+        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null, dest.fullClassName + "@" + x.name.getText()));
     }
 
     private processMethodSignature(x:ts.MethodSignature, dest:HaxeTypeDeclaration)
     {
+        var methodName = x.name.getText();
+        
         dest.addMethod
         (
-            x.name.getText(),
-            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null)),
-            this.convertType(x.type),
+            methodName,
+            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
+            this.convertType(x.type, dest.fullClassName + "@" + methodName),
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
             this.isFlag(x.modifiers, ts.NodeFlags.Static),
@@ -261,15 +265,18 @@ export class DtsFileParser
 
     private processPropertyDeclaration(x:ts.PropertyDeclaration, dest:HaxeTypeDeclaration)
     {
-        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null));
+        var varName = x.name.getText();
+        dest.addVar(this.createVar(varName, x.type, null, this.getJsDoc(x.name), x.questionToken != null, dest.fullClassName + "@" + varName));
     }
 
     private processMethodDeclaration(x:ts.MethodDeclaration, dest:HaxeTypeDeclaration)
     {
-        dest.addMethod(
-            x.name.getText(),
-            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null)),
-            this.convertType(x.type),
+        var methodName = x.name.getText();
+        dest.addMethod
+        (
+            methodName,
+            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
+            this.convertType(x.type, dest.fullClassName + "@" + methodName),
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
             this.isFlag(x.modifiers, ts.NodeFlags.Static),
@@ -279,9 +286,10 @@ export class DtsFileParser
 
     private processConstructor(x:ts.ConstructorDeclaration, dest:HaxeTypeDeclaration)
     {
-        dest.addMethod(
+        dest.addMethod
+        (
             "new",
-            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null)),
+            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@new." + p.name.getText())),
             "Void",
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
@@ -336,58 +344,17 @@ export class DtsFileParser
         for (let id of ids) this.imports.push(moduleFilePath.replace("/", ".") + "." + id);
     }
 
-    private createVar(name:string, type:ts.Node, defaultValue:string, jsDoc:string, isOptional:boolean) : HaxeVar
+    private createVar(name:string, type:ts.Node, defaultValue:string, jsDoc:string, isOptional:boolean, typeLocalePath:string) : HaxeVar
     {
         return {
             haxeName: name,
-            haxeType: this.convertType(type),
+            haxeType: this.convertType(type, typeLocalePath),
             haxeDefVal: defaultValue,
             jsDoc: jsDoc,
             isOptional: isOptional
         };
     }
 
-    private convertType(node:ts.Node) : string
-    {
-        if (!node) return "Dynamic";
-
-        switch (node.kind)
-        {
-            case ts.SyntaxKind.FunctionType:
-            {
-                let t = <ts.FunctionTypeNode>node;
-                let types = [];
-                for (var p of t.parameters) types.push(this.convertType(p.type));
-                types.push(this.convertType(t.type));
-                return types.join("->");
-            }
-
-            case ts.SyntaxKind.ArrayType:
-            {
-                let t = <ts.ArrayTypeNode>node;
-                return "Array<" + this.convertType(t.elementType) + ">";
-            }
-            
-            case ts.SyntaxKind.UnionType:
-            {
-                return this.convertUnionType((<ts.UnionTypeNode>node).types);
-            }
-            
-            case ts.SyntaxKind.TypeLiteral:
-            {
-                return this.processTypeLiteral(<ts.TypeLiteralNode>node);
-            }
-        }
-
-        var s = node.getText();
-        return this.typeMapper.get(s) ? this.typeMapper.get(s) : s;
-    }
-
-    private convertUnionType(types:Array<ts.TypeNode>) : string
-    {
-        if (types.length == 1) return this.convertType(types[0]);
-        return "haxe.extern.EitherType<" + this.convertType(types[0])+", " +  this.convertUnionType(types.slice(1)) + ">";
-    }
 
     private getJsDoc(node:ts.Node)
     {
@@ -416,24 +383,6 @@ export class DtsFileParser
         return s;
     }
 
-    private processTypeLiteral(node:ts.TypeLiteralNode) : string
-    {
-        if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature)
-        {
-            let tt = <ts.IndexSignatureDeclaration>node.members[0];
-            if (tt.parameters.length == 1) return "Dynamic<" + this.convertType(tt.type) + ">";
-        }
-    
-       var item = new HaxeTypeDeclaration("");
-        
-        this.processChildren(node, new Map<number, (node:any) => void>(
-        [
-            [ ts.SyntaxKind.PropertySignature, (x:ts.PropertySignature) => this.processPropertySignature(x, item) ],
-            [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]
-        ]));
-
-        return item.toString();
-    }
 
     private getHaxeTypeDeclarationByShort(type:"interface"|"class"|"enum"|"", shortClassName:string) : HaxeTypeDeclaration
     {
@@ -468,5 +417,72 @@ export class DtsFileParser
             this.allHaxeTypes.push(this.curModuleClass);
         }
         return this.curModuleClass;
+    }
+
+    /**
+     * localePath:
+     *  `mypack.MyClas<T` - type of class <TypeParameter>
+     *  `mypack.MyClas@myFunc` - return type of the function or variable
+     *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
+     */
+    private convertType(node:ts.Node, localePath:string) : string
+    {
+        if (!node) return "Dynamic";
+
+        switch (node.kind)
+        {
+            case ts.SyntaxKind.FunctionType:
+            {
+                let t = <ts.FunctionTypeNode>node;
+                let types = [];
+                for (var p of t.parameters) types.push(this.convertType(p.type, p.name.getText()));
+                types.push(this.convertType(t.type, null));
+                return types.join("->");
+            }
+
+            case ts.SyntaxKind.ArrayType:
+            {
+                let t = <ts.ArrayTypeNode>node;
+                return "Array<" + this.convertType(t.elementType, null) + ">";
+            }
+            
+            case ts.SyntaxKind.UnionType:
+            {
+                return this.convertUnionType((<ts.UnionTypeNode>node).types);
+            }
+            
+            case ts.SyntaxKind.TypeLiteral:
+            {
+                return this.processTypeLiteral(<ts.TypeLiteralNode>node);
+            }
+        }
+
+        var s = node.getText();
+        return this.typeConvertor.convert(s, localePath);
+    }
+
+    private convertUnionType(types:Array<ts.TypeNode>) : string
+    {
+        if (types.length == 1) return this.convertType(types[0], null);
+        return "haxe.extern.EitherType<" + this.convertType(types[0], null)+", " +  this.convertUnionType(types.slice(1)) + ">";
+    }
+
+    private processTypeLiteral(node:ts.TypeLiteralNode) : string
+    {
+        if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature)
+        {
+            let tt = <ts.IndexSignatureDeclaration>node.members[0];
+            if (tt.parameters.length == 1) return "Dynamic<" + this.convertType(tt.type, null) + ">";
+        }
+    
+       var item = new HaxeTypeDeclaration("");
+        
+        this.processChildren(node, new Map<number, (node:any) => void>(
+        [
+            [ ts.SyntaxKind.PropertySignature, (x:ts.PropertySignature) => this.processPropertySignature(x, item) ],
+            [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]
+        ]));
+
+        return item.toString();
     }
 }

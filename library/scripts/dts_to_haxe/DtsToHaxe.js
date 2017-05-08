@@ -7,6 +7,7 @@ const DtsFileParser_1 = require("./DtsFileParser");
 const CmdOptions_1 = require("./CmdOptions");
 const Logger_1 = require("./Logger");
 const FsTools = require("./FsTools");
+const TypeConvertor_1 = require("./TypeConvertor");
 var options = new CmdOptions_1.CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.");
 options.add("outDir", "hxclasses", ["--out-dir"], "Output directory. Default is 'hxclasses'.");
@@ -14,6 +15,7 @@ options.add("rootPackage", "", ["--root-package"], "Root package for generated c
 options.add("nativeNamespace", "", ["--native-namespace"], "Prefix package for @:native meta.");
 options.add("logLevel", "warn", ["--log-level"], "Verbose level: 'none', 'warn' or 'debug'. Default is 'warn'.");
 options.addRepeatable("imports", ["--import"], "Add import for each generated file.");
+options.addRepeatable("typeMappers", ["--type-mapper"], "Add mapper file.");
 options.addRepeatable("filePaths", null, "Source typescript definition file path or directory.");
 if (process.argv.length <= 2) {
     console.log("TypeScript definition files (*.d.ts) to haxe convertor.");
@@ -58,12 +60,27 @@ for (var i = 0; i < filePaths.length; i++) {
         i += allFiles.length - 1;
     }
 }
+var typeMapper = new Map();
+for (let fileName of params.get("typeMappers")) {
+    var lines = fs.readFileSync(fileName).toString().split("\r\n").join("\n").split("\r").join("\n").split("\n");
+    for (let line of lines) {
+        line = line.trim();
+        if (line === "" || line.startsWith("#") || line.startsWith("//"))
+            continue;
+        var p = line.split("=>");
+        if (p.length == 2)
+            typeMapper.set(p[0].trim(), p[1].trim());
+        else
+            console.log("ERROR in file '" + fileName + "': bad string '" + line + "'.");
+    }
+}
+var typeConvertor = new TypeConvertor_1.TypeConvertor(typeMapper);
 const program = ts.createProgram(filePaths, compilerOptions);
 const typeChecker = program.getTypeChecker();
 var results = new Array();
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
-    let parser = new DtsFileParser_1.DtsFileParser(sourceFile, typeChecker, params.get("rootPackage"), params.get("nativeNamespace"));
+    let parser = new DtsFileParser_1.DtsFileParser(sourceFile, typeChecker, typeConvertor, params.get("rootPackage"), params.get("nativeNamespace"));
     parser.parse(results, new Logger_1.Logger(params.get("logLevel")));
 }
 for (var klass of results) {
