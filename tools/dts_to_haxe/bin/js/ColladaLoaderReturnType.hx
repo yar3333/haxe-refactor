@@ -1,10 +1,8 @@
 package js;
 
 @:native("THREE.ColladaLoaderReturnType")
-extern interface ColladaLoaderReturnType
-	extends BaseInt
-	extends Abc
-{
+typedef ColladaLoaderReturnType =
+{>BaseInt, >Abc,
 	var info : { var render : { var vertices : Float; var faces : Float; }; };
 	var pointMap : Dynamic<Array<Float>>;
 	var myfield : haxe.extern.EitherType<Float, String>;

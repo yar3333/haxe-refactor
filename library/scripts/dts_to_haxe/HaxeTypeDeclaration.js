@@ -100,10 +100,12 @@ class HaxeTypeDeclaration {
             s += this.imports.join("\n") + (this.imports.length > 0 ? "\n\n" : "");
             s += this.jsDocToString(this.docComment);
             s += this.metas.map(m => m + "\n").join("\n");
-            s += "extern " + this.type + " " + clas.className;
+            s += (this.type != "typedef" ? "extern " : "") + this.type + " " + clas.className;
             if (this.typeParameters.length > 0) {
                 s += "<" + this.typeParameters.map(x => x.name + ":" + x.constraint).join(", ") + ">";
             }
+            if (this.type == "typedef")
+                s += " =\n{";
             switch (this.type) {
                 case "class":
                     s += (this.baseFullClassName ? " extends " + this.getShortClassName(clas.packageName, this.baseFullClassName) : "") + "\n";
@@ -117,12 +119,16 @@ class HaxeTypeDeclaration {
                         s += "\n\t" + this.baseFullInterfaceNames.map(x => "extends " + this.getShortClassName(clas.packageName, x)).join("\n\t");
                     s += "\n";
                     break;
+                case "typedef":
+                    s += this.baseFullInterfaceNames.map(x => ">" + this.getShortClassName(clas.packageName, x) + ",").join(" ") + "\n";
+                    break;
                 case "enum":
                     s += "\n";
                     break;
             }
         }
-        s += "{\n";
+        if (this.type != "typedef")
+            s += "{\n";
         s += (this.vars.length > 0 ? "\t" + (this.vars.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n\n" : "");
         s += (this.methods.length > 0 ? "\t" + (this.methods.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
         s += (this.customs.length > 0 ? "\t" + (this.customs.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");

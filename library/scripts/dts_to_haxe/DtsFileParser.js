@@ -4,12 +4,13 @@ const ts = require("typescript");
 const Tokens_1 = require("./Tokens");
 const HaxeTypeDeclaration_1 = require("./HaxeTypeDeclaration");
 class DtsFileParser {
-    constructor(sourceFile, typeChecker, typeConvertor, rootPackage, nativeNamespace) {
+    constructor(sourceFile, typeChecker, typeConvertor, rootPackage, nativeNamespace, typedefs) {
         this.sourceFile = sourceFile;
         this.typeChecker = typeChecker;
         this.typeConvertor = typeConvertor;
         this.rootPackage = rootPackage;
         this.nativeNamespace = nativeNamespace;
+        this.typedefs = typedefs;
         this.indent = "";
         this.imports = new Array();
         this.curModuleClass = null;
@@ -118,6 +119,10 @@ class DtsFileParser {
     }
     processInterfaceDeclaration(node) {
         var item = this.getHaxeTypeDeclarationByShort("interface", node.name.getText());
+        console.log("item ------------------------------" + item.fullClassName);
+        console.log("this.typedefs = ", this.typedefs);
+        if (this.typedefs.indexOf(item.fullClassName) >= 0)
+            item.type = "typedef";
         this.processChildren(node, new Map([
             [ts.SyntaxKind.ExportKeyword, (x) => { }],
             [ts.SyntaxKind.Identifier, (x) => { }],
