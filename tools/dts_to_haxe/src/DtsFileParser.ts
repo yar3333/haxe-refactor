@@ -444,7 +444,7 @@ export class DtsFileParser
             case ts.SyntaxKind.ArrayType:
             {
                 let t = <ts.ArrayTypeNode>node;
-                return "Array<" + this.convertType(t.elementType, null) + ">";
+                return this.typeConvertor.convert("Array<" + this.convertType(t.elementType, null) + ">", localePath);
             }
             
             case ts.SyntaxKind.UnionType:
@@ -456,10 +456,24 @@ export class DtsFileParser
             {
                 return this.processTypeLiteral(<ts.TypeLiteralNode>node);
             }
+
+            case ts.SyntaxKind.TypeReference:
+            {
+                let t = <ts.TypeReferenceNode>node;
+                if (t.typeArguments == null || t.typeArguments.length == 0)
+                {
+                    return this.typeConvertor.convert(t.typeName.getText(), localePath);
+                }
+                else
+                {
+                    var s = this.typeConvertor.convert(t.typeName.getText(), null);
+                    var pp = t.typeArguments.map(x => this.convertType(x, null));
+                    return this.typeConvertor.convert(s + "<" + pp.join(", ") + ">", localePath);
+                }
+            }
         }
 
-        var s = node.getText();
-        return this.typeConvertor.convert(s, localePath);
+        return this.typeConvertor.convert(node.getText(), localePath);
     }
 
     private convertUnionType(types:Array<ts.TypeNode>) : string
