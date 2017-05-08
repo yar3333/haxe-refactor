@@ -1,4 +1,4 @@
-@:native("THREE.Js")
+@:native("THREE")
 extern class Js
 {
 	/**

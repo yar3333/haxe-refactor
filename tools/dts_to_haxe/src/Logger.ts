@@ -11,11 +11,11 @@ export class Logger implements ILogger
         if (this.level == "none") return;
         if (this.level == "warn")
         {
-            if (this.warnCounter > 0) console.warn(s);
+            if (this.warnCounter > 0) console.log(s);
         }
         else
         {
-            if (this.warnCounter > 0) console.warn(s);
+            if (this.warnCounter > 0) console.log(s);
             else                      console.log(s);
         }
     }

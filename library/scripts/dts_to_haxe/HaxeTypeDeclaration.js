@@ -31,6 +31,16 @@ class HaxeTypeDeclaration {
     addMeta(meta) {
         this.metas.push(meta);
     }
+    replaceMeta(meta) {
+        var n = meta.indexOf("(");
+        var prefix = n > 0 ? meta.substring(0, n) : meta;
+        for (var i = 0; i < this.metas.length; i++) {
+            if (this.metas[i] == prefix || this.metas[i].startsWith(prefix + "(")) {
+                this.metas[i] = meta;
+                break;
+            }
+        }
+    }
     addVar(v, isPrivate = false, isStatic = false, isReadOnlyProperty = false) {
         var s = this.jsDocToString(v.jsDoc);
         if (v.isOptional)

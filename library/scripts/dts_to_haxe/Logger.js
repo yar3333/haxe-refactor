@@ -9,11 +9,11 @@ class Logger {
             return;
         if (this.level == "warn") {
             if (this.warnCounter > 0)
-                console.warn(s);
+                console.log(s);
         }
         else {
             if (this.warnCounter > 0)
-                console.warn(s);
+                console.log(s);
             else
                 console.log(s);
         }
