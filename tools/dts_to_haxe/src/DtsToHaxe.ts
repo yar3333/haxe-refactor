@@ -67,7 +67,7 @@ var results = new Array<HaxeTypeDeclaration>();
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
     
-    var parser = new DtsFileParser(sourceFile, typeChecker, params.get("rootPackage"), params.get("nativeNamespace"));
+    let parser = new DtsFileParser(sourceFile, typeChecker, params.get("rootPackage"), params.get("nativeNamespace"));
     parser.parse(results, new Logger(params.get("logLevel")));
 }
 
@@ -76,7 +76,7 @@ for (var klass of results)
     klass.addImports(params.get("imports"));
 
     let destFilePath = params.get("outDir") + "/" + klass.fullClassName.split(".").join("/") + ".hx";
-    console.log("\tSave file " + destFilePath);
+    console.log("Save file " + destFilePath);
     FsTools.mkdirp(path.dirname(destFilePath));
     fs.writeFileSync(destFilePath, klass.toString());
 }

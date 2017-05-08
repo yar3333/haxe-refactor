@@ -16,9 +16,11 @@ export class DtsFileParser
     private indent = "";
 
     private imports = new Array<string>();
-    public classesAndInterfaces: Array<HaxeTypeDeclaration>;
+    public allHaxeTypes: Array<HaxeTypeDeclaration>;
 
     private curPackage: string;
+
+    private curModuleClass: HaxeTypeDeclaration = null;
 
     constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private rootPackage:string, private nativeNamespace:string)
     {
@@ -26,13 +28,21 @@ export class DtsFileParser
         this.typeMapper = TsToHaxeStdTypes.getAll();
     }
 
-    public parse(classesAndInterfaces:Array<HaxeTypeDeclaration>, logger:ILogger) : void
+    public parse(allHaxeTypes:Array<HaxeTypeDeclaration>, logger:ILogger) : void
     {
-        this.classesAndInterfaces = classesAndInterfaces;
+        this.allHaxeTypes = allHaxeTypes;
         this.logger = logger;
         this.curPackage = this.rootPackage;
 
         const node = this.sourceFile;
+
+        var savePack = this.curPackage;
+
+        ts.forEachChild(node, x => {
+            if (x.kind == ts.SyntaxKind.NamespaceExportDeclaration) {
+                this.curPackage = this.makeFullClassPath([ this.curPackage, (<ts.NamespaceExportDeclaration>x).name.getText() ]);
+            }
+        });
 
         this.processNode(node, () => {
             switch (node.kind) {
@@ -46,6 +56,7 @@ export class DtsFileParser
                         [ ts.SyntaxKind.EnumDeclaration, (x:ts.EnumDeclaration) => this.processEnumDeclaration(x) ],
                         [ ts.SyntaxKind.FunctionDeclaration, (x:ts.FunctionDeclaration) => this.processFunctionDeclaration(x) ],
                         [ ts.SyntaxKind.ModuleDeclaration, (x:ts.ModuleDeclaration) => this.processModuleDeclaration(x) ],
+                        [ ts.SyntaxKind.NamespaceExportDeclaration, (x:ts.NamespaceExportDeclaration) => {} ],
                         [ ts.SyntaxKind.EndOfFileToken, (x) => {} ]
                     ]));
                     break;
@@ -55,6 +66,8 @@ export class DtsFileParser
                     this.logSubTree(node);
             }
         });
+
+        this.curPackage = savePack;
     }
 
     private processModuleDeclaration(node:ts.ModuleDeclaration)
@@ -160,7 +173,7 @@ export class DtsFileParser
             [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]
         ]));
 
-        this.classesAndInterfaces.push(item);
+        this.allHaxeTypes.push(item);
     }
 
     private processClassDeclaration(node:ts.ClassDeclaration)
@@ -179,7 +192,7 @@ export class DtsFileParser
             [ ts.SyntaxKind.Constructor, (x:ts.ConstructorDeclaration) => this.processConstructor(x, item) ]
         ]));
 
-        this.classesAndInterfaces.push(item);
+        this.allHaxeTypes.push(item);
     }
 
     private processEnumDeclaration(node:ts.EnumDeclaration)
@@ -195,7 +208,7 @@ export class DtsFileParser
             [ ts.SyntaxKind.EnumMember, (x:ts.EnumMember) => this.processEnumMember(x, item) ],
         ]));
 
-        this.classesAndInterfaces.push(item);
+        this.allHaxeTypes.push(item);
     }
 
     private processEnumMember(x:ts.EnumMember, dest:HaxeTypeDeclaration)
@@ -419,7 +432,7 @@ export class DtsFileParser
 
     private getHaxeTypeDeclarationByFull(type:"interface"|"class"|"enum"|"", fullClassName:string)
     {
-        var haxeType = this.classesAndInterfaces.find(x => x.fullClassName == fullClassName);
+        var haxeType = this.allHaxeTypes.find(x => x.fullClassName == fullClassName);
         if (!haxeType)
         {
             haxeType = new HaxeTypeDeclaration(type, fullClassName);
@@ -431,20 +444,19 @@ export class DtsFileParser
 
     private getModuleClass(node:ts.Node) : HaxeTypeDeclaration
     {
+        if (this.curModuleClass == null)
+        {
         let parts = this.curPackage.split(".");
         if (parts.length == 1 && parts[0] == "") parts[0] = "Root";
-        else                                     parts.push(this.capitalize(parts[parts.length-1]));
+            else                                     parts[parts.length - 1] = this.capitalize(parts[parts.length - 1]);
         
         let moduleName = parts.join(".");
         
-        var moduleClass = this.classesAndInterfaces.find(x => x.fullClassName == moduleName);
-        if (!moduleClass)
-        {
-            moduleClass = new HaxeTypeDeclaration("class", moduleName);
-            let relativePackage = this.curPackage.startsWith(this.rootPackage + ".") ? this.curPackage.substring(this.rootPackage.length + 1) : "";
-            moduleClass.addMeta('@:native("' + this.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
-            this.classesAndInterfaces.push(moduleClass);
+            this.curModuleClass = new HaxeTypeDeclaration("class", moduleName);
+            var relativePackage = this.curPackage.startsWith(this.rootPackage + ".") ? this.curPackage.substring(this.rootPackage.length + 1) : "";
+            this.curModuleClass.addMeta('@:native("' + this.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
+            this.allHaxeTypes.push(this.curModuleClass);
         }
-        return moduleClass;
+        return this.curModuleClass;
     }
 }
