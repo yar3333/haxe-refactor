@@ -1,6 +1,10 @@
 import { Scene, MyIden2 } from "./three-core";
 
 export class Curve<T extends Vector> {
+    width : number;
+    height: string;
+
+    test(width:number, height:string) : void;
 }
 
 export interface ColladaLoaderReturnType extends BaseInt, Abc {

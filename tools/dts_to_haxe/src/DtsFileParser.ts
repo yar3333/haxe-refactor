@@ -169,8 +169,6 @@ export class DtsFileParser
     private processInterfaceDeclaration(node:ts.InterfaceDeclaration)
     {
         var item = this.getHaxeTypeDeclarationByShort("interface", node.name.getText());
-        console.log("item ------------------------------" + item.fullClassName);
-        console.log("this.typedefs = ", this.typedefs)
         if (this.typedefs.indexOf(item.fullClassName) >= 0) item.type = "typedef";
         
         this.processChildren(node, new Map<number, (node:any) => void>(
