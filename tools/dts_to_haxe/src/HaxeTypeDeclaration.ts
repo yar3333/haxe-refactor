@@ -17,7 +17,7 @@ export interface HaxeVarGetter
 
 export class HaxeTypeDeclaration
 {
-	public type : "class" | "interface" | "enum" | "";
+	public type : "class" | "interface" | "enum" | "typedef" | "";
 
 	docComment = "";
 	fullClassName = "";
@@ -32,7 +32,7 @@ export class HaxeTypeDeclaration
 	private enumMembers = new Array<string>();
 	private typeParameters = new Array<{ name:string, constraint:string }>();
 	
-	constructor(type:"class"|"interface"|"enum"|"", fullClassName="")
+	constructor(type:"class"|"interface"|"enum"|"typedef"|"", fullClassName="")
 	{
 		this.type = type;
 		this.fullClassName = fullClassName;
@@ -133,7 +133,6 @@ export class HaxeTypeDeclaration
 		var clas = this.splitFullClassName(this.fullClassName);
 		
 		var s = "";
-
 		
 		if (this.type != "")
 		{
@@ -144,12 +143,14 @@ export class HaxeTypeDeclaration
 			s += this.jsDocToString(this.docComment);
 
 			s += this.metas.map(m => m + "\n").join("\n");
-			s += "extern " + this.type + " " + clas.className;
+			s += (this.type != "typedef" ? "extern " : "") + this.type + " " + clas.className;
 
 			if (this.typeParameters.length > 0)
 			{
 				s += "<" + this.typeParameters.map(x => x.name + ":" + x.constraint).join(", ") + ">";
 			}
+
+			if (this.type == "typedef") s+= " =\n{";
 
 			switch (this.type)
 			{
@@ -164,12 +165,18 @@ export class HaxeTypeDeclaration
 					s += "\n"
 					break;
 
+				case "typedef":
+					s += this.baseFullInterfaceNames.map(x => ">" + this.getShortClassName(clas.packageName, x) + ",").join(" ") + "\n";
+					break;
+
 				case "enum":
 					s += "\n";
 					break;
 			}
 		}
-		s += "{\n";
+
+		if (this.type != "typedef") s += "{\n";
+
 		s += (this.vars.length > 0 ? "\t" + (this.vars.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n\n" : "");
 		s += (this.methods.length > 0 ? "\t" + (this.methods.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
 		s += (this.customs.length > 0 ? "\t" + (this.customs.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");

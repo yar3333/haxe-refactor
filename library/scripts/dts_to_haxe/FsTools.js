@@ -61,4 +61,13 @@ function mkdirp(p, mode, made) {
     return made;
 }
 exports.mkdirp = mkdirp;
+function readTextFileLines(fileName, trim, ignoreEmptyLinesAndComments) {
+    var lines = fs.readFileSync(fileName).toString().split("\r\n").join("\n").split("\r").join("\n").split("\n");
+    if (trim)
+        lines = lines.filter(x => x.trim());
+    if (ignoreEmptyLinesAndComments)
+        lines = lines.filter(x => x !== "" && !x.startsWith("#") && !x.startsWith("//"));
+    return lines;
+}
+exports.readTextFileLines = readTextFileLines;
 //# sourceMappingURL=FsTools.js.map
