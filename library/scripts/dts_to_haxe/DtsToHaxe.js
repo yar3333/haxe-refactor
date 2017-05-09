@@ -8,6 +8,8 @@ const CmdOptions_1 = require("./CmdOptions");
 const Logger_1 = require("./Logger");
 const FsTools = require("./FsTools");
 const TypeConvertor_1 = require("./TypeConvertor");
+const TypePathTools_1 = require("./TypePathTools");
+const DtsFilePossibleTypesFinder_1 = require("./DtsFilePossibleTypesFinder");
 var options = new CmdOptions_1.CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.");
 options.add("outDir", "hxclasses", ["--out-dir"], "Output directory. Default is 'hxclasses'.");
@@ -80,14 +82,19 @@ for (let fileName of params.get("typedefFiles")) {
 const program = ts.createProgram(filePaths, compilerOptions);
 const typeChecker = program.getTypeChecker();
 var results = new Array();
+var knownTypes = new Array();
+for (let sourceFile of program.getSourceFiles()) {
+    let finder = new DtsFilePossibleTypesFinder_1.DtsFilePossibleTypesFinder(sourceFile, params.get("rootPackage"));
+    knownTypes = knownTypes.concat(finder.find());
+}
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
-    let parser = new DtsFileParser_1.DtsFileParser(sourceFile, typeChecker, typeConvertor, params.get("rootPackage"), params.get("nativeNamespace"), typedefs);
+    let parser = new DtsFileParser_1.DtsFileParser(sourceFile, typeChecker, typeConvertor, params.get("rootPackage"), params.get("nativeNamespace"), typedefs, knownTypes);
     parser.parse(results, new Logger_1.Logger(params.get("logLevel")));
 }
 for (var klass of results) {
     klass.addImports(params.get("imports"));
-    let destFilePath = params.get("outDir") + "/" + klass.fullClassName.split(".").join("/") + ".hx";
+    let destFilePath = params.get("outDir") + "/" + TypePathTools_1.TypePathTools.normalizeFullClassName(klass.fullClassName).split(".").join("/") + ".hx";
     console.log("Save file " + destFilePath);
     FsTools.mkdirp(path.dirname(destFilePath));
     fs.writeFileSync(destFilePath, klass.toString());

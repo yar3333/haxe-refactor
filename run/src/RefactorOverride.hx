@@ -66,11 +66,38 @@ class RefactorOverride extends Refactor
 	public function overloadInText(text:String) : String
 	{
 		var reID = "\\b[_a-zA-Z][_a-zA-Z0-9]*\\b";
-		var reTYPE = "(?:(?:"+reID+"|\\{[^}]*\\})(?:\\[\\])*\\s*)";
-		var reTYPE_COMPLEX = "(?:" + reTYPE + "|\\(" + reID + "\\s[:]\\s*" + reTYPE + "(?:,\\s*" + reID + "\\s[:]\\s*" + reTYPE + ")\\)\\s*=>\\s*" + reTYPE + ")";
-		//                                 1                                 2                                                 3               4                                5                             6                   7
-		var reOverloads = new Regex("/\n([ \t]*)((?:static\\s+)?(?:(?:public|private)\\s+)?(?:static\\s+)?function\\s+)(" + reID + ")\\s*\\((.*?)\n\\s*function\\s+\\2\\s*\\(([^)]*)\\)\\s*[:]\\s*(" + reTYPE_COMPLEX + ")\\s*;(.*)$/\n$1@:overload(function($5):$6{})\n$1$2$3($4$7/sr");
-		return reOverloads.replace(text, Log.echo.bind(_, 1));
+		var reTypeParams = "(?:<\\s*" + reID + "(?:\\s*,\\s*" + reID + ")*\\s*>)?";
+		var reTYPE = "(?:" 
+						+ "(?:" + reID + reTypeParams + "|\\{[^}]*\\})"
+						+ "(?:\\[\\])*"
+						+ "\\s*"
+					+ ")";
+		var reTYPE_COMPLEX = "(?:" 
+			+ reTYPE
+			+ "|" + "\\(" + reID + "\\s[:]\\s*" + reTYPE + "(?:,\\s*" + reID + "\\s[:]\\s*" + reTYPE + ")\\)\\s*=>\\s*" + reTYPE 
+			+ ")";
+			
+		var reMods = "(?:(?:static|public|private|override)\\s+)*";
+		
+		var reOverloads = "/\n" 
+						+ "([ \t]*)" // 1 - tabs
+						+ "(" + reMods + "function)" // 2 - modifiers + "function"
+						+ "\\s+"
+						+ "(" + reID + ")" // 3 - func name
+						+ "\\s*\\("
+						+ "(.*?)" // 4 - any text between to capture
+						+ "\n\\s*\\2\\s+\\3\\s*\\("
+						+ "([^)]*?)" // 5 - alternative parameters
+						+ "\\)\\s*[:]\\s*"
+						+ "(" + reTYPE_COMPLEX + ")" // 6 - alternative return type
+						+ "\\s*;"
+						+ "(.*)" // 7 - any text after all to capture
+						+ "$/"
+						+ "\n$1@:overload(function($5):$6{})\n$1$2 $3($4$7/sr"; // replace to expression
+		
+		var re = new Regex(reOverloads);
+		
+		return re.replace(text, Log.echo.bind(_, 1));
 	}
 	
 	function overrideInType(type:HaxeType, baseLogLevel:Int)
@@ -164,7 +191,7 @@ class RefactorOverride extends Refactor
 					var baseAsOverload = ("@:overload(function" + baseFuncTail + "{})").replace(" ", "");
 					overloads.remove(baseAsOverload);
 					
-					var resLines = overloads.concat([ (baseType.kind == "class" ? "override " : "") + "function " + baseFuncName + baseFuncTail ]);
+					var resLines = overloads.concat([ (baseType.kind == "class" ? (baseFuncName != "new" ? "override " : "") : "") + "function " + baseFuncName + baseFuncTail ]);
 					
 					return resLines.map(function(s) return indentSpaces + s).join("\n");
 				}

@@ -9,6 +9,8 @@ import { Logger } from "./Logger";
 import { HaxeTypeDeclaration } from "./HaxeTypeDeclaration";
 import * as FsTools from "./FsTools";
 import { TypeConvertor } from "./TypeConvertor";
+import { TypePathTools } from "./TypePathTools";
+import { DtsFilePossibleTypesFinder } from "./DtsFilePossibleTypesFinder";
 
 var options = new CmdOptions();
 options.add("target", "ES5", ["--target"], "ES3, ES5, ES6, ES2015 or Latest. Default is ES5.")
@@ -86,10 +88,15 @@ const typeChecker = program.getTypeChecker();
 
 var results = new Array<HaxeTypeDeclaration>();
 
+var knownTypes = new Array<string>();
+for (let sourceFile of program.getSourceFiles()) {
+    let finder = new DtsFilePossibleTypesFinder(sourceFile, params.get("rootPackage"));
+    knownTypes = knownTypes.concat(finder.find());
+}
+
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
-    
-    let parser = new DtsFileParser(sourceFile, typeChecker, typeConvertor, params.get("rootPackage"), params.get("nativeNamespace"), typedefs);
+    let parser = new DtsFileParser(sourceFile, typeChecker, typeConvertor, params.get("rootPackage"), params.get("nativeNamespace"), typedefs, knownTypes);
     parser.parse(results, new Logger(params.get("logLevel")));
 }
 
@@ -97,9 +104,8 @@ for (var klass of results)
 {
     klass.addImports(params.get("imports"));
 
-    let destFilePath = params.get("outDir") + "/" + klass.fullClassName.split(".").join("/") + ".hx";
+    let destFilePath = params.get("outDir") + "/" + TypePathTools.normalizeFullClassName(klass.fullClassName).split(".").join("/") + ".hx";
     console.log("Save file " + destFilePath);
     FsTools.mkdirp(path.dirname(destFilePath));
     fs.writeFileSync(destFilePath, klass.toString());
 }
-

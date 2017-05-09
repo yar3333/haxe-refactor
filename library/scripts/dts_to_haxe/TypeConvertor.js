@@ -1,4 +1,5 @@
 "use strict";
+const TypePathTools_1 = require("./TypePathTools");
 class TypeConvertor {
     /**
      * Keys:
@@ -16,6 +17,8 @@ class TypeConvertor {
             ["string", "String"],
             ["number", "Float"],
             ["boolean", "Bool"],
+            ["Object", "Dynamic"],
+            ["Function", "haxe.Constraints.Function"]
         ]);
         for (let k of custom.keys()) {
             this.mapper.set(k, custom.get(k));
@@ -27,7 +30,14 @@ class TypeConvertor {
      *  `mypack.MyClas@myFuncOrVar` - return type of the function or variable type
      *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
      */
-    convert(type, localePath) {
+    convert(type, localePath, knownTypes, curPack) {
+        if (type == "this" && localePath && localePath.indexOf("@") > 0)
+            return localePath.split("@")[0];
+        if (type.indexOf(".") >= 0) {
+            var possibleKnownType = TypePathTools_1.TypePathTools.normalizeFullClassName(TypePathTools_1.TypePathTools.makeFullClassPath([curPack, type]));
+            if (knownTypes.indexOf(possibleKnownType) >= 0)
+                return possibleKnownType;
+        }
         type = this.mapper.has(type) ? this.mapper.get(type) : type;
         if (localePath) {
             if (localePath.startsWith("@"))

@@ -1,3 +1,5 @@
+import { TypePathTools } from "./TypePathTools";
+
 export interface HaxeVar
 {
 	haxeName : string;
@@ -7,16 +9,10 @@ export interface HaxeVar
 	isOptional : boolean;
 }
 
-export interface HaxeVarGetter
-{
-	haxeName : string;
-	haxeType : string;
-	haxeBody : string;
-	isOptional : boolean;
-}
-
 export class HaxeTypeDeclaration
 {
+	static reserved = [ "dynamic", "catch", "throw" ];
+
 	public type : "class" | "interface" | "enum" | "typedef" | "";
 
 	docComment = "";
@@ -59,42 +55,70 @@ export class HaxeTypeDeclaration
 	
 	public addVar(v:HaxeVar, isPrivate=false, isStatic=false, isReadOnlyProperty=false) : void
 	{
+		if (HaxeTypeDeclaration.reserved.indexOf(v.haxeName) >= 0)
+		{
+			var originalName = v.haxeName;
+			v.haxeName += "_";
+			this.vars.push(this.varGetterToString(v, "return (cast this)['" + originalName + "'];", "null", isPrivate, isStatic, true));
+			v.haxeName = originalName;
+		}
+		else
+		{
+			var s = this.jsDocToString(v.jsDoc);
+			if (v.isOptional) s += "@:optional ";
+			if (isPrivate) s += "private ";
+			if (isStatic) s += "static ";
+			s += "var " + v.haxeName + (isReadOnlyProperty ? "(default, null)" : "") + " : " + this.trimTypePath(v.haxeType)
+				+ (isStatic && v.haxeDefVal != null ? " = " + v.haxeDefVal : "")
+				+ ";";
+			this.vars.push(s);
+		}
+ 	}
+	
+	public addVarGetter(v:HaxeVar, getter:string, setter:string, isPrivate=false, isStatic=false, isInline=false) : void
+	{
+		this.vars.push(this.varGetterToString(v, getter, setter, isPrivate, isStatic, isInline));
+	}
+
+	private varGetterToString(v:HaxeVar, getter:string, setter:string, isPrivate=false, isStatic=false, isInline=false) : string
+	{
+		var isGetterSpecial = getter == "null" || getter == "never";
+		var isSetterSpecial = setter == "null" || setter == "never";
+
 		var s = this.jsDocToString(v.jsDoc);
 		if (v.isOptional) s += "@:optional ";
 		if (isPrivate) s += "private ";
 		if (isStatic) s += "static ";
-		s += "var " + v.haxeName + (isReadOnlyProperty ? "(default, null)" : "") + " : " + v.haxeType
-			  + (isStatic && v.haxeDefVal != null ? " = " + v.haxeDefVal : "")
-			  + ";";
-		this.vars.push(s);
- 	}
-	
-	public addVarGetter(v:HaxeVarGetter, isPrivate = false, isStatic = false, isInline = false) : void
-	{
-		var s = "\n\t";
-		if (v.isOptional) s += "@:optional ";
-		if (isPrivate) s += "private ";
-		if (isStatic) s += "static ";
-		s += "var " + v.haxeName + "(get_" + v.haxeName + ", null)" + " : " + v.haxeType + ";\n";
+		s += "var " + v.haxeName + "(" + (isGetterSpecial ? getter : "get") + ", " + (isSetterSpecial ? setter : "set") + ")" + " : " + this.trimTypePath(v.haxeType) + ";";
 		
-		s += (isInline ? "\tinline " : "\t")
-		   + "function get_" + v.haxeName + "() : " + v.haxeType + "\n"
-		   + "\t{\n"
-		   + this.indent(v.haxeBody.trim(), "\t\t") + "\n"
-		   + "\t}";
+		if (!isGetterSpecial)
+		{
+			s += "\n";
+			if (isInline) s += "inline ";
+			s += "function get_" + v.haxeName + "() : " + this.trimTypePath(v.haxeType) + (getter.indexOf("\n") >= 0 ? "\n" : " ") + getter;
+		}
 		
-		this.vars.push(s);
+		if (!isSetterSpecial)
+		{
+			s += "\n";
+			if (isInline) s += "inline ";
+			s += "function set_" + v.haxeName + "() : " + this.trimTypePath(v.haxeType) + (setter.indexOf("\n") >= 0 ? "\n" : " ") + setter;
+		}
+		
+		return s;
 	}
 	
-	public addMethod(name:string, vars:Array<HaxeVar>, retType:string, body:string, isPrivate:boolean, isStatic:boolean, jsDoc?:string) : void
+	public addMethod(name:string, vars:Array<HaxeVar>, retType:string, body:string, isPrivate:boolean, isStatic:boolean, jsDoc:string, typeParameters:Array<{ name:string, constraint:string }>) : void
 	{
 		var header = 
 			    this.jsDocToString(jsDoc)
 			  + (isPrivate ? 'private ' : '')
 			  + (isStatic ? 'static ' : '')
-			  + 'function ' + name + '('
-			  + vars.map((v:HaxeVar) => (v.isOptional ? "?" : "") + v.haxeName + ":" + v.haxeType + (v.haxeDefVal != null ? '=' + v.haxeDefVal : '')).join(', ')
-			  + ') : ' + retType;
+			  + 'function ' + name
+			  + (typeParameters && typeParameters.length > 0 ? "<" + typeParameters.map(t => t.name + (t.constraint ? ":" + t.constraint : "")).join(", ") + ">" : "") 
+			  + '('
+			  + vars.map(v => this.parameterToString(v)).join(', ')
+			  + ') : ' + this.trimTypePath(retType);
 		var s = header;
 		if (body !== null)
 		{
@@ -111,6 +135,16 @@ export class HaxeTypeDeclaration
 		this.methods.push(s);
  	}
 	
+	private parameterToString(v:HaxeVar) : string
+	{
+		var s = "";
+		if (v.isOptional) s += "?";
+		s += HaxeTypeDeclaration.reserved.indexOf(v.haxeName) >= 0 ? v.haxeName+"_" : v.haxeName;
+		s += ":" + this.trimTypePath(v.haxeType);
+		if (v.haxeDefVal !== null && v.haxeDefVal !== undefined) s += '=' + v.haxeDefVal;
+		return s;
+	}
+	
 	public addEnumMember(name:string, value:string, jsDoc:string) : void
 	{
 		var s = this.jsDocToString(jsDoc);
@@ -125,25 +159,25 @@ export class HaxeTypeDeclaration
 
 	public addTypeParameter(name:string, constraint:string)
 	{
-		this.typeParameters.push({ name:name, constraint:constraint });
+		this.typeParameters.push({ name:name, constraint:this.trimTypePath(constraint) });
 	}
 	
 	public toString() : string
 	{
-		var clas = this.splitFullClassName(this.fullClassName);
+		var packAndClass = TypePathTools.splitFullClassName(TypePathTools.normalizeFullClassName(this.fullClassName));
 		
 		var s = "";
 		
 		if (this.type != "")
 		{
-			if (clas.packageName) s += "package " + clas.packageName + ";\n\n";
+			if (packAndClass.packageName) s += "package " + packAndClass.packageName + ";\n\n";
 			
 			s += this.imports.join("\n") + (this.imports.length > 0 ? "\n\n" : "");
 			
 			s += this.jsDocToString(this.docComment);
 
 			s += this.metas.map(m => m + "\n").join("\n");
-			s += (this.type != "typedef" ? "extern " : "") + this.type + " " + clas.className;
+			s += (this.type != "typedef" ? "extern " : "") + this.type + " " + packAndClass.className;
 
 			if (this.typeParameters.length > 0)
 			{
@@ -155,18 +189,18 @@ export class HaxeTypeDeclaration
 			switch (this.type)
 			{
 				case "class":
-					s += (this.baseFullClassName ? " extends " + this.getShortClassName(clas.packageName, this.baseFullClassName) : "") + "\n";
-					if (this.baseFullInterfaceNames.length > 0) s += "\timplements " + this.baseFullInterfaceNames.map(x => this.getShortClassName(clas.packageName, x)).join(", ") + "\n";
+					s += (this.baseFullClassName ? " extends " + this.trimTypePath(this.baseFullClassName) : "") + "\n";
+					if (this.baseFullInterfaceNames.length > 0) s += "\timplements " + this.baseFullInterfaceNames.map(x => this.trimTypePath(x)).join(", ") + "\n";
 					break;
 
 				case "interface":
-					if (this.baseFullInterfaceNames.length == 1) s += " extends " + this.baseFullInterfaceNames.map(x => this.getShortClassName(clas.packageName, x)).join(", ");
-					else if (this.baseFullInterfaceNames.length > 1) s += "\n\t" + this.baseFullInterfaceNames.map(x => "extends " + this.getShortClassName(clas.packageName, x)).join("\n\t");
+					if (this.baseFullInterfaceNames.length == 1) s += " extends " + this.baseFullInterfaceNames.map(x => this.trimTypePath(x)).join(", ");
+					else if (this.baseFullInterfaceNames.length > 1) s += "\n\t" + this.baseFullInterfaceNames.map(x => "extends " + this.trimTypePath(x)).join("\n\t");
 					s += "\n"
 					break;
 
 				case "typedef":
-					s += this.baseFullInterfaceNames.map(x => ">" + this.getShortClassName(clas.packageName, x) + ",").join(" ") + "\n";
+					s += this.baseFullInterfaceNames.map(x => ">" + this.trimTypePath(x) + ",").join(" ") + "\n";
 					break;
 
 				case "enum":
@@ -197,28 +231,15 @@ export class HaxeTypeDeclaration
 		return ind + text.replace("\n", "\n" + ind);
     }
 	
-	private splitFullClassName(fullClassName:string) : { packageName:string, className:string }
-	{
-		var packageName = '';
-		var className = fullClassName;
-		
-		if (fullClassName.lastIndexOf('.') != -1)
-		{
-			packageName = fullClassName.substr(0, fullClassName.lastIndexOf('.'));
-			className = fullClassName.substr(fullClassName.lastIndexOf('.') + 1);
-		}
-		
-		return { packageName:packageName, className:className };
-	}
-
 	private jsDocToString(jsDoc:string) : string
 	{
 		if (jsDoc === null || jsDoc === "") return "";
 		return "/"+"**\n * " + jsDoc.split("\r\n").join("\n").split("\n").join("\n * ") + "\n *" + "/\n";
 	}
 
-	private getShortClassName(pack:string, fullClassName:string) : string
+	private trimTypePath(fullClassName:string) : string
 	{
+		var pack = TypePathTools.splitFullClassName(TypePathTools.normalizeFullClassName(this.fullClassName)).packageName;
 		if (pack === null || pack === "") return fullClassName;
 		
 		var partsA = pack.split(".");

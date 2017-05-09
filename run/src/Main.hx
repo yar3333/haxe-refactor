@@ -58,6 +58,7 @@ class Main
 				case "extractFromFile":	commands.extractFromFile(args);
 				case "override":		commands.doOverride(args);
 				case "overloadInFile":	commands.overloadInFile(args);
+				case "overloadInText":	commands.overloadInText(args);
 				case "reindent":		commands.reindent(args);
 				case "reindentFile":	commands.reindentFile(args);
 				case "reindentText":	commands.reindentText(args);
@@ -109,6 +110,7 @@ class Main
 		Lib.println("    extractFromFile Save parts of specified text file into separate files.");
 		Lib.println("    override        Autofix override/overload/redefinition in haxe code.");
 		Lib.println("    overloadInFile  Autofix overload/redefinition in haxe code.");
+		Lib.println("    overloadInText  Line overloadInFile, but read from stdin and write to stdout.");
 		Lib.println("    reindent        Recursive change indentation in files.");
 		Lib.println("    reindentFile    Change indentation in specified file.");
 		Lib.println("    reindentText    Like reindentFile, but read from stdin and write to stdout.");

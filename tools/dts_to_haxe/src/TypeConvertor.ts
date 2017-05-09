@@ -1,4 +1,5 @@
 import * as ts from "typescript";
+import { TypePathTools } from "./TypePathTools"
 
 export class TypeConvertor
 {
@@ -22,6 +23,8 @@ export class TypeConvertor
             [ "string", "String" ],
             [ "number", "Float" ],
             [ "boolean", "Bool" ],
+            [ "Object", "Dynamic" ],
+            [ "Function", "haxe.Constraints.Function"]
         ]);
         
         for (let k of custom.keys())
@@ -36,8 +39,16 @@ export class TypeConvertor
      *  `mypack.MyClas@myFuncOrVar` - return type of the function or variable type
      *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
      */
-    convert(type:string, localePath:string) : string
+    convert(type:string, localePath:string, knownTypes:Array<string>, curPack:string) : string
     {
+        if (type == "this" && localePath && localePath.indexOf("@") > 0) return localePath.split("@")[0];
+
+        if (type.indexOf(".") >= 0)
+        {
+            var possibleKnownType = TypePathTools.normalizeFullClassName(TypePathTools.makeFullClassPath([ curPack, type ]));
+            if (knownTypes.indexOf(possibleKnownType) >= 0) return possibleKnownType;
+        }
+
         type = this.mapper.has(type) ? this.mapper.get(type) : type;
 
         if (localePath)
