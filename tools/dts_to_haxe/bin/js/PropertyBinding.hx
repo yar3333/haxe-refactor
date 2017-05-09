@@ -3,6 +3,7 @@ package js;
 @:native("THREE.PropertyBinding")
 extern class PropertyBinding
 {
+	var onLoadStart : Void->Void;
 	var path : String;
 	var parsedPath : Dynamic;
 	var node : Dynamic;
