@@ -282,8 +282,11 @@ class DtsFileParser {
                 {
                     let t = node;
                     let types = [];
-                    for (var p of t.parameters)
-                        types.push(this.convertType(p.type, p.name.getText()));
+                    if (t.parameters.length > 0)
+                        for (var p of t.parameters)
+                            types.push(this.convertType(p.type, p.name.getText()));
+                    else
+                        types.push("Void");
                     types.push(this.convertType(t.type, null));
                     return types.join("->");
                 }
