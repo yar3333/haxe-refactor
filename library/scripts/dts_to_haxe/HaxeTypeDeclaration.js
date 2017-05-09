@@ -37,7 +37,7 @@ class HaxeTypeDeclaration {
         if (HaxeTypeDeclaration.reserved.indexOf(v.haxeName) >= 0) {
             var originalName = v.haxeName;
             v.haxeName += "_";
-            this.vars.push(this.varGetterToString(v, "return (cast this)['" + originalName + "'];", "null", isPrivate, isStatic, true));
+            this.vars.push(this.varGetterToString(v, "return (cast this)[cast '" + originalName + "'];", "null", isPrivate, isStatic, true));
             v.haxeName = originalName;
         }
         else {
