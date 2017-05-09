@@ -1,5 +1,4 @@
 "use strict";
-const TsToHaxeStdTypes_1 = require("./TsToHaxeStdTypes");
 class TypeConvertor {
     /**
      * Keys:
@@ -11,7 +10,13 @@ class TypeConvertor {
      *  `fromType` - specified type in any place
      */
     constructor(custom) {
-        this.mapper = TsToHaxeStdTypes_1.TsToHaxeStdTypes.getAll();
+        this.mapper = new Map([
+            ["any", "Dynamic"],
+            ["void", "Void"],
+            ["string", "String"],
+            ["number", "Float"],
+            ["boolean", "Bool"],
+        ]);
         for (let k of custom.keys()) {
             this.mapper.set(k, custom.get(k));
         }
@@ -23,6 +28,7 @@ class TypeConvertor {
      *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
      */
     convert(type, localePath) {
+        type = this.mapper.has(type) ? this.mapper.get(type) : type;
         if (localePath) {
             if (localePath.startsWith("@"))
                 localePath = "." + localePath.substring(1); // literal (anonimous) types
@@ -65,7 +71,7 @@ class TypeConvertor {
                 }
             }
         }
-        return this.mapper.has(type) ? this.mapper.get(type) : type;
+        return type;
     }
     testIf(sourceType, resultType) {
         var match = /^(.+?)\s+if\s+(.+)$/.exec(resultType);
