@@ -439,7 +439,7 @@ export class DtsFileParser
             
             case ts.SyntaxKind.UnionType:
             {
-                return this.convertUnionType((<ts.UnionTypeNode>node).types);
+                return this.callTypeConvertor(this.convertUnionType((<ts.UnionTypeNode>node).types), localePath);
             }
             
             case ts.SyntaxKind.TypeLiteral:
