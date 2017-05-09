@@ -1,3 +1,5 @@
+# comment ==================
+
 *width => Int
 *height => Int if Float
 *arr => Array<Int> if Array<Float>

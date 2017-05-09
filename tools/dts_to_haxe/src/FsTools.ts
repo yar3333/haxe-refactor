@@ -80,7 +80,7 @@ export function mkdirp(p, mode?, made?)
 export function readTextFileLines(fileName:string, trim:boolean, ignoreEmptyLinesAndComments:boolean) : Array<string>
 {
     var lines = fs.readFileSync(fileName).toString().split("\r\n").join("\n").split("\r").join("\n").split("\n");
-    if (trim) lines = lines.filter(x => x.trim());
+    if (trim) lines = lines.map(x => x.trim());
     if (ignoreEmptyLinesAndComments) lines = lines.filter(x => x !== "" && !x.startsWith("#") && !x.startsWith("//"));
     return lines;
 }

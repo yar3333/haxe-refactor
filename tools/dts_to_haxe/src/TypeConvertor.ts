@@ -1,5 +1,4 @@
 import * as ts from "typescript";
-import { TsToHaxeStdTypes } from "./TsToHaxeStdTypes";
 
 export class TypeConvertor
 {
@@ -16,7 +15,15 @@ export class TypeConvertor
      */
     constructor(custom:Map<string, string>)
     {
-        this.mapper = TsToHaxeStdTypes.getAll();
+        this.mapper = new Map<string, string>
+        ([
+            [ "any", "Dynamic" ],
+            [ "void", "Void" ],
+            [ "string", "String" ],
+            [ "number", "Float" ],
+            [ "boolean", "Bool" ],
+        ]);
+        
         for (let k of custom.keys())
         {
             this.mapper.set(k, custom.get(k));
@@ -31,6 +38,8 @@ export class TypeConvertor
      */
     convert(type:string, localePath:string) : string
     {
+        type = this.mapper.has(type) ? this.mapper.get(type) : type;
+
         if (localePath)
         {
             if (localePath.startsWith("@")) localePath = "." + localePath.substring(1); // literal (anonimous) types
@@ -80,7 +89,8 @@ export class TypeConvertor
                 }
             }
         }
-        return this.mapper.has(type) ? this.mapper.get(type) : type;
+
+        return type;
     }
 
     private testIf(sourceType, resultType:string) : string
