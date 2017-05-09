@@ -5,6 +5,7 @@ import { Tokens } from "./Tokens";
 import { HaxeTypeDeclaration, HaxeVar } from "./HaxeTypeDeclaration";
 import { ILogger } from "./ILogger";
 import { TypeConvertor } from "./TypeConvertor";
+import { TypePathTools } from "./TypePathTools";
 
 export class DtsFileParser
 {
@@ -19,8 +20,8 @@ export class DtsFileParser
     private curPackage: string;
 
     private curModuleClass: HaxeTypeDeclaration = null;
-
-    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private typeConvertor:TypeConvertor, private rootPackage:string, private nativeNamespace:string, private typedefs:Array<string>)
+    
+    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private typeConvertor:TypeConvertor, private rootPackage:string, private nativeNamespace:string, private typedefs:Array<string>, private knownTypes:Array<string>)
     {
         this.tokens = Tokens.getAll();
     }
@@ -37,7 +38,7 @@ export class DtsFileParser
 
         ts.forEachChild(node, x => {
             if (x.kind == ts.SyntaxKind.NamespaceExportDeclaration) {
-                this.curPackage = this.makeFullClassPath([ this.curPackage, (<ts.NamespaceExportDeclaration>x).name.getText() ]);
+                this.curPackage = TypePathTools.makeFullClassPath([ this.curPackage, (<ts.NamespaceExportDeclaration>x).name.getText() ]);
             }
         });
 
@@ -71,7 +72,7 @@ export class DtsFileParser
     {
         var savePack = this.curPackage;
         
-        this.curPackage = this.makeFullClassPath([ this.curPackage, node.name.getText() ]);
+        this.curPackage = TypePathTools.makeFullClassPath([ this.curPackage, node.name.getText() ]);
         
         this.processChildren(node.body, new Map<number, (node:ts.Node) => void>(
         [
@@ -131,7 +132,8 @@ export class DtsFileParser
             null,
             false, // private
             true, // static
-            this.getJsDoc(node.name)
+            this.getJsDoc(node.name),
+            this.prepareTypeParameters(node)
         );
     }
 
@@ -175,7 +177,7 @@ export class DtsFileParser
         [
             [ ts.SyntaxKind.ExportKeyword, (x) => {} ],
             [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => {} ],
-            [ ts.SyntaxKind.HeritageClause, (x:ts.HeritageClause) => item.baseFullInterfaceNames = x.types.map(y => this.makeFullClassPath([ this.curPackage, y.getText() ])) ],
+            [ ts.SyntaxKind.HeritageClause, (x:ts.HeritageClause) => item.baseFullInterfaceNames = x.types.map(y => TypePathTools.makeFullClassPath([ this.curPackage, y.getText() ])) ],
             [ ts.SyntaxKind.PropertySignature, (x:ts.PropertySignature) => this.processPropertySignature(x, item) ],
             [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]
         ]));
@@ -234,11 +236,11 @@ export class DtsFileParser
         switch (x.token)
         {
             case ts.SyntaxKind.ExtendsKeyword:
-                dest.baseFullClassName = x.types.map(y => this.makeFullClassPath([ this.curPackage, y.getText() ])).toString();
+                dest.baseFullClassName = x.types.map(y => TypePathTools.makeFullClassPath([ this.curPackage, y.getText() ])).toString();
                 break;
 
             case ts.SyntaxKind.ImplementsKeyword:
-                dest.baseFullInterfaceNames = x.types.map(y => this.makeFullClassPath([ this.curPackage, y.getText() ]));
+                dest.baseFullInterfaceNames = x.types.map(y => TypePathTools.makeFullClassPath([ this.curPackage, y.getText() ]));
                 break;
         }
     }
@@ -260,7 +262,8 @@ export class DtsFileParser
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
             this.isFlag(x.modifiers, ts.NodeFlags.Static),
-            this.getJsDoc(x.name)
+            this.getJsDoc(x.name),
+            this.prepareTypeParameters(x)
         );
     }
 
@@ -281,7 +284,8 @@ export class DtsFileParser
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
             this.isFlag(x.modifiers, ts.NodeFlags.Static),
-            this.getJsDoc(x.name)
+            this.getJsDoc(x.name),
+            this.prepareTypeParameters(x)
         );
     }
 
@@ -295,7 +299,8 @@ export class DtsFileParser
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
             this.isFlag(x.modifiers, ts.NodeFlags.Static),
-            this.getJsDoc(x.getFirstToken())
+            this.getJsDoc(x.getFirstToken()),
+            this.prepareTypeParameters(x)
         );
     }
 
@@ -368,26 +373,9 @@ export class DtsFileParser
         return mods && mods.flags && (mods.flags & f) !== 0;
     }
 
-    private capitalize(s:string) : string
-    {
-        return s.charAt(0).toUpperCase() + s.slice(1);
-    }
-
-    private makeFullClassPath(parts:Array<string>) : string
-    {
-        var s = "";
-        for (var p of parts)
-        {
-            if (p !== null && p !== "" && s != "") s += ".";
-            s += p;
-        }
-        return s;
-    }
-
-
     private getHaxeTypeDeclarationByShort(type:"interface"|"class"|"enum"|"", shortClassName:string) : HaxeTypeDeclaration
     {
-        return this.getHaxeTypeDeclarationByFull(type, this.makeFullClassPath([ this.curPackage, shortClassName ]));
+        return this.getHaxeTypeDeclarationByFull(type, TypePathTools.makeFullClassPath([ this.curPackage, shortClassName ]));
     }
 
     private getHaxeTypeDeclarationByFull(type:"interface"|"class"|"enum"|"", fullClassName:string)
@@ -397,7 +385,7 @@ export class DtsFileParser
         {
             haxeType = new HaxeTypeDeclaration(type, fullClassName);
             let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : "";
-            haxeType.addMeta('@:native("' + this.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
+            haxeType.addMeta('@:native("' + TypePathTools.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
         }
         return haxeType;
     }
@@ -406,16 +394,16 @@ export class DtsFileParser
     {
         if (this.curModuleClass == null)
         {
-        let parts = this.curPackage.split(".");
-        if (parts.length == 1 && parts[0] == "") parts[0] = "Root";
-            else                                     parts[parts.length - 1] = this.capitalize(parts[parts.length - 1]);
-        
-        let moduleName = parts.join(".");
-        
-            this.curModuleClass = new HaxeTypeDeclaration("class", moduleName);
-            var relativePackage = this.curPackage.startsWith(this.rootPackage + ".") ? this.curPackage.substring(this.rootPackage.length + 1) : "";
-            this.curModuleClass.addMeta('@:native("' + this.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
-            this.allHaxeTypes.push(this.curModuleClass);
+            let parts = this.curPackage.split(".");
+            if (parts.length == 1 && parts[0] == "") parts[0] = "Root";
+            else                                     parts[parts.length - 1] = TypePathTools.capitalize(parts[parts.length - 1]);
+            
+            let moduleName = parts.join(".");
+            
+                this.curModuleClass = new HaxeTypeDeclaration("class", moduleName);
+                var relativePackage = this.curPackage.startsWith(this.rootPackage + ".") ? this.curPackage.substring(this.rootPackage.length + 1) : "";
+                this.curModuleClass.addMeta('@:native("' + TypePathTools.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
+                this.allHaxeTypes.push(this.curModuleClass);
         }
         return this.curModuleClass;
     }
@@ -444,7 +432,9 @@ export class DtsFileParser
             case ts.SyntaxKind.ArrayType:
             {
                 let t = <ts.ArrayTypeNode>node;
-                return this.typeConvertor.convert("Array<" + this.convertType(t.elementType, null) + ">", localePath);
+                let subType = t.elementType;
+                if (subType.kind == ts.SyntaxKind.ParenthesizedType) subType = (<ts.ParenthesizedTypeNode>subType).type;
+                return this.callTypeConvertor("Array<" + this.convertType(subType, null) + ">", localePath);
             }
             
             case ts.SyntaxKind.UnionType:
@@ -462,18 +452,23 @@ export class DtsFileParser
                 let t = <ts.TypeReferenceNode>node;
                 if (t.typeArguments == null || t.typeArguments.length == 0)
                 {
-                    return this.typeConvertor.convert(t.typeName.getText(), localePath);
+                    return this.callTypeConvertor(t.typeName.getText(), localePath);
                 }
                 else
                 {
-                    var s = this.typeConvertor.convert(t.typeName.getText(), null);
+                    var s = this.callTypeConvertor(t.typeName.getText(), null);
                     var pp = t.typeArguments.map(x => this.convertType(x, null));
-                    return this.typeConvertor.convert(s + "<" + pp.join(", ") + ">", localePath);
+                    return this.callTypeConvertor(s + "<" + pp.join(", ") + ">", localePath);
                 }
             }
         }
 
-        return this.typeConvertor.convert(node.getText(), localePath);
+        return this.callTypeConvertor(node.getText(), localePath);
+    }
+
+    private callTypeConvertor(type:string, localePath:string)
+    {
+        return this.typeConvertor.convert(type, localePath, this.knownTypes, this.curPackage);
     }
 
     private convertUnionType(types:Array<ts.TypeNode>) : string
@@ -499,5 +494,11 @@ export class DtsFileParser
         ]));
 
         return item.toString();
+    }
+
+    private prepareTypeParameters(node:{ typeParameters?:ts.NodeArray<ts.TypeParameterDeclaration> }) : Array<{ name:string, constraint:string }>
+    {
+        if (!node.typeParameters) return [];
+        return node.typeParameters.map(t => ({ name:t.name.getText(), constraint:this.convertType(t.constraint, null) }))
     }
 }

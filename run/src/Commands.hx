@@ -718,6 +718,28 @@ class Commands extends BaseCommands
 		}
 	}
 	
+	public function overloadInText(args:Array<String>)
+	{
+		var options = new CmdOptions();
+		
+		if (args.length > 0)
+		{
+			options.parse(args);
+			
+			var refactor = new RefactorOverride(null, null);
+			Lib.print(refactor.overloadInText(Sys.stdin().readAll().toString()));
+		}
+		else
+		{
+			Lib.println("Autofix overload/redefinition in haxe extern class members.");
+			Lib.println("Read from stdin and write to stdout.");
+			Lib.println("Usage: haxelib run refactor [-v] overloadInText");
+			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
+			Lib.println("");
+			Lib.print(options.getHelpMessage());
+		}
+	}
+	
 	public function reindent(args:Array<String>)
 	{
 		var options = new CmdOptions();
@@ -851,7 +873,8 @@ class Commands extends BaseCommands
 		}
 		else
 		{
-			Lib.println("Change indentation in the stream: read from stdin, write into stdout.");
+			Lib.println("Change text indentation.");
+			Lib.println("Read from stdin and write to stdout.");
 			Lib.println("Usage: haxelib run refactor reindentText <oldTabSize> <oldIndentSize> <newTabSize> <newIndentSize> [ <shiftSize> ]");
 			Lib.println("Command args description:");
 			Lib.println("");
