@@ -2,6 +2,14 @@
 extern class Js
 {
 	/**
+	 * MyJsDoc1
+	 */
+	static var REVISION(default, null) : String;
+	/**
+	 * MyJsDoc2
+	 */
+	static var CullFaceNone(default, null) : CullFace;
+	/**
 	 * MyJsDoc3
 	 */
 	static var CullFaceNone(default, null) : CullFace;
@@ -10,4 +18,6 @@ extern class Js
 	static var CullFaceFrontBack(default, null) : CullFace;
 	static var FrontFaceDirectionCW(default, null) : FrontFaceDirection;
 	static var FrontFaceDirectionCCW(default, null) : FrontFaceDirection;
+	static var a(default, null) : Dynamic;
+	static var b(default, null) : Dynamic;
 }

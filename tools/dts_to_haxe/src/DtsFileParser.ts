@@ -19,8 +19,6 @@ export class DtsFileParser
 
     private curPackage: string;
 
-    private curModuleClass: HaxeTypeDeclaration = null;
-    
     constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private typeConvertor:TypeConvertor, private rootPackage:string, private nativeNamespace:string, private typedefs:Array<string>, private knownTypes:Array<string>)
     {
         this.tokens = Tokens.getAll();
@@ -392,20 +390,22 @@ export class DtsFileParser
 
     private getModuleClass(node:ts.Node) : HaxeTypeDeclaration
     {
-        if (this.curModuleClass == null)
+        let parts = this.curPackage.split(".");
+        if (parts.length == 1 && parts[0] == "") parts[0] = "Root";
+        else                                     parts[parts.length - 1] = TypePathTools.capitalize(parts[parts.length - 1]);
+        
+        let moduleName = parts.join(".");
+        
+        let curModuleClass = this.allHaxeTypes.find(x => x.fullClassName == moduleName);
+        if (!curModuleClass)
         {
-            let parts = this.curPackage.split(".");
-            if (parts.length == 1 && parts[0] == "") parts[0] = "Root";
-            else                                     parts[parts.length - 1] = TypePathTools.capitalize(parts[parts.length - 1]);
-            
-            let moduleName = parts.join(".");
-            
-                this.curModuleClass = new HaxeTypeDeclaration("class", moduleName);
-                var relativePackage = this.curPackage.startsWith(this.rootPackage + ".") ? this.curPackage.substring(this.rootPackage.length + 1) : "";
-                this.curModuleClass.addMeta('@:native("' + TypePathTools.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
-                this.allHaxeTypes.push(this.curModuleClass);
+            curModuleClass = new HaxeTypeDeclaration("class", moduleName);
+            var relativePackage = this.curPackage.startsWith(this.rootPackage + ".") ? this.curPackage.substring(this.rootPackage.length + 1) : "";
+            curModuleClass.addMeta('@:native("' + TypePathTools.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
+            this.allHaxeTypes.push(curModuleClass);
         }
-        return this.curModuleClass;
+
+        return curModuleClass;
     }
 
     /**
