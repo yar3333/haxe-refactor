@@ -6,4 +6,4 @@
 
 @del library.zip 2>NUL
 @echo Zipping library...
-@7z a -tzip library.zip * -i!..\*.md -xr!make.cmd -xr!library.zip -xr!ndll\Windows\*.exp -xr!ndll\Windows\*.lib
+@7z a -tzip library.zip * -i!..\*.md -xr!make-zip.cmd -xr!library.zip -xr!ndll\Windows\*.exp -xr!ndll\Windows\*.lib
