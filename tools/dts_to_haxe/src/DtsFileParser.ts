@@ -255,7 +255,7 @@ export class DtsFileParser
         dest.addMethod
         (
             methodName,
-            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
+            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
             this.convertType(x.type, dest.fullClassName + "@" + methodName),
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
@@ -277,7 +277,7 @@ export class DtsFileParser
         dest.addMethod
         (
             methodName,
-            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
+            x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
             this.convertType(x.type, dest.fullClassName + "@" + methodName),
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
@@ -431,7 +431,7 @@ export class DtsFileParser
                 
                 types.push(this.convertType(t.type, null));
                 
-                return types.join("->");
+                return this.callTypeConvertor(types.join("->"), localePath);
             }
 
             case ts.SyntaxKind.ArrayType:

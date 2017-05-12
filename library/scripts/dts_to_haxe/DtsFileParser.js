@@ -176,7 +176,7 @@ class DtsFileParser {
     }
     processMethodSignature(x, dest) {
         var methodName = x.name.getText();
-        dest.addMethod(methodName, x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())), this.convertType(x.type, dest.fullClassName + "@" + methodName), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name), this.prepareTypeParameters(x));
+        dest.addMethod(methodName, x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())), this.convertType(x.type, dest.fullClassName + "@" + methodName), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name), this.prepareTypeParameters(x));
     }
     processPropertyDeclaration(x, dest) {
         var varName = x.name.getText();
@@ -184,7 +184,7 @@ class DtsFileParser {
     }
     processMethodDeclaration(x, dest) {
         var methodName = x.name.getText();
-        dest.addMethod(methodName, x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), x.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())), this.convertType(x.type, dest.fullClassName + "@" + methodName), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name), this.prepareTypeParameters(x));
+        dest.addMethod(methodName, x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())), this.convertType(x.type, dest.fullClassName + "@" + methodName), null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.name), this.prepareTypeParameters(x));
     }
     processConstructor(x, dest) {
         dest.addMethod("new", x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@new." + p.name.getText())), "Void", null, this.isFlag(x.modifiers, ts.NodeFlags.Private), this.isFlag(x.modifiers, ts.NodeFlags.Static), this.getJsDoc(x.getFirstToken()), this.prepareTypeParameters(x));
@@ -288,7 +288,7 @@ class DtsFileParser {
                     else
                         types.push("Void");
                     types.push(this.convertType(t.type, null));
-                    return types.join("->");
+                    return this.callTypeConvertor(types.join("->"), localePath);
                 }
             case ts.SyntaxKind.ArrayType:
                 {

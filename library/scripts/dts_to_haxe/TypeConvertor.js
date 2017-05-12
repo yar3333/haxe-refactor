@@ -31,24 +31,25 @@ class TypeConvertor {
      *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
      */
     convert(type, localePath, knownTypes, curPack) {
-        if (type == "this" && localePath && localePath.indexOf("@") > 0)
-            return localePath.split("@")[0];
+        if (type == "this" && localePath && localePath.indexOf("@") > 0) {
+            type = localePath.split("@")[0];
+        }
         if (type.indexOf(".") >= 0) {
             var possibleKnownType = TypePathTools_1.TypePathTools.normalizeFullClassName(TypePathTools_1.TypePathTools.makeFullClassPath([curPack, type]));
             if (knownTypes.indexOf(possibleKnownType) >= 0)
-                return possibleKnownType;
+                type = possibleKnownType;
         }
-        type = this.mapper.has(type) ? this.mapper.get(type) : type;
+        type = this.mapper.has(type) ? this.getMapperValue(type, localePath) : type;
         if (localePath) {
             if (localePath.startsWith("@"))
                 localePath = "." + localePath.substring(1); // literal (anonimous) types
             if (this.mapper.has(localePath)) {
-                let r = this.testIf(type, this.mapper.get(localePath));
+                let r = this.testIf(type, this.getMapperValue(localePath, localePath));
                 if (r)
                     return r;
             }
             if (this.mapper.has(localePath.replace("@", "*"))) {
-                let r = this.testIf(type, this.mapper.get(localePath.replace("@", "*")));
+                let r = this.testIf(type, this.getMapperValue(localePath.replace("@", "*"), localePath));
                 if (r)
                     return r;
             }
@@ -56,30 +57,33 @@ class TypeConvertor {
                 var m = localePath.indexOf("@");
                 if (m >= 0) {
                     if (this.mapper.has(localePath.substring(m))) {
-                        let r = this.testIf(type, this.mapper.get(localePath.substring(m)));
+                        let r = this.testIf(type, this.getMapperValue(localePath.substring(m), localePath));
                         if (r)
                             return r;
                     }
                     if (this.mapper.has("*" + localePath.substring(m + 1))) {
-                        let r = this.testIf(type, this.mapper.get("*" + localePath.substring(m + 1)));
+                        let r = this.testIf(type, this.getMapperValue("*" + localePath.substring(m + 1), localePath));
                         if (r)
                             return r;
                     }
                     var n = localePath.lastIndexOf(".");
                     if (n > m) {
                         if (this.mapper.has(localePath.substring(n))) {
-                            let r = this.testIf(type, this.mapper.get(localePath.substring(n)));
+                            let r = this.testIf(type, this.getMapperValue(localePath.substring(n), localePath));
                             if (r)
                                 return r;
                         }
                         if (this.mapper.has("*" + localePath.substring(n + 1))) {
-                            let r = this.testIf(type, this.mapper.get("*" + localePath.substring(n + 1)));
+                            let r = this.testIf(type, this.getMapperValue("*" + localePath.substring(n + 1), localePath));
                             if (r)
                                 return r;
                         }
                     }
                 }
             }
+        }
+        if (type == "self" && localePath.indexOf("@") > 0) {
+            return localePath.split("@")[0];
         }
         return type;
     }
@@ -88,6 +92,12 @@ class TypeConvertor {
         if (!match)
             return resultType;
         return match[2] === sourceType ? match[1] : null;
+    }
+    getMapperValue(key, localePath) {
+        var v = this.mapper.get(key);
+        if (v && localePath && localePath.indexOf("@") > 0)
+            v = v.replace(/\bself\b/g, localePath.split("@")[0]);
+        return v;
     }
 }
 exports.TypeConvertor = TypeConvertor;

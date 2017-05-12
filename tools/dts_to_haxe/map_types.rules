@@ -4,3 +4,5 @@
 *height => Int if Float
 *arr => Array<Int> if Array<Float>
 *arr2 => Array<Int> if Array<Float>
+
+js.PropertyBinding@traverse.callback => String->Void
