@@ -3,7 +3,6 @@ package js;
 @:native("THREE.PropertyBinding")
 extern class PropertyBinding
 {
-	var onLoadStart : Void->Void;
 	var path : String;
 	var parsedPath : Dynamic;
 	var node : Dynamic;
@@ -13,12 +12,14 @@ extern class PropertyBinding
 	var GetterByBindingType : Array<haxe.Constraints.Function>;
 	var SetterByBindingTypeAndVersioning : Array<Array<haxe.Constraints.Function>>;
 
+	function testfunc(arr:Array<Int>, ?offset:Float) : Void;
+	function traverse(callback:String->Void) : Void;
 	function new(rootNode:Dynamic, path:String, ?parsedPath:Dynamic) : Void;
 	function getValue(targetArray:Dynamic, offset:Float) : Dynamic;
 	function setValue(sourceArray:Dynamic, offset:Float) : Void;
 	function bind() : Void;
 	function unbind() : Void;
-	static function create(root:Dynamic, path:Dynamic, parsedPath:Dynamic) : haxe.extern.EitherType<PropertyBinding, js.propertyBinding.Composite>;
+	static function create(root:Dynamic, path:Dynamic, ?parsedPath:Dynamic) : haxe.extern.EitherType<PropertyBinding, js.propertyBinding.Composite>;
 	static function parseTrackName(trackName:String) : Dynamic;
 	static function findNode(root:Dynamic, nodeName:String) : Dynamic;
 }

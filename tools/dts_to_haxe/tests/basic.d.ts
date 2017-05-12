@@ -1,7 +1,9 @@
 import { Scene, MyIden2 } from "./three-core";
 
 export class PropertyBinding {
-    onLoadStart: () => void;
+    testfunc(arr:number[], offset?:number) : void;
+    
+    traverse(callback:(a:string)=>any) : void;
 
     constructor(rootNode: any, path: string, parsedPath?: any);
 
