@@ -4,7 +4,7 @@
   "description": "",
   "main": "../../library/scripts/dts_to_haxe/DtsToHaxe.js",
   "devDependencies": {
-    "typescript": "^2.0.3"
+    "typescript": "2.0.3"
   },
   "scripts": {
     "build": "tsc",
