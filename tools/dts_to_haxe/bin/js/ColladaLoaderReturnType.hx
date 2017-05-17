@@ -1,6 +1,5 @@
 package js;
 
-@:native("THREE.ColladaLoaderReturnType")
 typedef ColladaLoaderReturnType =
 {>BaseInt, >Abc,
 	var info : { var render : { var vertices : Float; var faces : Float; }; };

@@ -247,8 +247,10 @@ class DtsFileParser {
         var haxeType = this.allHaxeTypes.find(x => x.fullClassName == fullClassName);
         if (!haxeType) {
             haxeType = new HaxeTypeDeclaration_1.HaxeTypeDeclaration(type, fullClassName);
-            let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : "";
-            haxeType.addMeta('@:native("' + TypePathTools_1.TypePathTools.makeFullClassPath([this.nativeNamespace, relativePackage]) + '")');
+            if (type != "interface") {
+                let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : "";
+                haxeType.addMeta('@:native("' + TypePathTools_1.TypePathTools.makeFullClassPath([this.nativeNamespace, relativePackage]) + '")');
+            }
         }
         return haxeType;
     }
