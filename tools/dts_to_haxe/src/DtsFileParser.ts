@@ -382,8 +382,11 @@ export class DtsFileParser
         if (!haxeType)
         {
             haxeType = new HaxeTypeDeclaration(type, fullClassName);
-            let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : "";
-            haxeType.addMeta('@:native("' + TypePathTools.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
+            if (type != "interface")
+            {
+                let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : "";
+                haxeType.addMeta('@:native("' + TypePathTools.makeFullClassPath([ this.nativeNamespace, relativePackage ]) + '")');
+            }
         }
         return haxeType;
     }
