@@ -324,7 +324,7 @@ class DtsFileParser {
         return this.callTypeConvertor(node.getText(), localePath);
     }
     callTypeConvertor(type, localePath) {
-        return this.typeMapper.convert(type, localePath, this.knownTypes, this.curPackage);
+        return this.typeMapper.map(type, localePath, this.knownTypes, this.curPackage);
     }
     convertUnionType(types) {
         if (types.length == 1)

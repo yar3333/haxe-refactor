@@ -3,7 +3,7 @@ import { TypePathTools } from "./TypePathTools"
 
 export class TypeMapper
 {
-    private map : Map<string, string>;
+    private data : Map<string, string>;
     
     /**
      * Keys:
@@ -16,7 +16,7 @@ export class TypeMapper
      */
     constructor(custom:Map<string, string>)
     {
-        this.map = new Map<string, string>
+        this.data = new Map<string, string>
         ([
             [ "any", "Dynamic" ],
             [ "void", "Void" ],
@@ -29,7 +29,7 @@ export class TypeMapper
         
         for (let k of custom.keys())
         {
-            this.map.set(k, custom.get(k));
+            this.data.set(k, custom.get(k));
         }
     }
 
@@ -39,7 +39,7 @@ export class TypeMapper
      *  `mypack.MyClas@myFuncOrVar` - return type of the function or variable type
      *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
      */
-    convert(type:string, localePath:string, knownTypes:Array<string>, curPack:string) : string
+    map(type:string, localePath:string, knownTypes:Array<string>, curPack:string) : string
     {
         if (type == "this" && localePath && localePath.indexOf("@") > 0)
         {
@@ -52,19 +52,19 @@ export class TypeMapper
             if (knownTypes.indexOf(possibleKnownType) >= 0) type = possibleKnownType;
         }
 
-        type = this.map.has(type) ? this.getMapperValue(type, localePath) : type;
+        type = this.data.has(type) ? this.getMapperValue(type, localePath) : type;
 
         if (localePath)
         {
             if (localePath.startsWith("@")) localePath = "." + localePath.substring(1); // literal (anonimous) types
 
-            if (this.map.has(localePath))
+            if (this.data.has(localePath))
             {
                 let r = this.testIf(type, this.getMapperValue(localePath, localePath));
                 if (r) return r;
             }
 
-            if (this.map.has(localePath.replace("@", "*")))
+            if (this.data.has(localePath.replace("@", "*")))
             {
                 let r = this.testIf(type, this.getMapperValue(localePath.replace("@", "*"), localePath));
                 if (r) return r;
@@ -76,12 +76,12 @@ export class TypeMapper
                 
                 if (m >= 0)
                 {
-                    if (this.map.has(localePath.substring(m)))
+                    if (this.data.has(localePath.substring(m)))
                     {
                         let r = this.testIf(type, this.getMapperValue(localePath.substring(m), localePath));
                         if (r) return r;
                     }
-                    if (this.map.has("*" + localePath.substring(m + 1)))
+                    if (this.data.has("*" + localePath.substring(m + 1)))
                     {
                         let r = this.testIf(type, this.getMapperValue("*" + localePath.substring(m + 1), localePath));
                         if (r) return r;
@@ -89,12 +89,12 @@ export class TypeMapper
                     var n = localePath.lastIndexOf(".");
                     if (n > m)
                     {
-                        if (this.map.has(localePath.substring(n)))
+                        if (this.data.has(localePath.substring(n)))
                         {
                             let r = this.testIf(type, this.getMapperValue(localePath.substring(n), localePath));
                             if (r) return r;
                         }
-                        if (this.map.has("*" + localePath.substring(n + 1)))
+                        if (this.data.has("*" + localePath.substring(n + 1)))
                         {
                             let r = this.testIf(type, this.getMapperValue("*" + localePath.substring(n + 1), localePath));
                             if (r) return r;
@@ -121,7 +121,7 @@ export class TypeMapper
 
     private getMapperValue(key:string, localePath:string) : string
     {
-        var v = this.map.get(key);
+        var v = this.data.get(key);
         if (v && localePath && localePath.indexOf("@") > 0) v = v.replace(/\bself\b/g, localePath.split("@")[0]);
         return v;
     }
