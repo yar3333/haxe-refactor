@@ -5,10 +5,10 @@ const Tokens_1 = require("./Tokens");
 const HaxeTypeDeclaration_1 = require("./HaxeTypeDeclaration");
 const TypePathTools_1 = require("./TypePathTools");
 class DtsFileParser {
-    constructor(sourceFile, typeChecker, typeConvertor, rootPackage, nativeNamespace, typedefs, knownTypes) {
+    constructor(sourceFile, typeChecker, typeMapper, rootPackage, nativeNamespace, typedefs, knownTypes) {
         this.sourceFile = sourceFile;
         this.typeChecker = typeChecker;
-        this.typeConvertor = typeConvertor;
+        this.typeMapper = typeMapper;
         this.rootPackage = rootPackage;
         this.nativeNamespace = nativeNamespace;
         this.typedefs = typedefs;
@@ -324,7 +324,7 @@ class DtsFileParser {
         return this.callTypeConvertor(node.getText(), localePath);
     }
     callTypeConvertor(type, localePath) {
-        return this.typeConvertor.convert(type, localePath, this.knownTypes, this.curPackage);
+        return this.typeMapper.convert(type, localePath, this.knownTypes, this.curPackage);
     }
     convertUnionType(types) {
         if (types.length == 1)

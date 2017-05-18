@@ -7,7 +7,7 @@ const DtsFileParser_1 = require("./DtsFileParser");
 const CmdOptions_1 = require("./CmdOptions");
 const Logger_1 = require("./Logger");
 const FsTools = require("./FsTools");
-const TypeConvertor_1 = require("./TypeConvertor");
+const TypeMapper_1 = require("./TypeMapper");
 const TypePathTools_1 = require("./TypePathTools");
 const DtsFilePossibleTypesFinder_1 = require("./DtsFilePossibleTypesFinder");
 var options = new CmdOptions_1.CmdOptions();
@@ -64,17 +64,17 @@ for (var i = 0; i < filePaths.length; i++) {
         i += allFiles.length - 1;
     }
 }
-var typeMapper = new Map();
+var typeMapperData = new Map();
 for (let fileName of params.get("typeMappers")) {
     for (let line of FsTools.readTextFileLines(fileName, true, true)) {
         var p = line.split("=>");
         if (p.length == 2)
-            typeMapper.set(p[0].trim(), p[1].trim());
+            typeMapperData.set(p[0].trim(), p[1].trim());
         else
             console.log("ERROR in file '" + fileName + "': bad string '" + line + "'.");
     }
 }
-var typeConvertor = new TypeConvertor_1.TypeConvertor(typeMapper);
+var typeMapper = new TypeMapper_1.TypeMapper(typeMapperData);
 var typedefs = params.get("typedefs");
 for (let fileName of params.get("typedefFiles")) {
     typedefs = typedefs.concat(FsTools.readTextFileLines(fileName, true, true));
@@ -89,7 +89,7 @@ for (let sourceFile of program.getSourceFiles()) {
 }
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
-    let parser = new DtsFileParser_1.DtsFileParser(sourceFile, typeChecker, typeConvertor, params.get("rootPackage"), params.get("nativeNamespace"), typedefs, knownTypes);
+    let parser = new DtsFileParser_1.DtsFileParser(sourceFile, typeChecker, typeMapper, params.get("rootPackage"), params.get("nativeNamespace"), typedefs, knownTypes);
     parser.parse(results, new Logger_1.Logger(params.get("logLevel")));
 }
 for (var klass of results) {

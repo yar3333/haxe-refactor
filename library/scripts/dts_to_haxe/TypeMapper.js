@@ -1,6 +1,6 @@
 "use strict";
 const TypePathTools_1 = require("./TypePathTools");
-class TypeConvertor {
+class TypeMapper {
     /**
      * Keys:
      *  `mypack.MyClas<T` - type of class <TypeParameter>
@@ -11,7 +11,7 @@ class TypeConvertor {
      *  `fromType` - specified type in any place
      */
     constructor(custom) {
-        this.mapper = new Map([
+        this.map = new Map([
             ["any", "Dynamic"],
             ["void", "Void"],
             ["string", "String"],
@@ -21,7 +21,7 @@ class TypeConvertor {
             ["Function", "haxe.Constraints.Function"]
         ]);
         for (let k of custom.keys()) {
-            this.mapper.set(k, custom.get(k));
+            this.map.set(k, custom.get(k));
         }
     }
     /**
@@ -39,16 +39,16 @@ class TypeConvertor {
             if (knownTypes.indexOf(possibleKnownType) >= 0)
                 type = possibleKnownType;
         }
-        type = this.mapper.has(type) ? this.getMapperValue(type, localePath) : type;
+        type = this.map.has(type) ? this.getMapperValue(type, localePath) : type;
         if (localePath) {
             if (localePath.startsWith("@"))
                 localePath = "." + localePath.substring(1); // literal (anonimous) types
-            if (this.mapper.has(localePath)) {
+            if (this.map.has(localePath)) {
                 let r = this.testIf(type, this.getMapperValue(localePath, localePath));
                 if (r)
                     return r;
             }
-            if (this.mapper.has(localePath.replace("@", "*"))) {
+            if (this.map.has(localePath.replace("@", "*"))) {
                 let r = this.testIf(type, this.getMapperValue(localePath.replace("@", "*"), localePath));
                 if (r)
                     return r;
@@ -56,24 +56,24 @@ class TypeConvertor {
             if (localePath.indexOf("<") < 0) {
                 var m = localePath.indexOf("@");
                 if (m >= 0) {
-                    if (this.mapper.has(localePath.substring(m))) {
+                    if (this.map.has(localePath.substring(m))) {
                         let r = this.testIf(type, this.getMapperValue(localePath.substring(m), localePath));
                         if (r)
                             return r;
                     }
-                    if (this.mapper.has("*" + localePath.substring(m + 1))) {
+                    if (this.map.has("*" + localePath.substring(m + 1))) {
                         let r = this.testIf(type, this.getMapperValue("*" + localePath.substring(m + 1), localePath));
                         if (r)
                             return r;
                     }
                     var n = localePath.lastIndexOf(".");
                     if (n > m) {
-                        if (this.mapper.has(localePath.substring(n))) {
+                        if (this.map.has(localePath.substring(n))) {
                             let r = this.testIf(type, this.getMapperValue(localePath.substring(n), localePath));
                             if (r)
                                 return r;
                         }
-                        if (this.mapper.has("*" + localePath.substring(n + 1))) {
+                        if (this.map.has("*" + localePath.substring(n + 1))) {
                             let r = this.testIf(type, this.getMapperValue("*" + localePath.substring(n + 1), localePath));
                             if (r)
                                 return r;
@@ -94,11 +94,11 @@ class TypeConvertor {
         return match[2] === sourceType ? match[1] : null;
     }
     getMapperValue(key, localePath) {
-        var v = this.mapper.get(key);
+        var v = this.map.get(key);
         if (v && localePath && localePath.indexOf("@") > 0)
             v = v.replace(/\bself\b/g, localePath.split("@")[0]);
         return v;
     }
 }
-exports.TypeConvertor = TypeConvertor;
-//# sourceMappingURL=TypeConvertor.js.map
+exports.TypeMapper = TypeMapper;
+//# sourceMappingURL=TypeMapper.js.map
