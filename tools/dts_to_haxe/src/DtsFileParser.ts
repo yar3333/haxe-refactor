@@ -476,7 +476,7 @@ export class DtsFileParser
 
     private callTypeConvertor(type:string, localePath:string)
     {
-        return this.typeMapper.convert(type, localePath, this.knownTypes, this.curPackage);
+        return this.typeMapper.map(type, localePath, this.knownTypes, this.curPackage);
     }
 
     private convertUnionType(types:Array<ts.TypeNode>) : string

@@ -11,7 +11,7 @@ class TypeMapper {
      *  `fromType` - specified type in any place
      */
     constructor(custom) {
-        this.map = new Map([
+        this.data = new Map([
             ["any", "Dynamic"],
             ["void", "Void"],
             ["string", "String"],
@@ -21,7 +21,7 @@ class TypeMapper {
             ["Function", "haxe.Constraints.Function"]
         ]);
         for (let k of custom.keys()) {
-            this.map.set(k, custom.get(k));
+            this.data.set(k, custom.get(k));
         }
     }
     /**
@@ -30,7 +30,7 @@ class TypeMapper {
      *  `mypack.MyClas@myFuncOrVar` - return type of the function or variable type
      *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
      */
-    convert(type, localePath, knownTypes, curPack) {
+    map(type, localePath, knownTypes, curPack) {
         if (type == "this" && localePath && localePath.indexOf("@") > 0) {
             type = localePath.split("@")[0];
         }
@@ -39,16 +39,16 @@ class TypeMapper {
             if (knownTypes.indexOf(possibleKnownType) >= 0)
                 type = possibleKnownType;
         }
-        type = this.map.has(type) ? this.getMapperValue(type, localePath) : type;
+        type = this.data.has(type) ? this.getMapperValue(type, localePath) : type;
         if (localePath) {
             if (localePath.startsWith("@"))
                 localePath = "." + localePath.substring(1); // literal (anonimous) types
-            if (this.map.has(localePath)) {
+            if (this.data.has(localePath)) {
                 let r = this.testIf(type, this.getMapperValue(localePath, localePath));
                 if (r)
                     return r;
             }
-            if (this.map.has(localePath.replace("@", "*"))) {
+            if (this.data.has(localePath.replace("@", "*"))) {
                 let r = this.testIf(type, this.getMapperValue(localePath.replace("@", "*"), localePath));
                 if (r)
                     return r;
@@ -56,24 +56,24 @@ class TypeMapper {
             if (localePath.indexOf("<") < 0) {
                 var m = localePath.indexOf("@");
                 if (m >= 0) {
-                    if (this.map.has(localePath.substring(m))) {
+                    if (this.data.has(localePath.substring(m))) {
                         let r = this.testIf(type, this.getMapperValue(localePath.substring(m), localePath));
                         if (r)
                             return r;
                     }
-                    if (this.map.has("*" + localePath.substring(m + 1))) {
+                    if (this.data.has("*" + localePath.substring(m + 1))) {
                         let r = this.testIf(type, this.getMapperValue("*" + localePath.substring(m + 1), localePath));
                         if (r)
                             return r;
                     }
                     var n = localePath.lastIndexOf(".");
                     if (n > m) {
-                        if (this.map.has(localePath.substring(n))) {
+                        if (this.data.has(localePath.substring(n))) {
                             let r = this.testIf(type, this.getMapperValue(localePath.substring(n), localePath));
                             if (r)
                                 return r;
                         }
-                        if (this.map.has("*" + localePath.substring(n + 1))) {
+                        if (this.data.has("*" + localePath.substring(n + 1))) {
                             let r = this.testIf(type, this.getMapperValue("*" + localePath.substring(n + 1), localePath));
                             if (r)
                                 return r;
@@ -94,7 +94,7 @@ class TypeMapper {
         return match[2] === sourceType ? match[1] : null;
     }
     getMapperValue(key, localePath) {
-        var v = this.map.get(key);
+        var v = this.data.get(key);
         if (v && localePath && localePath.indexOf("@") > 0)
             v = v.replace(/\bself\b/g, localePath.split("@")[0]);
         return v;
