@@ -5,6 +5,7 @@ import { Tokens } from "./Tokens";
 import { HaxeTypeDeclaration, HaxeVar } from "./HaxeTypeDeclaration";
 import { ILogger } from "./ILogger";
 import { TypeMapper } from "./TypeMapper";
+import { TypeConvertor } from "./TypeConvertor";
 import { TypePathTools } from "./TypePathTools";
 
 export class DtsFileParser
@@ -14,17 +15,20 @@ export class DtsFileParser
     private tokens : string[];
     private indent = "";
 
+    private typeConvertor : TypeConvertor;
+
     private imports = new Array<string>();
     public allHaxeTypes: Array<HaxeTypeDeclaration>;
 
-    private curPackage: string;
+    public curPackage: string;
 
-    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private typeMapper:TypeMapper, private rootPackage:string, private nativeNamespace:string, private typedefs:Array<string>, private knownTypes:Array<string>)
+    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, typeMapper:TypeMapper, private rootPackage:string, private nativeNamespace:string, private typedefs:Array<string>, knownTypes:Array<string>)
     {
         this.tokens = Tokens.getAll();
+        this.typeConvertor = new TypeConvertor(this, typeMapper, knownTypes);
     }
 
-    public parse(allHaxeTypes:Array<HaxeTypeDeclaration>, logger:ILogger) : void
+    parse(allHaxeTypes:Array<HaxeTypeDeclaration>, logger:ILogger) : void
     {
         this.allHaxeTypes = allHaxeTypes;
         this.logger = logger;
@@ -64,6 +68,19 @@ export class DtsFileParser
         });
 
         this.curPackage = savePack;
+    }
+
+    parseLiteralType(node:ts.TypeLiteralNode) : string
+    {
+       var item = new HaxeTypeDeclaration("");
+        
+        this.processChildren(node, new Map<number, (node:any) => void>(
+        [
+            [ ts.SyntaxKind.PropertySignature, (x:ts.PropertySignature) => this.processPropertySignature(x, item) ],
+            [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]
+        ]));
+
+        return item.toString();
     }
 
     private processModuleDeclaration(node:ts.ModuleDeclaration)
@@ -126,7 +143,7 @@ export class DtsFileParser
         (
             methodName,
             node.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), node.questionToken != null, item.fullClassName + "@" + methodName+"." + p.name.getText())),
-            this.convertType(node.type, item.fullClassName + "@" + node.name.getText()),
+            this.typeConvertor.convert(node.type, item.fullClassName + "@" + node.name.getText()),
             null,
             false, // private
             true, // static
@@ -205,7 +222,7 @@ export class DtsFileParser
     
     private processTypeParameter(node:ts.TypeParameterDeclaration, dest:HaxeTypeDeclaration)
     {
-        dest.addTypeParameter(node.name.getText(), this.convertType(node.constraint, dest.fullClassName + "<" + node.name.getText()));
+        dest.addTypeParameter(node.name.getText(), this.typeConvertor.convert(node.constraint, dest.fullClassName + "<" + node.name.getText()));
     }
 
     private processEnumDeclaration(node:ts.EnumDeclaration)
@@ -256,7 +273,7 @@ export class DtsFileParser
         (
             methodName,
             x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
-            this.convertType(x.type, dest.fullClassName + "@" + methodName),
+            this.typeConvertor.convert(x.type, dest.fullClassName + "@" + methodName),
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
             this.isFlag(x.modifiers, ts.NodeFlags.Static),
@@ -278,7 +295,7 @@ export class DtsFileParser
         (
             methodName,
             x.parameters.map(p => this.createVar(p.name.getText(), p.type, null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
-            this.convertType(x.type, dest.fullClassName + "@" + methodName),
+            this.typeConvertor.convert(x.type, dest.fullClassName + "@" + methodName),
             null,
             this.isFlag(x.modifiers, ts.NodeFlags.Private),
             this.isFlag(x.modifiers, ts.NodeFlags.Static),
@@ -352,7 +369,7 @@ export class DtsFileParser
     {
         return {
             haxeName: name,
-            haxeType: this.convertType(type, typeLocalePath),
+            haxeType: this.typeConvertor.convert(type, typeLocalePath),
             haxeDefVal: defaultValue,
             jsDoc: jsDoc,
             isOptional: isOptional
@@ -411,102 +428,9 @@ export class DtsFileParser
         return curModuleClass;
     }
 
-    /**
-     * localePath:
-     *  `mypack.MyClas<T` - type of class <TypeParameter>
-     *  `mypack.MyClas@myFunc` - return type of the function or variable
-     *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
-     */
-    private convertType(node:ts.Node, localePath:string) : string
-    {
-        if (!node) return "Dynamic";
-
-        switch (node.kind)
-        {
-            case ts.SyntaxKind.FunctionType:
-            {
-                let t = <ts.FunctionTypeNode>node;
-                
-                let types = [];
-                
-                if (t.parameters.length > 0) for (var p of t.parameters) types.push(this.convertType(p.type, p.name.getText()));
-                else                         types.push("Void");
-                
-                types.push(this.convertType(t.type, null));
-                
-                return this.callTypeConvertor(types.join("->"), localePath);
-            }
-
-            case ts.SyntaxKind.ArrayType:
-            {
-                let t = <ts.ArrayTypeNode>node;
-                let subType = t.elementType;
-                if (subType.kind == ts.SyntaxKind.ParenthesizedType) subType = (<ts.ParenthesizedTypeNode>subType).type;
-                return this.callTypeConvertor("Array<" + this.convertType(subType, null) + ">", localePath);
-            }
-            
-            case ts.SyntaxKind.UnionType:
-            {
-                return this.callTypeConvertor(this.convertUnionType((<ts.UnionTypeNode>node).types), localePath);
-            }
-            
-            case ts.SyntaxKind.TypeLiteral:
-            {
-                return this.processTypeLiteral(<ts.TypeLiteralNode>node);
-            }
-
-            case ts.SyntaxKind.TypeReference:
-            {
-                let t = <ts.TypeReferenceNode>node;
-                if (t.typeArguments == null || t.typeArguments.length == 0)
-                {
-                    return this.callTypeConvertor(t.typeName.getText(), localePath);
-                }
-                else
-                {
-                    var s = this.callTypeConvertor(t.typeName.getText(), null);
-                    var pp = t.typeArguments.map(x => this.convertType(x, null));
-                    return this.callTypeConvertor(s + "<" + pp.join(", ") + ">", localePath);
-                }
-            }
-        }
-
-        return this.callTypeConvertor(node.getText(), localePath);
-    }
-
-    private callTypeConvertor(type:string, localePath:string)
-    {
-        return this.typeMapper.map(type, localePath, this.knownTypes, this.curPackage);
-    }
-
-    private convertUnionType(types:Array<ts.TypeNode>) : string
-    {
-        if (types.length == 1) return this.convertType(types[0], null);
-        return "haxe.extern.EitherType<" + this.convertType(types[0], null)+", " +  this.convertUnionType(types.slice(1)) + ">";
-    }
-
-    private processTypeLiteral(node:ts.TypeLiteralNode) : string
-    {
-        if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature)
-        {
-            let tt = <ts.IndexSignatureDeclaration>node.members[0];
-            if (tt.parameters.length == 1) return "Dynamic<" + this.convertType(tt.type, null) + ">";
-        }
-    
-       var item = new HaxeTypeDeclaration("");
-        
-        this.processChildren(node, new Map<number, (node:any) => void>(
-        [
-            [ ts.SyntaxKind.PropertySignature, (x:ts.PropertySignature) => this.processPropertySignature(x, item) ],
-            [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]
-        ]));
-
-        return item.toString();
-    }
-
     private prepareTypeParameters(node:{ typeParameters?:ts.NodeArray<ts.TypeParameterDeclaration> }) : Array<{ name:string, constraint:string }>
     {
         if (!node.typeParameters) return [];
-        return node.typeParameters.map(t => ({ name:t.name.getText(), constraint:this.convertType(t.constraint, null) }))
+        return node.typeParameters.map(t => ({ name:t.name.getText(), constraint:this.typeConvertor.convert(t.constraint, null) }))
     }
 }
