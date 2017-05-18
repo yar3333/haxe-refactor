@@ -26,7 +26,7 @@ class TypeConvertor {
                     else
                         types.push("Void");
                     types.push(this.convert(t.type, null));
-                    return this.callTypeConvertor(types.join("->"), localePath);
+                    return this.mapType(types.join("->"), localePath);
                 }
             case ts.SyntaxKind.ArrayType:
                 {
@@ -34,11 +34,11 @@ class TypeConvertor {
                     let subType = t.elementType;
                     if (subType.kind == ts.SyntaxKind.ParenthesizedType)
                         subType = subType.type;
-                    return this.callTypeConvertor("Array<" + this.convert(subType, null) + ">", localePath);
+                    return this.mapType("Array<" + this.convert(subType, null) + ">", localePath);
                 }
             case ts.SyntaxKind.UnionType:
                 {
-                    return this.callTypeConvertor(this.convertUnionType(node.types), localePath);
+                    return this.mapType(this.convertUnionType(node.types, localePath), localePath);
                 }
             case ts.SyntaxKind.TypeLiteral:
                 {
@@ -48,24 +48,33 @@ class TypeConvertor {
                 {
                     let t = node;
                     if (t.typeArguments == null || t.typeArguments.length == 0) {
-                        return this.callTypeConvertor(t.typeName.getText(), localePath);
+                        return this.mapType(t.typeName.getText(), localePath);
                     }
                     else {
-                        var s = this.callTypeConvertor(t.typeName.getText(), null);
+                        var s = this.mapType(t.typeName.getText(), null);
                         var pp = t.typeArguments.map(x => this.convert(x, null));
-                        return this.callTypeConvertor(s + "<" + pp.join(", ") + ">", localePath);
+                        return this.mapType(s + "<" + pp.join(", ") + ">", localePath);
                     }
                 }
         }
-        return this.callTypeConvertor(node.getText(), localePath);
+        return this.mapType(node.getText(), localePath);
     }
-    callTypeConvertor(type, localePath) {
+    mapType(type, localePath) {
         return this.typeMapper.map(type, localePath, this.knownTypes, this.parser.curPackage);
     }
-    convertUnionType(types) {
+    convertUnionType(types, localePath) {
         if (types.length == 1)
             return this.convert(types[0], null);
-        return "haxe.extern.EitherType<" + this.convert(types[0], null) + ", " + this.convertUnionType(types.slice(1)) + ">";
+        var stringLiterals = types.filter(x => this.isStringLiteralType(x));
+        var otherTypes = types.filter(x => !this.isStringLiteralType(x));
+        if (stringLiterals.length > 0) {
+            var newEnum = this.parser.addNewEnumAsStringAbstract(localePath, stringLiterals.map(x => x.getChildAt(0).text));
+            var mappedEnum = this.mapType(newEnum.fullClassName, null);
+            return otherTypes.length > 0 ? "haxe.extern.EitherType<" + mappedEnum + ", " + this.convertUnionType(otherTypes, null) + ">" : mappedEnum;
+        }
+        else {
+            return "haxe.extern.EitherType<" + this.convert(types[0], null) + ", " + this.convertUnionType(types.slice(1), null) + ">";
+        }
     }
     processTypeLiteral(node) {
         if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature) {
@@ -79,6 +88,9 @@ class TypeConvertor {
         if (!node.typeParameters)
             return [];
         return node.typeParameters.map(t => ({ name: t.name.getText(), constraint: this.convert(t.constraint, null) }));
+    }
+    isStringLiteralType(x) {
+        return x.kind == ts.SyntaxKind.LastTypeNode && x.getChildCount() == 1 && x.getChildAt(0).kind == ts.SyntaxKind.StringLiteral;
     }
 }
 exports.TypeConvertor = TypeConvertor;
