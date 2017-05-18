@@ -78,7 +78,7 @@ export class TypeConvertor
         return this.mapType(node.getText(), localePath);
     }
 
-    private mapType(type:string, localePath:string)
+    mapType(type:string, localePath:string)
     {
         return this.typeMapper.map(type, localePath, this.knownTypes, this.parser.curPackage);
     }

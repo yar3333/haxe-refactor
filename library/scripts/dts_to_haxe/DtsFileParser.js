@@ -108,8 +108,6 @@ class DtsFileParser {
         ]));
     }
     processVariableStatement(node) {
-        if (!this.isFlag(node, ts.NodeFlags.Export))
-            return;
         for (var decl of node.declarationList.declarations) {
             this.logger.log(this.indent + "| " + decl.name.getText());
             var isReadOnly = this.isFlag(node.declarationList, ts.NodeFlags.Const) || this.isFlag(node.declarationList, ts.NodeFlags.Readonly);
@@ -152,17 +150,29 @@ class DtsFileParser {
         ]));
     }
     processInterfaceDeclaration(node) {
-        var item = this.getHaxeTypeDeclarationByShort("interface", node.name.getText());
-        if (this.typedefs.indexOf(item.fullClassName) >= 0)
-            item.type = "typedef";
+        var name = node.name.getText();
+        var item;
+        switch (name) {
+            case "Window":
+                item = this.getHaxeTypeDeclarationByShort("class", this.getClassNameFromPath(node.getSourceFile().fileName), "window");
+                break;
+            default:
+                item = this.getHaxeTypeDeclarationByShort("interface", name);
+                if (this.typedefs.indexOf(item.fullClassName) >= 0)
+                    item.type = "typedef";
+                break;
+        }
         this.processChildren(node, new Map([
             [ts.SyntaxKind.ExportKeyword, (x) => { }],
             [ts.SyntaxKind.Identifier, (x) => { }],
-            [ts.SyntaxKind.HeritageClause, (x) => item.baseFullInterfaceNames = x.types.map(y => TypePathTools_1.TypePathTools.makeFullClassPath([this.curPackage, y.getText()]))],
+            [ts.SyntaxKind.HeritageClause, (x) => this.processHeritageClauseForInterface(x, item)],
             [ts.SyntaxKind.PropertySignature, (x) => this.processPropertySignature(x, item)],
             [ts.SyntaxKind.MethodSignature, (x) => this.processMethodSignature(x, item)]
         ]));
         this.allHaxeTypes.push(item);
+    }
+    processHeritageClauseForInterface(x, dest) {
+        dest.baseFullInterfaceNames = x.types.map(y => this.typeConvertor.convert(y, null));
     }
     processClassDeclaration(node) {
         var item = this.getHaxeTypeDeclarationByShort("class", node.name.getText());
@@ -197,10 +207,10 @@ class DtsFileParser {
     processHeritageClauseForClass(x, dest) {
         switch (x.token) {
             case ts.SyntaxKind.ExtendsKeyword:
-                dest.baseFullClassName = x.types.map(y => TypePathTools_1.TypePathTools.makeFullClassPath([this.curPackage, y.getText()])).toString();
+                dest.baseFullClassName = x.types.map(y => this.typeConvertor.convert(y, null)).toString();
                 break;
             case ts.SyntaxKind.ImplementsKeyword:
-                dest.baseFullInterfaceNames = x.types.map(y => TypePathTools_1.TypePathTools.makeFullClassPath([this.curPackage, y.getText()]));
+                dest.baseFullInterfaceNames = x.types.map(y => this.typeConvertor.convert(y, null));
                 break;
         }
     }
@@ -273,16 +283,16 @@ class DtsFileParser {
     isFlag(mods, f) {
         return mods && mods.flags && (mods.flags & f) !== 0;
     }
-    getHaxeTypeDeclarationByShort(type, shortClassName) {
-        return this.getHaxeTypeDeclarationByFull(type, TypePathTools_1.TypePathTools.makeFullClassPath([this.curPackage, shortClassName]));
+    getHaxeTypeDeclarationByShort(type, shortClassName, native) {
+        return this.getHaxeTypeDeclarationByFull(type, TypePathTools_1.TypePathTools.makeFullClassPath([this.curPackage, shortClassName]), native);
     }
-    getHaxeTypeDeclarationByFull(type, fullClassName) {
+    getHaxeTypeDeclarationByFull(type, fullClassName, native) {
         var haxeType = this.allHaxeTypes.find(x => x.fullClassName == fullClassName);
         if (!haxeType) {
             haxeType = new HaxeTypeDeclaration_1.HaxeTypeDeclaration(type, fullClassName);
             if (type != "interface") {
                 let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : "";
-                haxeType.addMeta('@:native("' + TypePathTools_1.TypePathTools.makeFullClassPath([this.nativeNamespace, relativePackage]) + '")');
+                haxeType.addMeta('@:native("' + (native ? native : TypePathTools_1.TypePathTools.makeFullClassPath([this.nativeNamespace, relativePackage])) + '")');
             }
         }
         return haxeType;
@@ -307,6 +317,14 @@ class DtsFileParser {
         if (!node.typeParameters)
             return [];
         return node.typeParameters.map(t => ({ name: t.name.getText(), constraint: this.typeConvertor.convert(t.constraint, null) }));
+    }
+    getClassNameFromPath(path) {
+        var parts = path.split("\\").join("/").split("/");
+        var r = parts.pop();
+        if (r == "index.d.ts")
+            r = parts.pop();
+        r = r.split(".").join("-").split("-").map(x => StringTools_1.StringTools.capitalize(x)).join("");
+        return r;
     }
 }
 exports.DtsFileParser = DtsFileParser;

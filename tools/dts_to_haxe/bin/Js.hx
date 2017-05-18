@@ -18,6 +18,7 @@ extern class Js
 	static var CullFaceFrontBack(default, null) : CullFace;
 	static var FrontFaceDirectionCW(default, null) : FrontFaceDirection;
 	static var FrontFaceDirectionCCW(default, null) : FrontFaceDirection;
+	static var device : Device;
 	static var a(default, null) : Dynamic;
 	static var b(default, null) : Dynamic;
 }
