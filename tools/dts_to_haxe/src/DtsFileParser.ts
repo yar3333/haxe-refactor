@@ -4,7 +4,7 @@ import * as ts from "typescript";
 import { Tokens } from "./Tokens";
 import { HaxeTypeDeclaration, HaxeVar } from "./HaxeTypeDeclaration";
 import { ILogger } from "./ILogger";
-import { TypeConvertor } from "./TypeConvertor";
+import { TypeMapper } from "./TypeMapper";
 import { TypePathTools } from "./TypePathTools";
 
 export class DtsFileParser
@@ -19,7 +19,7 @@ export class DtsFileParser
 
     private curPackage: string;
 
-    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private typeConvertor:TypeConvertor, private rootPackage:string, private nativeNamespace:string, private typedefs:Array<string>, private knownTypes:Array<string>)
+    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, private typeMapper:TypeMapper, private rootPackage:string, private nativeNamespace:string, private typedefs:Array<string>, private knownTypes:Array<string>)
     {
         this.tokens = Tokens.getAll();
     }
@@ -476,7 +476,7 @@ export class DtsFileParser
 
     private callTypeConvertor(type:string, localePath:string)
     {
-        return this.typeConvertor.convert(type, localePath, this.knownTypes, this.curPackage);
+        return this.typeMapper.convert(type, localePath, this.knownTypes, this.curPackage);
     }
 
     private convertUnionType(types:Array<ts.TypeNode>) : string

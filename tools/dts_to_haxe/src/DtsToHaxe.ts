@@ -8,7 +8,7 @@ import { CmdOptions } from "./CmdOptions";
 import { Logger } from "./Logger";
 import { HaxeTypeDeclaration } from "./HaxeTypeDeclaration";
 import * as FsTools from "./FsTools";
-import { TypeConvertor } from "./TypeConvertor";
+import { TypeMapper } from "./TypeMapper";
 import { TypePathTools } from "./TypePathTools";
 import { DtsFilePossibleTypesFinder } from "./DtsFilePossibleTypesFinder";
 
@@ -65,17 +65,17 @@ for (var i = 0; i < filePaths.length; i++)
     }
 }
 
-var typeMapper = new Map<string, string>();
+var typeMapperData = new Map<string, string>();
 for (let fileName of params.get("typeMappers"))
 {
     for (let line of FsTools.readTextFileLines(fileName, true, true))
     {
         var p = line.split("=>");
-        if (p.length == 2) typeMapper.set(p[0].trim(), p[1].trim());
+        if (p.length == 2) typeMapperData.set(p[0].trim(), p[1].trim());
         else console.log("ERROR in file '" + fileName + "': bad string '" + line + "'.");
     }
 }
-var typeConvertor = new TypeConvertor(typeMapper);
+var typeMapper = new TypeMapper(typeMapperData);
 
 var typedefs : Array<string> = params.get("typedefs");
 for (let fileName of params.get("typedefFiles"))
@@ -96,7 +96,7 @@ for (let sourceFile of program.getSourceFiles()) {
 
 for (let sourceFile of program.getSourceFiles()) {
     console.log("Process file " + sourceFile.path);
-    let parser = new DtsFileParser(sourceFile, typeChecker, typeConvertor, params.get("rootPackage"), params.get("nativeNamespace"), typedefs, knownTypes);
+    let parser = new DtsFileParser(sourceFile, typeChecker, typeMapper, params.get("rootPackage"), params.get("nativeNamespace"), typedefs, knownTypes);
     parser.parse(results, new Logger(params.get("logLevel")));
 }
 
