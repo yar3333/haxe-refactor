@@ -1,6 +1,7 @@
 /// <reference path="../typings/globals/node/index.d.ts" />
 
 import * as ts from "typescript";
+import { StringTools } from "./StringTools"
 import { Tokens } from "./Tokens";
 import { HaxeTypeDeclaration, HaxeVar } from "./HaxeTypeDeclaration";
 import { ILogger } from "./ILogger";
@@ -22,7 +23,7 @@ export class DtsFileParser
 
     public curPackage: string;
 
-    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, typeMapper:TypeMapper, private rootPackage:string, private nativeNamespace:string, private typedefs:Array<string>, knownTypes:Array<string>)
+    constructor(private sourceFile: ts.SourceFile, private typeChecker: ts.TypeChecker, typeMapper:TypeMapper, private rootPackage:string, private nativeNamespace:string, private typedefs:Array<string>, private knownTypes:Array<string>)
     {
         this.tokens = Tokens.getAll();
         this.typeConvertor = new TypeConvertor(this, typeMapper, knownTypes);
@@ -81,6 +82,36 @@ export class DtsFileParser
         ]));
 
         return item.toString();
+    }
+
+    addNewEnumAsStringAbstract(localePath:string, values:Array<string>) : HaxeTypeDeclaration
+    {
+        var parts = localePath.split("@");
+        var varOrFunc = parts[1].split(".");
+        var baseName = parts[0].toLowerCase() + "." + StringTools.capitalize(varOrFunc[varOrFunc.length - 1]);
+
+        var name = baseName;
+        var n = 0;
+        while (this.allHaxeTypes.find(x => x.fullClassName.toLowerCase() == name.toLowerCase()) || this.knownTypes.find(x => x.toLowerCase() == name.toLowerCase()))
+        {
+            n++;
+            name = baseName + "_" + n;
+        }
+
+        var item = new HaxeTypeDeclaration("abstract", name);
+        item.baseFullClassName = "String";
+        for (let v of values) item.addVar
+        ({
+            haxeName: v,
+            haxeType: null,
+            haxeDefVal: JSON.stringify(v),
+            jsDoc: null,
+            isOptional: false
+        });
+
+        this.allHaxeTypes.push(item);
+
+        return item;
     }
 
     private processModuleDeclaration(node:ts.ModuleDeclaration)

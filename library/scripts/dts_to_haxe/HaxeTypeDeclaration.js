@@ -48,8 +48,9 @@ class HaxeTypeDeclaration {
                 s += "private ";
             if (isStatic)
                 s += "static ";
-            s += "var " + v.haxeName + (isReadOnlyProperty ? "(default, null)" : "") + " : " + this.trimTypePath(v.haxeType)
-                + (isStatic && v.haxeDefVal != null ? " = " + v.haxeDefVal : "")
+            s += "var " + v.haxeName + (isReadOnlyProperty ? "(default, null)" : "")
+                + (this.type != "abstract" ? " : " + this.trimTypePath(v.haxeType) : "")
+                + (this.type == "abstract" || isStatic && v.haxeDefVal != null ? " = " + v.haxeDefVal : "")
                 + ";";
             this.vars.push(s);
         }
@@ -133,35 +134,36 @@ class HaxeTypeDeclaration {
             s += this.imports.join("\n") + (this.imports.length > 0 ? "\n\n" : "");
             s += this.jsDocToString(this.docComment);
             s += this.metas.map(m => m + "\n").join("\n");
-            s += (this.type != "typedef" ? "extern " : "") + this.type + " " + packAndClass.className;
+            s += (this.type != "typedef" && this.type != "abstract" ? "extern " : "") + this.type + " " + packAndClass.className;
             if (this.typeParameters.length > 0) {
                 s += "<" + this.typeParameters.map(x => x.name + ":" + x.constraint).join(", ") + ">";
             }
-            if (this.type == "typedef")
-                s += " =\n{";
             switch (this.type) {
                 case "class":
-                    s += (this.baseFullClassName ? " extends " + this.trimTypePath(this.baseFullClassName) : "") + "\n";
+                    if (this.baseFullClassName)
+                        s += " extends " + this.trimTypePath(this.baseFullClassName);
                     if (this.baseFullInterfaceNames.length > 0)
-                        s += "\timplements " + this.baseFullInterfaceNames.map(x => this.trimTypePath(x)).join(", ") + "\n";
+                        s += this.baseFullInterfaceNames.map(x => "\n\timplements " + this.trimTypePath(x)).join("");
+                    s += "\n{\n";
                     break;
                 case "interface":
                     if (this.baseFullInterfaceNames.length == 1)
-                        s += " extends " + this.baseFullInterfaceNames.map(x => this.trimTypePath(x)).join(", ");
+                        s += " extends " + this.trimTypePath(this.baseFullInterfaceNames[0]);
                     else if (this.baseFullInterfaceNames.length > 1)
-                        s += "\n\t" + this.baseFullInterfaceNames.map(x => "extends " + this.trimTypePath(x)).join("\n\t");
-                    s += "\n";
+                        s += this.baseFullInterfaceNames.map(x => "\n\textends " + this.trimTypePath(x)).join("");
+                    s += "\n{\n";
                     break;
                 case "typedef":
-                    s += this.baseFullInterfaceNames.map(x => ">" + this.trimTypePath(x) + ",").join(" ") + "\n";
+                    s += " =\n{" + this.baseFullInterfaceNames.map(x => ">" + this.trimTypePath(x) + ",").join(" ") + "\n";
                     break;
                 case "enum":
-                    s += "\n";
+                    s += "\n{\n";
+                    break;
+                case "abstract":
+                    s += "(" + this.trimTypePath(this.baseFullClassName) + ")\n{\n";
                     break;
             }
         }
-        if (this.type != "typedef")
-            s += "{\n";
         s += (this.vars.length > 0 ? "\t" + (this.vars.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n\n" : "");
         s += (this.methods.length > 0 ? "\t" + (this.methods.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
         s += (this.customs.length > 0 ? "\t" + (this.customs.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");

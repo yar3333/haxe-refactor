@@ -13,7 +13,7 @@ export class HaxeTypeDeclaration
 {
 	static reserved = [ "dynamic", "catch", "throw" ];
 
-	public type : "class" | "interface" | "enum" | "typedef" | "";
+	public type : "class" | "interface" | "enum" | "typedef" | "abstract" | "";
 
 	docComment = "";
 	fullClassName = "";
@@ -28,7 +28,7 @@ export class HaxeTypeDeclaration
 	private enumMembers = new Array<string>();
 	private typeParameters = new Array<{ name:string, constraint:string }>();
 	
-	constructor(type:"class"|"interface"|"enum"|"typedef"|"", fullClassName="")
+	constructor(type:"class"|"interface"|"enum"|"typedef"|"abstract"|"", fullClassName="")
 	{
 		this.type = type;
 		this.fullClassName = fullClassName;
@@ -68,8 +68,9 @@ export class HaxeTypeDeclaration
 			if (v.isOptional) s += "@:optional ";
 			if (isPrivate) s += "private ";
 			if (isStatic) s += "static ";
-			s += "var " + v.haxeName + (isReadOnlyProperty ? "(default, null)" : "") + " : " + this.trimTypePath(v.haxeType)
-				+ (isStatic && v.haxeDefVal != null ? " = " + v.haxeDefVal : "")
+			s += "var " + v.haxeName + (isReadOnlyProperty ? "(default, null)" : "")
+				+ (this.type != "abstract" ? " : " + this.trimTypePath(v.haxeType) : "")
+				+ (this.type == "abstract" || isStatic && v.haxeDefVal != null ? " = " + v.haxeDefVal : "")
 				+ ";";
 			this.vars.push(s);
 		}
@@ -177,39 +178,40 @@ export class HaxeTypeDeclaration
 			s += this.jsDocToString(this.docComment);
 
 			s += this.metas.map(m => m + "\n").join("\n");
-			s += (this.type != "typedef" ? "extern " : "") + this.type + " " + packAndClass.className;
+			s += (this.type != "typedef" && this.type != "abstract" ? "extern " : "") + this.type + " " + packAndClass.className;
 
 			if (this.typeParameters.length > 0)
 			{
 				s += "<" + this.typeParameters.map(x => x.name + ":" + x.constraint).join(", ") + ">";
 			}
 
-			if (this.type == "typedef") s+= " =\n{";
-
 			switch (this.type)
 			{
 				case "class":
-					s += (this.baseFullClassName ? " extends " + this.trimTypePath(this.baseFullClassName) : "") + "\n";
-					if (this.baseFullInterfaceNames.length > 0) s += "\timplements " + this.baseFullInterfaceNames.map(x => this.trimTypePath(x)).join(", ") + "\n";
+					if (this.baseFullClassName) s += " extends " + this.trimTypePath(this.baseFullClassName);
+					if (this.baseFullInterfaceNames.length > 0) s += this.baseFullInterfaceNames.map(x => "\n\timplements " + this.trimTypePath(x)).join("");
+					s += "\n{\n";
 					break;
 
 				case "interface":
-					if (this.baseFullInterfaceNames.length == 1) s += " extends " + this.baseFullInterfaceNames.map(x => this.trimTypePath(x)).join(", ");
-					else if (this.baseFullInterfaceNames.length > 1) s += "\n\t" + this.baseFullInterfaceNames.map(x => "extends " + this.trimTypePath(x)).join("\n\t");
-					s += "\n"
+					if      (this.baseFullInterfaceNames.length == 1) s += " extends " + this.trimTypePath(this.baseFullInterfaceNames[0]);
+					else if (this.baseFullInterfaceNames.length > 1 ) s += this.baseFullInterfaceNames.map(x => "\n\textends " + this.trimTypePath(x)).join("");
+					s += "\n{\n";
 					break;
 
 				case "typedef":
-					s += this.baseFullInterfaceNames.map(x => ">" + this.trimTypePath(x) + ",").join(" ") + "\n";
+					s += " =\n{" + this.baseFullInterfaceNames.map(x => ">" + this.trimTypePath(x) + ",").join(" ") + "\n";
 					break;
 
 				case "enum":
-					s += "\n";
+					s += "\n{\n";
+					break;
+
+				case "abstract":
+					s += "(" + this.trimTypePath(this.baseFullClassName) + ")\n{\n";
 					break;
 			}
 		}
-
-		if (this.type != "typedef") s += "{\n";
 
 		s += (this.vars.length > 0 ? "\t" + (this.vars.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n\n" : "");
 		s += (this.methods.length > 0 ? "\t" + (this.methods.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");

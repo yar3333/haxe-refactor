@@ -1,6 +1,7 @@
 /// <reference path="../typings/globals/node/index.d.ts" />
 "use strict";
 const ts = require("typescript");
+const StringTools_1 = require("./StringTools");
 const Tokens_1 = require("./Tokens");
 const HaxeTypeDeclaration_1 = require("./HaxeTypeDeclaration");
 const TypeConvertor_1 = require("./TypeConvertor");
@@ -12,6 +13,7 @@ class DtsFileParser {
         this.rootPackage = rootPackage;
         this.nativeNamespace = nativeNamespace;
         this.typedefs = typedefs;
+        this.knownTypes = knownTypes;
         this.indent = "";
         this.imports = new Array();
         this.tokens = Tokens_1.Tokens.getAll();
@@ -57,6 +59,29 @@ class DtsFileParser {
             [ts.SyntaxKind.MethodSignature, (x) => this.processMethodSignature(x, item)]
         ]));
         return item.toString();
+    }
+    addNewEnumAsStringAbstract(localePath, values) {
+        var parts = localePath.split("@");
+        var varOrFunc = parts[1].split(".");
+        var baseName = parts[0].toLowerCase() + "." + StringTools_1.StringTools.capitalize(varOrFunc[varOrFunc.length - 1]);
+        var name = baseName;
+        var n = 0;
+        while (this.allHaxeTypes.find(x => x.fullClassName.toLowerCase() == name.toLowerCase()) || this.knownTypes.find(x => x.toLowerCase() == name.toLowerCase())) {
+            n++;
+            name = baseName + "_" + n;
+        }
+        var item = new HaxeTypeDeclaration_1.HaxeTypeDeclaration("abstract", name);
+        item.baseFullClassName = "String";
+        for (let v of values)
+            item.addVar({
+                haxeName: v,
+                haxeType: null,
+                haxeDefVal: JSON.stringify(v),
+                jsDoc: null,
+                isOptional: false
+            });
+        this.allHaxeTypes.push(item);
+        return item;
     }
     processModuleDeclaration(node) {
         var savePack = this.curPackage;

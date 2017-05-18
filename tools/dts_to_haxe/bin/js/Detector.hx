@@ -9,5 +9,5 @@ extern class Detector
 	static var fileapi : Bool;
 
 	static function getWebGLErrorMessage() : HTMLElement;
-	static function addGetWebGLMessage(parameters:{ @:optional var id : String; @:optional var parent : HTMLElement; }) : Void;
+	static function addGetWebGLMessage(parameters: @:optional var id : String; @:optional var parent : HTMLElement; }) : Void;
 }
