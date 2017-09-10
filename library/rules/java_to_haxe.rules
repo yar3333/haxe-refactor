@@ -1,0 +1,100 @@
+ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
+LONGID = ID(?:[.]ID)*
+INT = [0-9]+(?:e[-+][0-9]+)?
+FLOAT = [0-9]+(?:[.][0-9]+)?(?:e[-+][0-9]+)?
+NUMBER = (?:INT|FLOAT)
+VALUE = (?:LONGID|NUMBER)
+SPACE = (?:[ ]|\t)+
+OPTSPACE = (?:SPACE)?+
+
+KEYWORDS = \b(?:new|return|extends|class|interface|enum|if|else|import|package|for)\b
+
+FORMAL_ARG = \s*ID\s*:\s*TYPE\s*
+FORMAL_ARGS = (?:FORMAL_ARG(?:,FORMAL_ARG)*)?
+FUNC_CALL = ID(?:<\s*ID(?:\s*,\s*ID)*\s*>)?\s*
+
+ACCESS = (?:(?:static|public|private)\s+)+
+BASETYPE = LONGID(?:[<]\s*LONGID(?:\s*,\s*LONGID)*\s*[>])?
+TYPE = BASETYPE[?]?
+
+B4BASE = (?:[:<]|new )
+
+// trim end spaces ============================================
+/[ \t]+\n/\n/
+
+// new line before brackets ===================================
+/\n(OPTSPACE)([^\n]+)\s*{[ \t]*\n/\n$1$2\n$1{\n/
+
+// remove spaces before ")"
+/[ ]+[)]/)
+
+// ============================================================
+// ============================================================
+
+/\bprotected\b/private/
+
+/\bthrows (TYPE)(\s*,\s*(TYPE))*\b//
+
+// change "T[]" => "Array<T>"
+/(TYPE)\s*\[\s*\]/Array<$1>
+
+// change: "T v" => "var v:T"
+/(TYPE)\s+(ID)(\s*[-=;+*\/%&{,)])/var $2:$1$3/s/KEYWORDS|[(]
+
+
+// fix: "(var v:T" => "(v:T" and ",var v:T" => ",v:T"
+/([(,]\s*)(final\s+)?var (ID)[:](TYPE)/$1$3:$4//
+
+/(ACCESS)?final\s+(ACCESS)?var/$1$2var//static
+/(ACCESS)?final\s+(ACCESS)?var/inline $1$2var
+
+// #########/(ACCESS)(TYPE)\s+(ID)[(](FORMAL_ARGS)[)]/$1function $3($4):$2/
+
+// detect constructor
+/^([ \t]*(?:ACCESS)?)(?:ID)\s*[(](FORMAL_ARGS)[)]/$1function new($2)/m
+
+/^([ \t]*(?:ACCESS)?)(TYPE)\s+(ID)\s*[(](FORMAL_ARGS)[)]/$1function $3($4):$2/m/function
+
+
+// foreach (T i : a)
+/\bfor\s*[(]TYPE (LONGID)\s+:\s+/for ($1 in /
+
+// change std types
+/(B4BASE)(?:int|long|short|char|byte)\b/$1Int
+/(B4BASE)boolean\b/$1Bool
+/(B4BASE)void\b/$1Void
+/(B4BASE)(?:double|float)\b/$1Float
+/(B4BASE)Boolean\b/$1Null<Bool>
+/(B4BASE)(?:Integer|Short|Character|Byte|Long)\b/$1Null<Int>
+/(B4BASE)(?:Float|Double)\b/$1Float
+
+// array constructor
+/\bnew (TYPE)\[(INT)\]/new Array<$1>()/
+
+/\bDateTime\b/Date
+/\bnew Date()\b/Date.now()
+/\bRegex\b/EReg
+
+// change: "var v:T" => "var a : T"
+/\bvar\s+(ID)\s*:\s*(TYPE)/var $1 : $2/
+
+// simplify 's : String = "' => 's = "'
+/(ID)\s*[:]\s*String\s*[=]\s*"/$1 = "/
+
+// "):T" => ") : T"
+/[)]:(TYPE)/) : $1
+
+/\bpublic\s+(class|interface)\b/$1
+
+/\bcatch\s*\((ID):Exception\)/catch ($1:Dynamic)/
+
+// ============================================================
+// ============================================================
+
+
+// trim end spaces ==============================
+/[ \t]+\n/\n/
+//\n((?:[ ]|\t)+)([^\n]+)\n\n/\n$1$2\n$1\n/m
+
+// add space prefixes ===========================
+/\n\n((?:[ ]|\t)+)/\n$1\n$1/
