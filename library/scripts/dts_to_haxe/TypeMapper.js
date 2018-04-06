@@ -18,7 +18,9 @@ class TypeMapper {
             ["number", "Float"],
             ["boolean", "Bool"],
             ["Object", "Dynamic"],
-            ["Function", "haxe.Constraints.Function"]
+            ["Function", "haxe.Constraints.Function"],
+            ["true", "Bool"],
+            ["false", "Bool"]
         ]);
         for (let k of custom.keys()) {
             this.data.set(k, custom.get(k));

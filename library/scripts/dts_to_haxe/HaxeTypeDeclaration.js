@@ -134,7 +134,7 @@ class HaxeTypeDeclaration {
             s += this.imports.join("\n") + (this.imports.length > 0 ? "\n\n" : "");
             s += this.jsDocToString(this.docComment);
             s += this.metas.map(m => m + "\n").join("\n");
-            s += (this.type != "typedef" && this.type != "abstract" ? "extern " : "") + this.type + " " + packAndClass.className;
+            s += (this.type != "typedef" && this.type != "abstract" ? "extern " : (this.type == "abstract" ? "@:enum " : "")) + this.type + " " + packAndClass.className;
             if (this.typeParameters.length > 0) {
                 s += "<" + this.typeParameters.map(x => x.name + ":" + x.constraint).join(", ") + ">";
             }

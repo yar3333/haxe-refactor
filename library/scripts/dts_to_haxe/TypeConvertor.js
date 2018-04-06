@@ -63,18 +63,27 @@ class TypeConvertor {
         return this.typeMapper.map(type, localePath, this.knownTypes, this.parser.curPackage);
     }
     convertUnionType(types, localePath) {
-        if (types.length == 1)
-            return this.convert(types[0], null);
-        var stringLiterals = types.filter(x => this.isStringLiteralType(x));
-        var otherTypes = types.filter(x => !this.isStringLiteralType(x));
-        if (stringLiterals.length > 0) {
-            var newEnum = this.parser.addNewEnumAsStringAbstract(localePath, stringLiterals.map(x => x.getChildAt(0).text));
-            var mappedEnum = this.mapType(newEnum.fullClassName, null);
-            return otherTypes.length > 0 ? "haxe.extern.EitherType<" + mappedEnum + ", " + this.convertUnionType(otherTypes, null) + ">" : mappedEnum;
+        //var hasNull = types.findIndex(x => this.isNull(x));
+        //if (hasNull) types = types.filter(x => !this.isNull(x));
+        types = types.filter(x => !this.isNull(x));
+        var r;
+        if (types.length == 1) {
+            r = this.convert(types[0], null);
         }
         else {
-            return "haxe.extern.EitherType<" + this.convert(types[0], null) + ", " + this.convertUnionType(types.slice(1), null) + ">";
+            var stringLiterals = types.filter(x => this.isStringLiteralType(x));
+            if (stringLiterals.length > 0) {
+                var otherTypes = types.filter(x => !this.isStringLiteralType(x));
+                var newEnum = this.parser.addNewEnumAsStringAbstract(localePath, stringLiterals.map(x => x.getChildAt(0).text));
+                var mappedEnum = this.mapType(newEnum.fullClassName, null);
+                r = otherTypes.length > 0 ? "haxe.extern.EitherType<" + mappedEnum + ", " + this.convertUnionType(otherTypes, null) + ">" : mappedEnum;
+            }
+            else {
+                r = "haxe.extern.EitherType<" + this.convert(types[0], null) + ", " + this.convertUnionType(types.slice(1), null) + ">";
+            }
         }
+        //return hasNull ? "Null<" + r + ">" : r;
+        return r;
     }
     processTypeLiteral(node) {
         if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature) {
@@ -91,6 +100,9 @@ class TypeConvertor {
     }
     isStringLiteralType(x) {
         return x.kind == ts.SyntaxKind.LastTypeNode && x.getChildCount() == 1 && x.getChildAt(0).kind == ts.SyntaxKind.StringLiteral;
+    }
+    isNull(x) {
+        return x.kind == ts.SyntaxKind.NullKeyword;
     }
 }
 exports.TypeConvertor = TypeConvertor;

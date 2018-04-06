@@ -10,4 +10,5 @@ extern class Detector
 
 	static function getWebGLErrorMessage() : HTMLElement;
 	static function addGetWebGLMessage(parameters:{ @:optional var id : String; @:optional var parent : HTMLElement; }) : Void;
+	static function testDots(parameters:Float) : Void;
 }

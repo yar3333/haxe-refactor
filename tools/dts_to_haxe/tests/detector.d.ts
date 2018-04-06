@@ -6,3 +6,6 @@ export function getWebGLErrorMessage(): HTMLElement;
 export function addGetWebGLMessage(parameters?: {id?: string; parent?: HTMLElement}): void;
 
 export as namespace Detector;
+
+
+export function testDots(...parameters:number[]): void;
