@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Add powerfull typescript *.d.ts to haxe externs convertor (based on typescript compiler services).",
-  "version": "4.0.0",
+  "releasenote": "Add java_to_haxe. Typescript: support rest operator \"...\" and true/false as data type.",
+  "version": "4.1.0",
   "url": "https://bitbucket.org/yar3333/haxe-refactor",
   "dependencies": {}
 }
