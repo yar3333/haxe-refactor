@@ -8,6 +8,8 @@ class TypePathTools {
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
     static decapitalize(s) {
+        if (/^[_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]+$/.test(s))
+            return s.toLowerCase();
         return s.charAt(0).toLowerCase() + s.slice(1);
     }
     static makeFullClassPath(parts) {

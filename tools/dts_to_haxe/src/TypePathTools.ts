@@ -13,6 +13,8 @@ export class TypePathTools
 
     static decapitalize(s:string) : string
     {
+		if (/^[_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]+$/.test(s)) return s.toLowerCase();
+		
         return s.charAt(0).toLowerCase() + s.slice(1);
     }
 

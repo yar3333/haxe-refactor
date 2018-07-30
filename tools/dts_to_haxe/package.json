@@ -10,7 +10,8 @@
     "build": "build.cmd",
     "start": "..\\..\\library\\scripts\\dts_to_haxe.cmd --out-dir bin --root-package js --native-namespace THREE --log-level debug --typedef js.ColladaLoaderReturnType --type-mapper map_types.rules tests",
     "build-and-start": "npm run build && npm start",
-    "debug": "run-node --nolazy --debug-brk=5858 ../../library/scripts/dts_to_haxe/DtsToHaxe.js --out-dir bin --root-package js --native-namespace THREE --log-level debug tests"
+    "debug": "run-node --nolazy --debug-brk=5858 ../../library/scripts/dts_to_haxe/DtsToHaxe.js --out-dir bin --root-package js --native-namespace THREE --log-level debug tests",
+    "tsc": "tsc"
   },
   "keywords": [],
   "author": "",
