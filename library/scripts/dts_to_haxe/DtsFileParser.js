@@ -93,6 +93,7 @@ class DtsFileParser {
             [ts.SyntaxKind.InterfaceDeclaration, (x) => this.processInterfaceDeclaration(x)],
             [ts.SyntaxKind.ClassDeclaration, (x) => this.processClassDeclaration(x)],
             [ts.SyntaxKind.VariableStatement, (x) => this.processVariableStatement(x)],
+            [ts.SyntaxKind.EnumDeclaration, (x) => this.processEnumDeclaration(x)],
         ]));
         this.curPackage = savePack;
     }
@@ -192,7 +193,8 @@ class DtsFileParser {
         dest.addTypeParameter(node.name.getText(), this.typeConvertor.convert(node.constraint, dest.fullClassName + "<" + node.name.getText()));
     }
     processEnumDeclaration(node) {
-        var item = this.getHaxeTypeDeclarationByShort("enum", node.name.getText());
+        var item = this.getHaxeTypeDeclarationByShort("abstract", node.name.getText());
+        item.baseFullClassName = "Dynamic";
         item.docComment = this.getJsDoc(node.name);
         this.processChildren(node, new Map([
             [ts.SyntaxKind.ExportKeyword, (x) => { }],
@@ -215,7 +217,8 @@ class DtsFileParser {
         }
     }
     processPropertySignature(x, dest) {
-        dest.addVar(this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null, dest.fullClassName + "@" + x.name.getText()));
+        this.logSubTree(x);
+        this.addVarToHaxeTypeDeclaration(dest, this.createVar(x.name.getText(), x.type, null, this.getJsDoc(x.name), x.questionToken != null, dest.fullClassName + "@" + x.name.getText()), x.modifiers);
     }
     processMethodSignature(x, dest) {
         var methodName = x.name.getText();
@@ -223,7 +226,7 @@ class DtsFileParser {
     }
     processPropertyDeclaration(x, dest) {
         var varName = x.name.getText();
-        dest.addVar(this.createVar(varName, x.type, null, this.getJsDoc(x.name), x.questionToken != null, dest.fullClassName + "@" + varName));
+        this.addVarToHaxeTypeDeclaration(dest, this.createVar(varName, x.type, null, this.getJsDoc(x.name), x.questionToken != null, dest.fullClassName + "@" + varName), x.modifiers);
     }
     processMethodDeclaration(x, dest) {
         var methodName = x.name.getText();
@@ -291,7 +294,7 @@ class DtsFileParser {
         if (!haxeType) {
             haxeType = new HaxeTypeDeclaration_1.HaxeTypeDeclaration(type, fullClassName);
             if (type != "interface") {
-                let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : "";
+                let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : fullClassName;
                 haxeType.addMeta('@:native("' + (native ? native : TypePathTools_1.TypePathTools.makeFullClassPath([this.nativeNamespace, relativePackage])) + '")');
             }
         }
@@ -337,6 +340,9 @@ class DtsFileParser {
                 console.log("Can't avoid array for type '" + node.getFullText() + "'.");
                 return node;
         }
+    }
+    addVarToHaxeTypeDeclaration(t, v, modifiers) {
+        t.addVar(v, this.isFlag(modifiers, ts.NodeFlags.Private) || this.isFlag(modifiers, ts.NodeFlags.Protected), this.isFlag(modifiers, ts.NodeFlags.Static), this.isFlag(modifiers, ts.NodeFlags.Const) || this.isFlag(modifiers, ts.NodeFlags.Readonly));
     }
 }
 exports.DtsFileParser = DtsFileParser;
