@@ -19,7 +19,7 @@ options.add("rootPackage", "", ["--root-package"], "Root package for generated c
 options.add("nativeNamespace", "", ["--native-namespace"], "Prefix package for @:native meta.")
 options.add("logLevel", "warn", ["--log-level"], "Verbose level: 'none', 'warn' or 'debug'. Default is 'warn'.")
 options.addRepeatable("imports", ["--import"], "Add import for each generated file.")
-options.addRepeatable("typeMappers", ["--type-mapper"], "Add mapper file.")
+options.addRepeatable("typeMappers", ["--type-mapper"], "Add type mapper file.")
 options.addRepeatable("typedefs", ["--typedef"], "Export specified interface as haxe typedef.")
 options.addRepeatable("typedefFiles", ["--typedef-file"], "Like `--typedef` but read type names from file (one type on line).")
 options.addRepeatable("filePaths", null, "Source typescript definition file path or directory.");
@@ -30,6 +30,13 @@ if (process.argv.length <= 2)
     console.log("Usage: dts_to_haxe <options> <filePaths> ...");
     console.log("Options:");
     console.log(options.getHelpMessage());
+    console.log("Type mapper file format: one statement per line. Statements:");
+    console.log("\tTypeA => TypeB // use type TypeB where TypeA originally used");
+    console.log("\tMyClass@myFunc => Int // use return type `Int` for specified class and function");
+    console.log("\t@myFunc => Int // use return type `Int` for all functions named `myFunc`");
+    console.log("\t@myFunc => Int if Float // use return type `Int` for all functions named `myFunc` where original type is `Float`");
+    console.log("\t*myVar => Int if Float // use `Int` instead `Float` for all variables named `myVar`");
+    console.log("\t@myMethod.myParam => Int if Float // use `Int` instead `Float` for all parameters named `myParam` for methods");
     process.exit(1);
 }
 

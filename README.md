@@ -109,6 +109,7 @@ beauty_cpp           Beauty C++ code files.
 beauty_haxe          Beauty Haxe code files.
 beauty_html          Beauty HTML code files.
 cs_to_haxe           Convert C# code into Haxe code.
+dts_to_haxe          Convert TypeScript definitions into Haxe externals.
 haxe_to_cpp          Convert Haxe code into C++ code.
 haxe_to_ts           Convert Haxe code into TypeScript code.
 js_to_haxe           Convert JavaScript code into Haxe code.

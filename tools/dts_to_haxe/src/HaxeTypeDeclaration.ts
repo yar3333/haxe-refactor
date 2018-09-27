@@ -74,7 +74,7 @@ export class HaxeTypeDeclaration
 				+ ";";
 			this.vars.push(s);
 		}
- 	}
+	 }
 	
 	public addVarGetter(v:HaxeVar, getter:string, setter:string, isPrivate=false, isStatic=false, isInline=false) : void
 	{
@@ -149,7 +149,7 @@ export class HaxeTypeDeclaration
 	public addEnumMember(name:string, value:string, jsDoc:string) : void
 	{
 		var s = this.jsDocToString(jsDoc);
-		s += name + (value != null ? value : "") + ";";
+		s += "var " + name + (value != null ? value : "") + ";";
 		this.enumMembers.push(s);
  	}
 

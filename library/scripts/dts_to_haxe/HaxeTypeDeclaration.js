@@ -116,7 +116,7 @@ class HaxeTypeDeclaration {
     }
     addEnumMember(name, value, jsDoc) {
         var s = this.jsDocToString(jsDoc);
-        s += name + (value != null ? value : "") + ";";
+        s += "var " + name + (value != null ? value : "") + ";";
         this.enumMembers.push(s);
     }
     addCustom(code) {

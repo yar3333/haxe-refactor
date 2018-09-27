@@ -56,6 +56,13 @@ class TypeConvertor {
                         return this.mapType(s + "<" + pp.join(", ") + ">", localePath);
                     }
                 }
+            case ts.SyntaxKind.ParenthesizedType:
+                {
+                    let t = node;
+                    if (t.getChildCount() == 3 && t.getChildAt(0).kind == ts.SyntaxKind.OpenParenToken && t.getChildAt(2).kind == ts.SyntaxKind.CloseParenToken) {
+                        return "(" + this.convert(t.getChildAt(1), localePath) + ")";
+                    }
+                }
         }
         return this.mapType(node.getText(), localePath);
     }
