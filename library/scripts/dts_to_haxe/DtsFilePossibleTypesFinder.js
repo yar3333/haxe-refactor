@@ -23,6 +23,7 @@ class DtsFilePossibleTypesFinder {
             [ts.SyntaxKind.InterfaceDeclaration, (x) => this.processInterfaceDeclaration(x)],
             [ts.SyntaxKind.ClassDeclaration, (x) => this.processClassDeclaration(x)],
             [ts.SyntaxKind.EnumDeclaration, (x) => this.processEnumDeclaration(x)],
+            [ts.SyntaxKind.TypeAliasDeclaration, (x) => this.processTypeAliasDeclaration(x)],
             [ts.SyntaxKind.ModuleDeclaration, (x) => this.processModuleDeclaration(x)],
             [ts.SyntaxKind.NamespaceExportDeclaration, (x) => { }],
             [ts.SyntaxKind.EndOfFileToken, (x) => { }]
@@ -39,6 +40,8 @@ class DtsFilePossibleTypesFinder {
             [ts.SyntaxKind.ModuleBlock, (x) => this.processModuleBlock(x)],
             [ts.SyntaxKind.InterfaceDeclaration, (x) => this.processInterfaceDeclaration(x)],
             [ts.SyntaxKind.ClassDeclaration, (x) => this.processClassDeclaration(x)],
+            [ts.SyntaxKind.EnumDeclaration, (x) => this.processEnumDeclaration(x)],
+            [ts.SyntaxKind.TypeAliasDeclaration, (x) => this.processTypeAliasDeclaration(x)],
         ]));
         this.curPackage = savePack;
     }
@@ -47,6 +50,7 @@ class DtsFilePossibleTypesFinder {
             [ts.SyntaxKind.InterfaceDeclaration, (x) => this.processInterfaceDeclaration(x)],
             [ts.SyntaxKind.ClassDeclaration, (x) => this.processClassDeclaration(x)],
             [ts.SyntaxKind.EnumDeclaration, (x) => this.processEnumDeclaration(x)],
+            [ts.SyntaxKind.TypeAliasDeclaration, (x) => this.processTypeAliasDeclaration(x)],
         ]));
     }
     processInterfaceDeclaration(node) {
@@ -56,6 +60,9 @@ class DtsFilePossibleTypesFinder {
         this.allHaxeTypes.push(this.getHaxeTypeFullNameByShort(node.name.getText()));
     }
     processEnumDeclaration(node) {
+        this.allHaxeTypes.push(this.getHaxeTypeFullNameByShort(node.name.getText()));
+    }
+    processTypeAliasDeclaration(node) {
         this.allHaxeTypes.push(this.getHaxeTypeFullNameByShort(node.name.getText()));
     }
     processChildren(node, map) {

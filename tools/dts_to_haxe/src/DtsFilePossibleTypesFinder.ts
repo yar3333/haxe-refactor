@@ -35,6 +35,7 @@ export class DtsFilePossibleTypesFinder
             [ ts.SyntaxKind.InterfaceDeclaration, (x:ts.InterfaceDeclaration) => this.processInterfaceDeclaration(x) ],
             [ ts.SyntaxKind.ClassDeclaration, (x:ts.ClassDeclaration) => this.processClassDeclaration(x) ],
             [ ts.SyntaxKind.EnumDeclaration, (x:ts.EnumDeclaration) => this.processEnumDeclaration(x) ],
+            [ ts.SyntaxKind.TypeAliasDeclaration, (x:ts.TypeAliasDeclaration) => this.processTypeAliasDeclaration(x) ],
             [ ts.SyntaxKind.ModuleDeclaration, (x:ts.ModuleDeclaration) => this.processModuleDeclaration(x) ],
             [ ts.SyntaxKind.NamespaceExportDeclaration, (x:ts.NamespaceExportDeclaration) => {} ],
             [ ts.SyntaxKind.EndOfFileToken, (x) => {} ]
@@ -59,6 +60,8 @@ export class DtsFilePossibleTypesFinder
             [ ts.SyntaxKind.ModuleBlock, (x:ts.ModuleBlock) => this.processModuleBlock(x) ],
             [ ts.SyntaxKind.InterfaceDeclaration, (x:ts.InterfaceDeclaration) => this.processInterfaceDeclaration(x) ],
             [ ts.SyntaxKind.ClassDeclaration, (x:ts.ClassDeclaration) => this.processClassDeclaration(x) ],
+            [ ts.SyntaxKind.EnumDeclaration, (x:ts.EnumDeclaration) => this.processEnumDeclaration(x) ],
+            [ ts.SyntaxKind.TypeAliasDeclaration, (x:ts.TypeAliasDeclaration) => this.processTypeAliasDeclaration(x) ],
         ]));
 
         this.curPackage = savePack;
@@ -71,6 +74,7 @@ export class DtsFilePossibleTypesFinder
             [ ts.SyntaxKind.InterfaceDeclaration, (x:ts.InterfaceDeclaration) => this.processInterfaceDeclaration(x) ],
             [ ts.SyntaxKind.ClassDeclaration, (x:ts.ClassDeclaration) => this.processClassDeclaration(x) ],
             [ ts.SyntaxKind.EnumDeclaration, (x:ts.EnumDeclaration) => this.processEnumDeclaration(x) ],
+            [ ts.SyntaxKind.TypeAliasDeclaration, (x:ts.TypeAliasDeclaration) => this.processTypeAliasDeclaration(x) ],
         ]));
     }
     
@@ -85,6 +89,11 @@ export class DtsFilePossibleTypesFinder
     }
     
     private processEnumDeclaration(node:ts.EnumDeclaration)
+    {
+        this.allHaxeTypes.push(this.getHaxeTypeFullNameByShort(node.name.getText()));
+    }
+    
+    private processTypeAliasDeclaration(node:ts.TypeAliasDeclaration)
     {
         this.allHaxeTypes.push(this.getHaxeTypeFullNameByShort(node.name.getText()));
     }

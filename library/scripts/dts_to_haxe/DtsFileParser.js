@@ -94,6 +94,7 @@ class DtsFileParser {
             [ts.SyntaxKind.ClassDeclaration, (x) => this.processClassDeclaration(x)],
             [ts.SyntaxKind.VariableStatement, (x) => this.processVariableStatement(x)],
             [ts.SyntaxKind.EnumDeclaration, (x) => this.processEnumDeclaration(x)],
+            [ts.SyntaxKind.TypeAliasDeclaration, (x) => this.processTypeAliasDeclaration(x)],
         ]));
         this.curPackage = savePack;
     }
@@ -203,6 +204,14 @@ class DtsFileParser {
         ]));
         this.allHaxeTypes.push(item);
     }
+    processTypeAliasDeclaration(node) {
+        var item = this.getHaxeTypeDeclarationByShort("typedef", node.name.getText());
+        item.docComment = this.getJsDoc(node.name);
+        if (node.typeParameters)
+            node.typeParameters.forEach(x => this.processTypeParameter(x, item));
+        item.setAliasTypeText(this.typeConvertor.convert(node.type, null));
+        this.allHaxeTypes.push(item);
+    }
     processEnumMember(x, dest) {
         dest.addEnumMember(x.name.getText(), x.initializer != null ? " = " + x.initializer.getText() : "", this.getJsDoc(x.name));
     }
@@ -293,7 +302,7 @@ class DtsFileParser {
         var haxeType = this.allHaxeTypes.find(x => x.fullClassName == fullClassName);
         if (!haxeType) {
             haxeType = new HaxeTypeDeclaration_1.HaxeTypeDeclaration(type, fullClassName);
-            if (type != "interface") {
+            if (type != "interface" && type != "typedef") {
                 let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : fullClassName;
                 haxeType.addMeta('@:native("' + (native ? native : TypePathTools_1.TypePathTools.makeFullClassPath([this.nativeNamespace, relativePackage])) + '")');
             }

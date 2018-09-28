@@ -27,6 +27,7 @@ export class HaxeTypeDeclaration
 	private customs = new Array<string>();
 	private enumMembers = new Array<string>();
 	private typeParameters = new Array<{ name:string, constraint:string }>();
+	private aliasTypeText: string;
 	
 	constructor(type:"class"|"interface"|"enum"|"typedef"|"abstract"|"", fullClassName="")
 	{
@@ -162,6 +163,11 @@ export class HaxeTypeDeclaration
 	{
 		this.typeParameters.push({ name:name, constraint:this.trimTypePath(constraint) });
 	}
+
+	public setAliasTypeText(typeText:string)
+	{
+		this.aliasTypeText = typeText;
+	}
 	
 	public toString() : string
 	{
@@ -178,7 +184,7 @@ export class HaxeTypeDeclaration
 			s += this.jsDocToString(this.docComment);
 
 			s += this.metas.map(m => m + "\n").join("\n");
-			s += (this.type != "typedef" && this.type != "abstract" ? "extern " : (this.type == "abstract" ? "@:enum " : "")) + this.type + " " + packAndClass.className;
+			s += (["typedef", "abstract"].indexOf(this.type) < 0 ? "extern " : (this.type == "abstract" ? "@:enum " : "")) + this.type + " " + packAndClass.className;
 
 			if (this.typeParameters.length > 0)
 			{
@@ -200,7 +206,7 @@ export class HaxeTypeDeclaration
 					break;
 
 				case "typedef":
-					s += " =\n{" + this.baseFullInterfaceNames.map(x => ">" + this.trimTypePath(x) + ",").join(" ") + "\n";
+					s += !this.aliasTypeText ? " =\n{" + this.baseFullInterfaceNames.map(x => ">" + this.trimTypePath(x) + ",").join(" ") + "\n" : " = " + this.aliasTypeText + ";";
 					break;
 
 				case "enum":
@@ -217,14 +223,16 @@ export class HaxeTypeDeclaration
 			s += "{";
 		}
 
-		s += (this.vars.length > 0 ? "\t" + (this.vars.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n\n" : "");
-		s += (this.methods.length > 0 ? "\t" + (this.methods.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
-		s += (this.customs.length > 0 ? "\t" + (this.customs.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
-		s += (this.enumMembers.length > 0 ? "\t" + (this.enumMembers.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
-
-		if (s.endsWith("\n\n")) s = s.substring(0, s.length-1);
-
-		s += "}";
+		if (this.type != "typedef" || !this.aliasTypeText) {
+			s += (this.vars.length > 0 ? "\t" + (this.vars.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n\n" : "");
+			s += (this.methods.length > 0 ? "\t" + (this.methods.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
+			s += (this.customs.length > 0 ? "\t" + (this.customs.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
+			s += (this.enumMembers.length > 0 ? "\t" + (this.enumMembers.map(x => x.split("\n").join("\n\t"))).join("\n\t") + "\n" : "");
+	
+			if (s.endsWith("\n\n")) s = s.substring(0, s.length - 1);
+			
+			s += "}";
+		}
 
 		if (this.type == "") s = s.replace(/[ \t\n]+/g," ");
 

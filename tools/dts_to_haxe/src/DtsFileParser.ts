@@ -129,6 +129,7 @@ export class DtsFileParser
             [ ts.SyntaxKind.ClassDeclaration, (x:ts.ClassDeclaration) => this.processClassDeclaration(x) ],
             [ ts.SyntaxKind.VariableStatement, (x:ts.VariableStatement) => this.processVariableStatement(x) ],
             [ ts.SyntaxKind.EnumDeclaration, (x:ts.EnumDeclaration) => this.processEnumDeclaration(x) ],
+            [ ts.SyntaxKind.TypeAliasDeclaration, (x:ts.TypeAliasDeclaration) => this.processTypeAliasDeclaration(x) ],
         ]));
 
         this.curPackage = savePack;
@@ -291,6 +292,18 @@ export class DtsFileParser
         this.allHaxeTypes.push(item);
     }
 
+    private processTypeAliasDeclaration(node:ts.TypeAliasDeclaration)
+    {
+        var item = this.getHaxeTypeDeclarationByShort("typedef", node.name.getText());
+
+        item.docComment = this.getJsDoc(node.name);
+        if (node.typeParameters) node.typeParameters.forEach(x => this.processTypeParameter(x, item));
+
+        item.setAliasTypeText(this.typeConvertor.convert(node.type, null));
+
+        this.allHaxeTypes.push(item);
+    }
+
     private processEnumMember(x:ts.EnumMember, dest:HaxeTypeDeclaration)
     {
         dest.addEnumMember(x.name.getText(), x.initializer!=null ? " = " + x.initializer.getText() : "", this.getJsDoc(x.name));
@@ -448,18 +461,18 @@ export class DtsFileParser
         return mods && mods.flags && (mods.flags & f) !== 0;
     }
 
-    private getHaxeTypeDeclarationByShort(type:"interface"|"class"|"enum"|"abstract"|"", shortClassName:string, native?:string) : HaxeTypeDeclaration
+    private getHaxeTypeDeclarationByShort(type:"interface"|"class"|"enum"|"abstract"|"typedef"|"", shortClassName:string, native?:string) : HaxeTypeDeclaration
     {
         return this.getHaxeTypeDeclarationByFull(type, TypePathTools.makeFullClassPath([ this.curPackage, shortClassName ]), native);
     }
 
-    private getHaxeTypeDeclarationByFull(type:"interface"|"class"|"enum"|"abstract"|"", fullClassName:string, native?:string)
+    private getHaxeTypeDeclarationByFull(type:"interface"|"class"|"enum"|"abstract"|"typedef"|"", fullClassName:string, native?:string)
     {
         var haxeType = this.allHaxeTypes.find(x => x.fullClassName == fullClassName);
         if (!haxeType)
         {
             haxeType = new HaxeTypeDeclaration(type, fullClassName);
-            if (type != "interface")
+            if (type != "interface" && type != "typedef")
             {
                 let relativePackage = fullClassName.startsWith(this.rootPackage + ".") ? fullClassName.substring(this.rootPackage.length + 1) : fullClassName;
                 haxeType.addMeta('@:native("' + (native ? native : TypePathTools.makeFullClassPath([ this.nativeNamespace, relativePackage ])) + '")');
