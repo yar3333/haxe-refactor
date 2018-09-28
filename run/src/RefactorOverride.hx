@@ -77,7 +77,7 @@ class RefactorOverride extends Refactor
 			+ "|" + "\\(" + reID + "\\s[:]\\s*" + reTYPE + "(?:,\\s*" + reID + "\\s[:]\\s*" + reTYPE + ")\\)\\s*=>\\s*" + reTYPE 
 			+ ")";
 			
-		var reMods = "(?:(?:static|public|private|override)\\s+)*";
+		var reMods = "(?:(?:public|private|override)\\s+)*";
 		
 		var reOverloads = "/\n" 
 						+ "([ \t]*)" // 1 - tabs
@@ -185,10 +185,10 @@ class RefactorOverride extends Refactor
 					
 					Log.echo("Method " + baseType.name + "." + baseFuncName + " is overriden by " + type.name + "." + funcName, baseLogLevel);
 					
-					var newOverload = ("@:overload(function" + funcTail + "{})").replace(" ", "");
+					var newOverload = removeUnnecessarySpaces("@:overload(function" + funcTail + "{})");
 					if (overloads.indexOf(newOverload) < 0) overloads.push(newOverload);
 					
-					var baseAsOverload = ("@:overload(function" + baseFuncTail + "{})").replace(" ", "");
+					var baseAsOverload = removeUnnecessarySpaces("@:overload(function" + baseFuncTail + "{})");
 					overloads.remove(baseAsOverload);
 					
 					var resLines = overloads.concat([ (baseType.kind == "class" ? (baseFuncName != "new" ? "override " : "") : "") + "function " + baseFuncName + baseFuncTail ]);
@@ -207,7 +207,12 @@ class RefactorOverride extends Refactor
 	
 	function splitOverloads(overloads:String) : Array<String>
 	{
-		return overloads.split("\n").map(function(s) return s.trim().replace(" ", "")).filter(function(s) return s != "");
+		return overloads.split("\n").map(removeUnnecessarySpaces).filter(function(s) return s != "");
+	}
+	
+	function removeUnnecessarySpaces(s:String)
+	{
+		return new EReg(Regexs.UNNECESSARY_SPACES, "g").map(s, function(re) return re.matched(1) + re.matched(2));
 	}
 	
 	function readType(baseDir:String, path:String, baseLogLevel:Int) : HaxeType
