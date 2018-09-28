@@ -89,6 +89,11 @@ export class TypeConvertor
                     return "(" + this.convert(t.getChildAt(1), localePath) + ")";
                 }
             }
+            
+            case ts.SyntaxKind.ThisType:
+            {
+                return localePath.split("@")[0].split(".").pop();
+            }
         }
 
         return this.mapType(node.getText(), localePath);

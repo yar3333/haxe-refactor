@@ -17,6 +17,7 @@ class TypeMapper {
             ["string", "String"],
             ["number", "Float"],
             ["boolean", "Bool"],
+            ["Boolean", "Bool"],
             ["Object", "{}"],
             ["Function", "haxe.Constraints.Function"],
             ["true", "Bool"],

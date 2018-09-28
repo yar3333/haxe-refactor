@@ -16,6 +16,8 @@ export class TypeMapper
      */
     constructor(custom:Map<string, string>)
     {
+        var a:PromiseLike;
+
         this.data = new Map<string, string>
         ([
             [ "any", "Dynamic" ],
@@ -23,6 +25,7 @@ export class TypeMapper
             [ "string", "String" ],
             [ "number", "Float" ],
             [ "boolean", "Bool" ],
+            [ "Boolean", "Bool" ],
             [ "Object", "{}" ],
             [ "Function", "haxe.Constraints.Function"],
             [ "true", "Bool"],
