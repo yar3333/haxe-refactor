@@ -21,9 +21,7 @@ class TypeMapper {
             ["Function", "haxe.Constraints.Function"],
             ["true", "Bool"],
             ["false", "Bool"],
-            ["undefined", "Null"],
-            ["Nullable", "Null"],
-            ["null", "Dynamic"]
+            ["Nullable", "Null"]
         ]);
         for (let k of custom.keys()) {
             this.data.set(k, custom.get(k));

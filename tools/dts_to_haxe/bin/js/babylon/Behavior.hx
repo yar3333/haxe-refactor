@@ -1,6 +1,6 @@
 package js.babylon;
 
-extern interface Behavior
+extern interface Behavior<T:Node>
 {
 	var name : String;
 

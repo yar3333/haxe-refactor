@@ -237,6 +237,7 @@ export class DtsFileParser
         [
             [ ts.SyntaxKind.ExportKeyword, (x) => {} ],
             [ ts.SyntaxKind.Identifier, (x:ts.Identifier) => {} ],
+            [ ts.SyntaxKind.TypeParameter, (x:ts.TypeParameterDeclaration) => this.processTypeParameter(x, item) ],
             [ ts.SyntaxKind.HeritageClause, (x:ts.HeritageClause) => this.processHeritageClauseForInterface(x, item) ],
             [ ts.SyntaxKind.PropertySignature, (x:ts.PropertySignature) => this.processPropertySignature(x, item) ],
             [ ts.SyntaxKind.MethodSignature, (x:ts.MethodSignature) => this.processMethodSignature(x, item) ]

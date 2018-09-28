@@ -167,6 +167,7 @@ class DtsFileParser {
         this.processChildren(node, new Map([
             [ts.SyntaxKind.ExportKeyword, (x) => { }],
             [ts.SyntaxKind.Identifier, (x) => { }],
+            [ts.SyntaxKind.TypeParameter, (x) => this.processTypeParameter(x, item)],
             [ts.SyntaxKind.HeritageClause, (x) => this.processHeritageClauseForInterface(x, item)],
             [ts.SyntaxKind.PropertySignature, (x) => this.processPropertySignature(x, item)],
             [ts.SyntaxKind.MethodSignature, (x) => this.processMethodSignature(x, item)]
