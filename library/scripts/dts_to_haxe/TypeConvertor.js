@@ -13,6 +13,12 @@ class TypeConvertor {
      *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
      */
     convert(node, localePath) {
+        var r = this.convertInner(node, localePath);
+        if (this.isNothingType(r))
+            return "{}";
+        return r;
+    }
+    convertInner(node, localePath) {
         if (!node)
             return "Dynamic";
         switch (node.kind) {
@@ -83,14 +89,21 @@ class TypeConvertor {
                 var otherTypes = types.filter(x => !this.isStringLiteralType(x));
                 var newEnum = this.parser.addNewEnumAsStringAbstract(localePath, stringLiterals.map(x => x.getChildAt(0).text));
                 var mappedEnum = this.mapType(newEnum.fullClassName, null);
-                r = otherTypes.length > 0 ? "haxe.extern.EitherType<" + mappedEnum + ", " + this.convertUnionType(otherTypes, null) + ">" : mappedEnum;
+                r = otherTypes.length > 0 ? this.convertUnionTypeInner(mappedEnum, this.convertUnionType(otherTypes, null)) : mappedEnum;
             }
             else {
-                r = "haxe.extern.EitherType<" + this.convert(types[0], null) + ", " + this.convertUnionType(types.slice(1), null) + ">";
+                r = this.convertUnionTypeInner(this.convert(types[0], null), this.convertUnionType(types.slice(1), null));
             }
         }
         //return hasNull ? "Null<" + r + ">" : r;
         return r;
+    }
+    convertUnionTypeInner(typeA, typeB) {
+        if (this.isNothingType(typeA))
+            return typeB;
+        if (this.isNothingType(typeB))
+            return typeA;
+        return "haxe.extern.EitherType<" + typeA + ", " + typeB + ">";
     }
     processTypeLiteral(node) {
         if (node.members.length == 1 && node.members[0].kind == ts.SyntaxKind.IndexSignature) {
@@ -110,6 +123,9 @@ class TypeConvertor {
     }
     isNull(x) {
         return x.kind == ts.SyntaxKind.NullKeyword;
+    }
+    isNothingType(type) {
+        return ["null", "undefined"].indexOf(type) >= 0;
     }
 }
 exports.TypeConvertor = TypeConvertor;

@@ -23,6 +23,13 @@ export class TypeConvertor
      */
     convert(node:ts.Node, localePath:string) : string
     {
+        var r = this.convertInner(node, localePath);
+        if (this.isNothingType(r)) return "{}";
+        return r;
+    }
+
+    private convertInner(node:ts.Node, localePath:string) : string
+    {
         if (!node) return "Dynamic";
 
         switch (node.kind)
@@ -113,16 +120,23 @@ export class TypeConvertor
                 var otherTypes = types.filter(x => !this.isStringLiteralType(x));
                 var newEnum = this.parser.addNewEnumAsStringAbstract(localePath, stringLiterals.map(x => (<ts.StringLiteral>x.getChildAt(0)).text));
                 var mappedEnum = this.mapType(newEnum.fullClassName, null);
-                r = otherTypes.length > 0 ? "haxe.extern.EitherType<" + mappedEnum + ", " + this.convertUnionType(otherTypes, null) + ">" : mappedEnum;
+                r = otherTypes.length > 0 ? this.convertUnionTypeInner(mappedEnum, this.convertUnionType(otherTypes, null)) : mappedEnum;
             }
             else
             {
-                r = "haxe.extern.EitherType<" + this.convert(types[0], null) + ", " + this.convertUnionType(types.slice(1), null) + ">";
+                r = this.convertUnionTypeInner(this.convert(types[0], null), this.convertUnionType(types.slice(1), null));
             }
         }
 
         //return hasNull ? "Null<" + r + ">" : r;
         return r;
+    }
+
+    private convertUnionTypeInner(typeA:string, typeB:string): string
+    {
+        if (this.isNothingType(typeA)) return typeB;
+        if (this.isNothingType(typeB)) return typeA;
+        return "haxe.extern.EitherType<" + typeA + ", " + typeB + ">";
     }
 
     private processTypeLiteral(node:ts.TypeLiteralNode) : string
@@ -150,5 +164,10 @@ export class TypeConvertor
     private isNull(x:ts.TypeNode)
     {
         return x.kind == ts.SyntaxKind.NullKeyword;
+    }
+
+    private isNothingType(type:string): boolean
+    {
+        return [ "null", "undefined" ].indexOf(type) >= 0;
     }
 }
