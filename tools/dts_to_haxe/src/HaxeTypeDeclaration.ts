@@ -11,7 +11,7 @@ export interface HaxeVar
 
 export class HaxeTypeDeclaration
 {
-	static reserved = [ "dynamic", "catch", "throw" ];
+	static reserved = [ "dynamic", "catch", "throw", "continue" ];
 
 	public type : "class" | "interface" | "enum" | "typedef" | "abstract" | "";
 
@@ -112,8 +112,20 @@ export class HaxeTypeDeclaration
 	
 	public addMethod(name:string, vars:Array<HaxeVar>, retType:string, body:string, isPrivate:boolean, isStatic:boolean, jsDoc:string, typeParameters:Array<{ name:string, constraint:string }>) : void
 	{
+		var realBody = body !== null ? '\n\t{\n' + this.indent(body.trim(), '\t\t') + '\n\t}' : ';';
+
+		var isMapReserved = HaxeTypeDeclaration.reserved.indexOf(name) >= 0 && body === null;
+		var prefix = "";
+		
+		if (isMapReserved) {
+			realBody = " return (cast this)[cast '" + name + "'](" + vars.map(x => x.haxeName).join(", ") + ");";
+			name = name + "_";
+			prefix = "inline ";
+		}
+		
 		var header = 
-			    this.jsDocToString(jsDoc)
+				this.jsDocToString(jsDoc)
+			  + prefix
 			  + (isPrivate ? 'private ' : '')
 			  + (isStatic ? 'static ' : '')
 			  + 'function ' + name
@@ -121,18 +133,8 @@ export class HaxeTypeDeclaration
 			  + '('
 			  + vars.map(v => this.parameterToString(v)).join(', ')
 			  + ') : ' + this.trimTypePath(retType);
-		var s = header;
-		if (body !== null)
-		{
-			s += '\n';
-			s += '\t{\n';
-			s += this.indent(body.trim(), '\t\t') + '\n';
-			s += '\t}';
-		}
-		else
-		{
-			s += ";";
-		}
+		
+		var s = header + realBody;
 		
 		this.methods.push(s);
  	}

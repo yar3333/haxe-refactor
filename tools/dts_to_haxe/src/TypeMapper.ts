@@ -16,8 +16,6 @@ export class TypeMapper
      */
     constructor(custom:Map<string, string>)
     {
-        var a:PromiseLike;
-
         this.data = new Map<string, string>
         ([
             [ "any", "Dynamic" ],

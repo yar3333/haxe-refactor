@@ -84,7 +84,16 @@ class HaxeTypeDeclaration {
         return s;
     }
     addMethod(name, vars, retType, body, isPrivate, isStatic, jsDoc, typeParameters) {
+        var realBody = body !== null ? '\n\t{\n' + this.indent(body.trim(), '\t\t') + '\n\t}' : ';';
+        var isMapReserved = HaxeTypeDeclaration.reserved.indexOf(name) >= 0 && body === null;
+        var prefix = "";
+        if (isMapReserved) {
+            realBody = " return (cast this)[cast '" + name + "'](" + vars.map(x => x.haxeName).join(", ") + ");";
+            name = name + "_";
+            prefix = "inline ";
+        }
         var header = this.jsDocToString(jsDoc)
+            + prefix
             + (isPrivate ? 'private ' : '')
             + (isStatic ? 'static ' : '')
             + 'function ' + name
@@ -92,16 +101,7 @@ class HaxeTypeDeclaration {
             + '('
             + vars.map(v => this.parameterToString(v)).join(', ')
             + ') : ' + this.trimTypePath(retType);
-        var s = header;
-        if (body !== null) {
-            s += '\n';
-            s += '\t{\n';
-            s += this.indent(body.trim(), '\t\t') + '\n';
-            s += '\t}';
-        }
-        else {
-            s += ";";
-        }
+        var s = header + realBody;
         this.methods.push(s);
     }
     parameterToString(v) {
@@ -207,6 +207,6 @@ class HaxeTypeDeclaration {
         return partsB[partsB.length - 1];
     }
 }
-HaxeTypeDeclaration.reserved = ["dynamic", "catch", "throw"];
+HaxeTypeDeclaration.reserved = ["dynamic", "catch", "throw", "continue"];
 exports.HaxeTypeDeclaration = HaxeTypeDeclaration;
 //# sourceMappingURL=HaxeTypeDeclaration.js.map
