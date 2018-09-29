@@ -2,5 +2,5 @@ package js;
 
 extern interface IAbc
 {
-	var onAnimationEnd : haxe.extern.EitherType<(Void->Void), Null>;
+	var onAnimationEnd : haxe.extern.EitherType<(Void->Void), {}>;
 }
