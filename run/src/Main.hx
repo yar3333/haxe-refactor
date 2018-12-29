@@ -1,14 +1,11 @@
-import hant.FileSystemTools;
 import hant.Log;
 import hant.Path;
-import hant.Process;
-import haxe.CallStack;
 import neko.Lib;
 import sys.FileSystem;
 
 class Main 
 {
-	static function main() 
+	static function main() : Int
 	{
         var args = Sys.args();
 		
@@ -69,8 +66,7 @@ class Main
 					var script = exeDir + "/scripts/" + command + (Sys.systemName() == "Windows" ? ".cmd" : "");
 					if (FileSystem.exists(script))
 					{
-						var r = Process.run(script, args);
-						return r.exitCode;
+						return Sys.command(script, args);
 						
 					}
 					fail("Unknow command '" + command + "'.");
