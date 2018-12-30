@@ -1,0 +1,40 @@
+// C# to C++
+
+ID = [_a-zA-Z][_a-zA-Z0-9]*
+VALUE = ID(?:[.]ID)*
+TYPE = ID(?:\s*<[^>]+>)?
+
+ACCESS_MODIFIER = public|protected|private|internal
+
+/\b(?:ACCESS_MODIFIER)\s+class\b/class/
+
+/\boverride\s+//
+
+/using\s+(VALUE);/#include "$1"/
+
+/\bnull\b/nullptr/
+/\bvar\b/auto/
+/\breadonly\b/const/
+
+/var\s+(ID)\s*=/auto $1 =/
+
+/\bprivate\b/private:/
+/\bprotected\b/protected:/
+/\bpublic\b/public:/
+
+/\bnamespace\s+(ID)/namespace $v1/
+
+/foreach\s*[(]\s*auto\s+(ID)\s+in\s+/for (const auto &$1 : /
+
+/\b(class\s+ID\s+:\s+)(ID)/$1public $2/
+
+/\b(namespace\s+(ID)\s+{\s+)/$1using std::string;\n\tusing std::vector;\n\tusing std::map;\n\tusing std::function;\n\t\n\t/
+
+/\bList\b/vector/
+/\bDictionary\b/map/
+/\bIDictionary\b/map/
+/\bDateTime\b/std::time_t/
+/\bAction<(\s*VALUE(?:\s*,\s*VALUE)*)\s*>/function<void($1)>/
+/\b(TYPE)\[\]/vector<$1>/
+
+/\bthis[.]/this->/
