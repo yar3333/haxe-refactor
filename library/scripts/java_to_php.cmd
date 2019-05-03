@@ -1,4 +1,4 @@
-@echo on
+@echo off
 SETLOCAL
 
 IF [%1]==[] GOTO :help
