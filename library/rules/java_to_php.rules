@@ -7,7 +7,7 @@ VALUE = (?:LONGID|NUMBER)
 SPACE = (?:[ ]|\t)+
 OPTSPACE = (?:SPACE)?+
 
-KEYWORDS = \b(?:new|return|extends|class|interface|enum|if|else|import|package|for|default|switch|case|final|private|public|protected|finally|catch|throw|function|package|import|use|namespace|implements|extends|static|const)\b
+KEYWORDS = \b(?:new|return|extends|class|interface|enum|if|else|import|package|for|default|switch|case|final|private|public|protected|try|finally|catch|throw|function|package|import|use|namespace|implements|extends|static|const|instanceof)\b
 
 BASETYPE = (?:LONGID(?:[<]\s*LONGID(?:\s*,\s*LONGID)*\s*[>])?|LONGID[<]\s*[?](?:\s*,\s*[?])*\s*[>])
 TYPE = (?:BASETYPE(?:\[\])*)
@@ -49,7 +49,7 @@ STD_PHP_TYPES = string|int|float|null|true|false|object|array|bool|void
 ![<]\s*[?](?:\s+extends\s+ID)*(?:\s*,\s*[?](?:\s+extends\s+ID)*)*\s*[>]!!
 
 // detect constructor
-/^([ \t]*(?:ACCESS)?)(?:ID)\s*[(](FORMAL_ARGS)[)]/$1function __construct($2)/m
+/^([ \t]*(?:ACCESS)?)(?:ID)\s*[(](FORMAL_ARGS)[)]/$1function __construct($2)/m/catch
 
 /^([ \t]*(?:ACCESS)?)(?:\s*final\s*)?(TYPE)\s+(ID)\s*[(](FORMAL_ARGS)[)]/$1function $3($4):$2/m/function
 
@@ -93,17 +93,17 @@ STD_PHP_TYPES = string|int|float|null|true|false|object|array|bool|void
 FUNCTION_DECLARE_PREFIX_WITH_NAME = (?:ACCESS)?function\s+ID
 PHP_FUNC_DECL_ARG = (?:\s*TYPE\s+[$]ID\s*)
 
-!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){0})(TYPE)(\s+)([$]ID)!$1/**\n$1 * param $3 $5 \n$1 */\n$1$2$3$4$5!m
-!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){1})(TYPE)(\s+)([$]ID)!$1/**\n$1 * param $3 $5 \n$1 */\n$1$2$3$4$5!m
-!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){2})(TYPE)(\s+)([$]ID)!$1/**\n$1 * param $3 $5 \n$1 */\n$1$2$3$4$5!m
-!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){3})(TYPE)(\s+)([$]ID)!$1/**\n$1 * param $3 $5 \n$1 */\n$1$2$3$4$5!m
-!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){4})(TYPE)(\s+)([$]ID)!$1/**\n$1 * param $3 $5 \n$1 */\n$1$2$3$4$5!m
-!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){5})(TYPE)(\s+)([$]ID)!$1/**\n$1 * param $3 $5 \n$1 */\n$1$2$3$4$5!m
-!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){6})(TYPE)(\s+)([$]ID)!$1/**\n$1 * param $3 $5 \n$1 */\n$1$2$3$4$5!m
-!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){7})(TYPE)(\s+)([$]ID)!$1/**\n$1 * param $3 $5 \n$1 */\n$1$2$3$4$5!m
-!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG(?:,\s*PHP_FUNC_DECL_ARG)*)?[)]\s*:\s*)(TYPE)!$1/**\n$1 * return $3\n$1 */\n$1$2$3!m
+!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){0})(TYPE)(\s+)([$]ID)!$1/**\n$1 * @param $3 $5 \n$1 */\n$1$2$3$4$5!m
+!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){1})(TYPE)(\s+)([$]ID)!$1/**\n$1 * @param $3 $5 \n$1 */\n$1$2$3$4$5!m
+!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){2})(TYPE)(\s+)([$]ID)!$1/**\n$1 * @param $3 $5 \n$1 */\n$1$2$3$4$5!m
+!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){3})(TYPE)(\s+)([$]ID)!$1/**\n$1 * @param $3 $5 \n$1 */\n$1$2$3$4$5!m
+!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){4})(TYPE)(\s+)([$]ID)!$1/**\n$1 * @param $3 $5 \n$1 */\n$1$2$3$4$5!m
+!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){5})(TYPE)(\s+)([$]ID)!$1/**\n$1 * @param $3 $5 \n$1 */\n$1$2$3$4$5!m
+!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){6})(TYPE)(\s+)([$]ID)!$1/**\n$1 * @param $3 $5 \n$1 */\n$1$2$3$4$5!m
+!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG,\s*){7})(TYPE)(\s+)([$]ID)!$1/**\n$1 * @param $3 $5 \n$1 */\n$1$2$3$4$5!m
+!^(SPACE)(FUNCTION_DECLARE_PREFIX_WITH_NAME[(](?:PHP_FUNC_DECL_ARG(?:,\s*PHP_FUNC_DECL_ARG)*)?[)]\s*:\s*)(TYPE)!$1/**\n$1 * @return $3\n$1 */\n$1$2$3!m
 
-!^(SPACE)(ACCESS)(TYPE)\s+([$]ID)!$1/**\n$1 * @var $3\n$1 */\n$1$2$4!m
+!^(SPACE)(ACCESS)(?:final\s+)?(TYPE)\s+([$]ID)!$1/**\n$1 * @var $3\n$1 */\n$1$2$4!m
 
 // ============================================================
 // AVOID [] IN TYPES
@@ -129,6 +129,12 @@ PHP_FUNC_DECL_ARG = (?:\s*TYPE\s+[$]ID\s*)
 // ============================================================
 /[ \t]+\n/\n/
 //\n((?:[ ]|\t)+)([^\n]+)\n\n/\n$1$2\n$1\n/m
+
+/\bif[(]/if (/ 
+/\bif [(] /if (/ 
+
+/\bfor[(]/for (/ 
+/\bfor [(] /for (/
 
 // ============================================================
 // formatting: add spaces
