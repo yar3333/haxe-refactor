@@ -1,4 +1,0 @@
-syntax: glob
-library.zip
-tests/bin/
-tools/dts_to_haxe/node_modules/
