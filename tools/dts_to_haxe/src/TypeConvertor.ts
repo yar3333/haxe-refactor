@@ -21,7 +21,7 @@ export class TypeConvertor
      *  `mypack.MyClas@myFunc` - return type of the function or variable
      *  `mypack.MyClas@myFunc.a` - type of the parameter "a"
      */
-    convert(node:ts.Node, localePath:string) : string
+    convert(node:ts.TypeNode, localePath:string) : string
     {
         var r = this.convertInner(node, localePath);
         if (this.isNothingType(r)) return "{}";
@@ -86,7 +86,7 @@ export class TypeConvertor
                 let t = <ts.ParenthesizedTypeNode>node;
                 if (t.getChildCount() == 3 && t.getChildAt(0).kind == ts.SyntaxKind.OpenParenToken && t.getChildAt(2).kind == ts.SyntaxKind.CloseParenToken)
                 {
-                    return "(" + this.convert(t.getChildAt(1), localePath) + ")";
+                    return "(" + this.convert(<ts.TypeNode>t.getChildAt(1), localePath) + ")";
                 }
             }
             

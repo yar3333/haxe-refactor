@@ -439,7 +439,7 @@ export class DtsFileParser
         for (let id of ids) this.imports.push(moduleFilePath.replace("/", ".") + "." + id);
     }
 
-    private createVar(name:string, type:ts.Node, defaultValue:string, jsDoc:string, isOptional:boolean, typeLocalePath:string) : HaxeVar
+    private createVar(name:string, type:ts.TypeNode, defaultValue:string, jsDoc:string, isOptional:boolean, typeLocalePath:string) : HaxeVar
     {
         return {
             haxeName: name,
