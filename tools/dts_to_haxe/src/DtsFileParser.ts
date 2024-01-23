@@ -365,18 +365,18 @@ export class DtsFileParser
     private processMethodDeclaration(x:ts.MethodDeclaration, dest:HaxeTypeDeclaration)
     {
         var methodName = x.name.getText();
-        dest.addMethod
-        (
-            methodName,
-            x.parameters.map(p => this.createVar(p.name.getText(), this.getParameterType(p), null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
-            this.typeConvertor.convert(x.type, dest.fullClassName + "@" + methodName),
-            null,
-            this.isFlag(x.modifiers, ts.NodeFlags.Private),
-            this.isFlag(x.modifiers, ts.NodeFlags.Static),
-            this.getJsDoc(x.name),
-            this.prepareTypeParameters(x)
-        );
-    }
+            dest.addMethod
+            (
+                methodName,
+                x.parameters.map(p => this.createVar(p.name.getText(), this.getParameterType(p), null, this.getJsDoc(p.name), p.questionToken != null, dest.fullClassName + "@" + methodName + "." + p.name.getText())),
+                this.typeConvertor.convert(x.type, dest.fullClassName + "@" + methodName),
+                null,
+                this.isFlag(x.modifiers, ts.NodeFlags.Private),
+                this.isFlag(x.modifiers, ts.NodeFlags.Static),
+                this.getJsDoc(x.name),
+                this.prepareTypeParameters(x)
+            );
+        }
 
     private processConstructor(x:ts.ConstructorDeclaration, dest:HaxeTypeDeclaration)
     {
@@ -522,7 +522,10 @@ export class DtsFileParser
         return p.dotDotDotToken ? this.avoidArray(p.type) : p.type;
     }
 
-    private avoidArray(node: ts.TypeNode): ts.TypeNode  {
+    private avoidArray(node: ts.TypeNode): ts.TypeNode 
+    {
+        if (node == null) return null;
+
         switch (node.kind)
         {
             case ts.SyntaxKind.ArrayType:

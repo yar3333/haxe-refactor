@@ -5,7 +5,7 @@ import sys.FileSystem;
 
 class Main 
 {
-	static function main() : Int
+	static function main() : Void
 	{
         var args = Sys.args();
 		
@@ -66,8 +66,9 @@ class Main
 					var script = exeDir + "/scripts/" + command + (Sys.systemName() == "Windows" ? ".cmd" : "");
 					if (FileSystem.exists(script))
 					{
-						return Sys.command(script, args);
 						
+						Sys.exit(Sys.command(script, args));
+						return;
 					}
 					fail("Unknow command '" + command + "'.");
 			}
@@ -76,8 +77,6 @@ class Main
 		{
 			summaryHelp(exeDir);
 		}
-		
-		return 0;
 	}
 	
 	static function fail(message:String)

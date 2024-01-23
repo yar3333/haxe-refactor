@@ -343,6 +343,8 @@ class DtsFileParser {
         return p.dotDotDotToken ? this.avoidArray(p.type) : p.type;
     }
     avoidArray(node) {
+        if (node == null)
+            return null;
         switch (node.kind) {
             case ts.SyntaxKind.ArrayType:
                 return node.elementType;
