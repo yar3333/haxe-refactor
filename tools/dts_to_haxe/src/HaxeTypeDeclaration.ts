@@ -152,7 +152,7 @@ export class HaxeTypeDeclaration
 	public addEnumMember(name:string, value:string, jsDoc:string) : void
 	{
 		var s = this.jsDocToString(jsDoc);
-		s += "var " + name + (value != null ? value : "") + ";";
+		s += name + (value != null ? value : "") + ";";
 		this.enumMembers.push(s);
  	}
 
@@ -186,7 +186,7 @@ export class HaxeTypeDeclaration
 			s += this.jsDocToString(this.docComment);
 
 			s += this.metas.map(m => m + "\n").join("\n");
-			s += (["typedef", "abstract"].indexOf(this.type) < 0 ? "extern " : (this.type == "abstract" ? "@:enum " : "")) + this.type + " " + packAndClass.className;
+			s += (["typedef", "abstract"].indexOf(this.type) < 0 ? "extern " : (this.type == "abstract" ? "enum " : "")) + this.type + " " + packAndClass.className;
 
 			if (this.typeParameters.length > 0)
 			{

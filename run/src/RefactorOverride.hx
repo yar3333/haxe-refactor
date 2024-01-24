@@ -212,7 +212,9 @@ class RefactorOverride extends Refactor
 	
 	function removeUnnecessarySpaces(s:String)
 	{
-		return new EReg(Regexs.UNNECESSARY_SPACES, "g").map(s, function(re) return re.matched(1) + re.matched(2));
+		s = new EReg(Regexs.UNNECESSARY_SPACES_1, "g").map(s, function(re) return re.matched(1) + re.matched(2));
+		s = new EReg(Regexs.UNNECESSARY_SPACES_2, "g").map(s, function(re) return re.matched(1) + re.matched(2));
+        return s;
 	}
 	
 	function readType(baseDir:String, path:String, baseLogLevel:Int) : HaxeType

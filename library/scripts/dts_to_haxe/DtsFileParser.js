@@ -195,8 +195,8 @@ class DtsFileParser {
         dest.addTypeParameter(node.name.getText(), this.typeConvertor.convert(node.constraint, dest.fullClassName + "<" + node.name.getText()));
     }
     processEnumDeclaration(node) {
-        var item = this.getHaxeTypeDeclarationByShort("abstract", node.name.getText());
-        item.baseFullClassName = "Dynamic";
+        var item = this.getHaxeTypeDeclarationByShort("enum", node.name.getText());
+        //item.baseFullClassName = "Dynamic";
         item.docComment = this.getJsDoc(node.name);
         this.processChildren(node, new Map([
             [ts.SyntaxKind.ExportKeyword, (x) => { }],

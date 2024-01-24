@@ -4,12 +4,12 @@ package js;
  * MyJsDoc1
  */
 @:native("THREE.MOUSE")
-@:enum abstract MOUSE(Dynamic)
+extern enum MOUSE
 {
-	var LEFT;
-	var MIDDLE;
+	LEFT;
+	MIDDLE;
 	/**
 	 * MyJsDoc for enum member
 	 */
-	var RIGHT;
+	RIGHT;
 }

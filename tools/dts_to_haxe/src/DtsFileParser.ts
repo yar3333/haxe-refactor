@@ -278,8 +278,8 @@ export class DtsFileParser
 
     private processEnumDeclaration(node:ts.EnumDeclaration)
     {
-        var item = this.getHaxeTypeDeclarationByShort("abstract", node.name.getText());
-        item.baseFullClassName = "Dynamic";
+        var item = this.getHaxeTypeDeclarationByShort("enum", node.name.getText());
+        //item.baseFullClassName = "Dynamic";
         
         item.docComment = this.getJsDoc(node.name);
 

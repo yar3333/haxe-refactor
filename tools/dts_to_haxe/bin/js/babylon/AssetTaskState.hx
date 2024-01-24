@@ -1,22 +1,22 @@
 package js.babylon;
 
 @:native("THREE.BABYLON.AssetTaskState")
-@:enum abstract AssetTaskState(Dynamic)
+extern enum AssetTaskState
 {
 	/**
 	 * Initialization
 	 */
-	var INIT = 0;
+	INIT = 0;
 	/**
 	 * Running
 	 */
-	var RUNNING = 1;
+	RUNNING = 1;
 	/**
 	 * Done
 	 */
-	var DONE = 2;
+	DONE = 2;
 	/**
 	 * Error
 	 */
-	var ERROR = 3;
+	ERROR = 3;
 }
