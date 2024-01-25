@@ -6,6 +6,6 @@
   "contributors": ["yar3333"],
   "releasenote": "Typescript-to-Haxe improvements: enum processing, type aliases, type parameters for interfaces, `this`, reserved method names.",
   "version": "4.2.0",
-  "url": "https://bitbucket.org/yar3333/haxe-refactor",
+  "url": "https://github.com/yar3333/haxe-refactor",
   "dependencies": {}
 }
