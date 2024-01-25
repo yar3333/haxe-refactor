@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Typescript-to-Haxe improvements: enum processing, type aliases, type parameters for interfaces, `this`, reserved method names.",
-  "version": "4.2.0",
+  "releasenote": "* hant.Process.run => Sys.command (avoid errors with quotes)<br>\n+ cs => cpp<br>\n+ java => php<br>\n* java => php<br>\n+ .gitignore<br>\n* minor bugfix for operator `...`<br>\n* minor<br>\n* haxe-4<br>\n* haxelib.json / URL<br>\n+ php_fix_this",
+  "version": "4.3.0",
   "url": "https://github.com/yar3333/haxe-refactor",
   "dependencies": {}
 }
