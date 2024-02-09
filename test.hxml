@@ -1,0 +1,9 @@
+--neko test\bin\index.n
+--class-path run\src
+--class-path test\src
+--library stdlib
+--library hant
+--library utest
+--define analyzer
+--main Main
+--cmd cmd /c "cd test\bin && neko index.n"

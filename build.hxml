@@ -1,0 +1,9 @@
+--neko library\run.n
+--class-path run\src
+--library stdlib
+--library hant
+--main Main
+--cmd IF EXIST ..\hant\library\ndll\Windows\hant.ndll copy /B /Y ..\hant\library\ndll\Windows\hant.ndll library\hant-windows.ndll
+--cmd IF EXIST ..\hant\library\ndll\Linux\hant.ndll   copy /B /Y ..\hant\library\ndll\Linux\hant.ndll   library\hant-linux.ndll
+--cmd IF EXIST ..\hant\library\ndll\Linux64\hant.ndll copy /B /Y ..\hant\library\ndll\Linux64\hant.ndll library\hant-linux64.ndll
+--cmd IF EXIST ..\hant\library\ndll\Mac64\hant.ndll   copy /B /Y ..\hant\library\ndll\Mac64\hant.ndll   library\hant-mac64.ndll

@@ -994,18 +994,15 @@ class Commands extends BaseCommands
 		}
 		else
 		{
-			Lib.println("Recursive fix line endings in files.");
-			Lib.println("Usage: haxelib run refactor [-v] lineEndings <baseDirs> <filter> ( windows | unix | mac )");
+			Lib.println("Recursive fix package in haxe source files.");
+			Lib.println("Usage: haxelib run refactor [-v] fixPackage <baseDirs> <filter>");
 			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
 			Lib.println("");
 			Lib.print(options.getHelpMessage());
 			Lib.println("");
 			Lib.println("Examples:");
 			Lib.println("");
-			Lib.println("    haxelib run refactor replace src *.htm;*.html windows");
-			Lib.println("        Files will be recursively found in 'src' folder.");
-			Lib.println("        Only HTML files will be processed.");
-			Lib.println("        Line endings will be fixed to CR/LF.");
+			Lib.println("    haxelib run refactor fixPackage src *.hx");
 		}
 	}
 }

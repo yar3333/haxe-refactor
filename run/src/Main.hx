@@ -62,6 +62,7 @@ class Main
 				case "renameFiles":		commands.renameFiles(args, verboseLevel > 0);
 				case "lineEndings":		commands.lineEndings(args);
 				case "fixPackage":		commands.fixPackage(args);
+				case "fixImports":		commands.fixImports(args);
 				default:
 					var script = exeDir + "/scripts/" + command + (Sys.systemName() == "Windows" ? ".cmd" : "");
 					if (FileSystem.exists(script))
@@ -112,6 +113,7 @@ class Main
 		Lib.println("    renameFiles     Rename files recursively by regex.");
 		Lib.println("    lineEndings     Recursive fix line endings in files.");
 		Lib.println("    fixPackage      Fix package in haxe files from relative directory path.");
+		Lib.println("    fixImports      Fix imports by running haxe compiler and read errors.");
 		Lib.println("");
 		
 		var isWindows = Sys.systemName() == "Windows";

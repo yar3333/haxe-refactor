@@ -20,7 +20,7 @@ class RefactorPackage extends Refactor
 					new TextFile(path, path, 2).process(function(text, _)
 					{
 						text = ~/^\s*package\s+[^;]+;\s*/.replace(text, "");
-						return "package " + Path.directory(localPath).replace("/\\", ".") + ";\n\n" + text;
+						return "package " + Path.directory(localPath).replace("/", ".") + ";\n\n" + text;
 					});
 					Log.finishSuccess();
 				}

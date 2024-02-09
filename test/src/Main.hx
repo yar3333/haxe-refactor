@@ -1,13 +1,14 @@
-import haxe.unit.TestCase;
+import utest.Assert;
+import utest.Runner;
 import sys.FileSystem;
 import sys.io.File;
 
-class Main extends TestCase
+class Main extends utest.Test
 {
 	static public function main()
 	{
-		var r = new haxe.unit.TestRunner();
-		r.add(new Main());
+		var r = new Runner();
+		r.addCase(new Main());
 		r.run();
 	}
 	
@@ -21,6 +22,6 @@ class Main extends TestCase
 		var result = File.getContent("assets/DatePeriod.hx");
 		FileSystem.deleteFile("assets/DatePeriod.hx");
 		
-		assertEquals(File.getContent("assets/DatePeriod.hx-ok"), result);
+		Assert.equals(File.getContent("assets/DatePeriod.hx-ok"), result);
 	}
 }

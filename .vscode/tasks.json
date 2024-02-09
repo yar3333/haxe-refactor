@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+        {
+            "type": "hxml",
+            "file": "test.hxml",
+            "group": "build",
+            "label": "hxml: test.hxml"
+        }
+    ]
+}

@@ -100,14 +100,14 @@ export class DtsFilePossibleTypesFinder
 
     private processChildren(node:ts.Node, map:Map<number, (node:ts.Node) => void>)
     {
-         ts.forEachChild(node, x =>
-         {
-             var f = map.get(x.kind);
-             if (f)
-             {
-                 f(x);
-             }
-         });
+        ts.forEachChild(node, x =>
+        {
+            var f = map.get(x.kind);
+            if (f)
+            {
+                f(x);
+            }
+        });
     }
 
     private getHaxeTypeFullNameByShort(shortClassName:string) : string
