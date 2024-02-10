@@ -6,6 +6,15 @@
             "file": "test.hxml",
             "group": "build",
             "label": "hxml: test.hxml"
+        },
+        {
+            "type": "hxml",
+            "file": "build.hxml",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "label": "hxml: build.hxml"
         }
     ]
 }

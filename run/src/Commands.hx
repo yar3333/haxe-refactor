@@ -1,7 +1,5 @@
 import hant.CmdOptions;
-import hant.FileSystemTools;
 import hant.FlashDevelopProject;
-import hant.Log;
 import neko.Lib;
 import stdlib.Regex;
 using StringTools;
@@ -974,35 +972,71 @@ class Commands extends BaseCommands
 	}
 	
 	public function fixPackage(args:Array<String>)
-	{
-		var options = new CmdOptions();
-		
-		options.add("baseDirs", "", "Paths to base folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
-		options.add("filter", "*.hx", "File path's filter (regex or '*.ext;*.ext'). Default is '*.hx'.");
-		
-		if (args.length > 0)
-		{
-			options.parse(args);
-			
-			var baseDirs = options.get("baseDirs");
-			var filter = filterToRegex(options.get("filter"));
-			
-			if (baseDirs == "") fail("<baseDirs> arg must be specified.");
-			
-			var refactor = new RefactorPackage(baseDirs, null);
-			refactor.fixPackage(new EReg(filter, "i"));
-		}
-		else
-		{
-			Lib.println("Recursive fix package in haxe source files.");
-			Lib.println("Usage: haxelib run refactor [-v] fixPackage <baseDirs> <filter>");
-			Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
-			Lib.println("");
-			Lib.print(options.getHelpMessage());
-			Lib.println("");
-			Lib.println("Examples:");
-			Lib.println("");
-			Lib.println("    haxelib run refactor fixPackage src *.hx");
-		}
-	}
+    {
+        var options = new CmdOptions();
+        
+        options.add("baseDirs", "", "Paths to base folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
+        options.add("filter", "*.hx", "File path's filter (regex or '*.ext;*.ext'). Default is '*.hx'.");
+        
+        if (args.length > 0)
+        {
+            options.parse(args);
+            
+            var baseDirs = options.get("baseDirs");
+            var filter = filterToRegex(options.get("filter"));
+            
+            if (baseDirs == "") fail("<baseDirs> arg must be specified.");
+            
+            var refactor = new RefactorPackage(baseDirs, null);
+            refactor.fixPackage(new EReg(filter, "i"));
+        }
+        else
+        {
+            Lib.println("Recursive fix package in haxe source files.");
+            Lib.println("Usage: haxelib run refactor [-v] fixPackage <baseDirs> [ <filter> ]");
+            Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
+            Lib.println("");
+            Lib.print(options.getHelpMessage());
+            Lib.println("");
+            Lib.println("Examples:");
+            Lib.println("");
+            Lib.println("    haxelib run refactor fixPackage src *.hx");
+        }
+    }
+
+    public function fixImports(args:Array<String>)
+    {
+        var options = new CmdOptions();
+        
+        options.add("hxmlFile", "", "Path to *.hxml file to compile your code.");
+        options.add("baseDirs", "", "Paths to base folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
+        options.add("filter", "*.hx", "File path's filter (regex or '*.ext;*.ext'). Default is '*.hx'.");
+        
+        if (args.length > 0)
+        {
+            options.parse(args);
+            
+            var hxmlFile = options.get("hxmlFile");
+            var baseDirs = options.get("baseDirs");
+            var filter = filterToRegex(options.get("filter"));
+            
+            if (hxmlFile == "") fail("<hxmlFile> arg must be specified.");
+            if (baseDirs == "") fail("<baseDirs> arg must be specified.");
+            
+            var refactor = new RefactorImports(baseDirs, null);
+            refactor.fixImports(hxmlFile, new EReg(filter, "i"));
+        }
+        else
+        {
+            Lib.println("Compile your code, read errors and add necessary imports.");
+            Lib.println("Usage: haxelib run refactor [-v] fixImports <hxmlFile> <baseDirs> [ <filter> ]");
+            Lib.println("where '-v' is the verbose key ('-vv' for more details). Command args description:");
+            Lib.println("");
+            Lib.print(options.getHelpMessage());
+            Lib.println("");
+            Lib.println("Examples:");
+            Lib.println("");
+            Lib.println("    haxelib run refactor fixImports build.hxml src *.hx");
+        }
+    }
 }
