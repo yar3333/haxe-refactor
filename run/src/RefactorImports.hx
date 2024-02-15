@@ -52,7 +52,7 @@ class RefactorImports extends Refactor
                 if (!types.exists(typeName)) { Log.finishFail("Type `" + typeName + "` not found in specified folders."); break; }
                 var fileBefore = File.getContent(fileToAddImport);
                 replacer.replaceInFile(fileToAddImport, [ new Regex("/^\\s*package[^;]*;\\s*?\\n(?:\\s*import\\s+[^;]+\\s*;\\s*?\\n)*/$0import " + types.get(typeName) + ";\\n/s") ], fileToAddImport, false, false, 2);
-                replacer.replaceInFile(fileToAddImport, [ new Regex("/^(\\s*package[^;]*;[ \t]*\\n)import/$0\\nimport") ], fileToAddImport, false, false, 2);
+                replacer.replaceInFile(fileToAddImport, [ new Regex("/^(\\s*package[^;]*;[ \t]*\\n)import/$1\\nimport") ], fileToAddImport, false, false, 2);
                 var fileAfter = File.getContent(fileToAddImport);
                 if (fileBefore == fileAfter) { Log.finishFail("Could't detect place to add import (possible, 'package' statememnt is not found)."); break; }
             Log.finishSuccess();
