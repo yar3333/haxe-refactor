@@ -5,7 +5,13 @@ IF [%1]==[] GOTO :help
 IF EXIST %1\NUL GOTO :dir
 
 :file
-IF [%2]==[] (SET DEST=%~dpn1.hx) ELSE (SET DEST=%2)
+SET DEST=%2
+IF NOT [%DEST%]==[] goto file_next
+SET DEST=%~dpn1
+for %%I IN (%DEST%) DO IF "%%~xI" == ".d" SET DEST=%%~dpnI
+SET DEST=%DEST%.hx
+
+:file_next
 haxelib run refactor convertFile --exclude-string-literals "%1" "%DEST%" %~dp0..\rules\ts_to_haxe.rules
 goto exit
 

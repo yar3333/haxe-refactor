@@ -1,0 +1,39 @@
+ID = \b[_a-zA-Z][_a-zA-Z0-9]*\b
+LONGID = ID(?:[.]ID)*
+STRUCT = \{[^}]*\}
+TYPE = (?:(?:LONGID|STRUCT)(?:\[\])*\s*)
+TYPE_GENERIC = (?:(?:TYPE\s*[<]\s*TYPE(?:,\s*TYPE)*[>])(?:\[\])*\s*)
+TYPE_COMPLEX = (?:TYPE_GENERIC|TYPE|\((?:\s*ID\s*[:]\s*TYPE(?:,\s*ID\s*[:]\s*TYPE)*)?\)\s*[=][>]\s*TYPE)
+
+TEMPLATE = (?:\s*[<]TYPE\s+extends\s+TYPE[>]\s*)
+TYPE_COMPLEX_EX = TYPE_COMPLEX(?:TEMPLATE)?
+BRACKETS = (?:[(][^()]*[)])
+FORMALPARAMS = \((?:BRACKETS|[^()])*\s*\)
+SPACE = [ \t]*
+
+EXPORT = (?:[ \t]*\bexport\s+)?
+
+MODIFIER = (?:\s*(?:public|protected|private|static)\s+)
+
+########################################################################
+
+
+##### Dynamic<Dynamic>
+/\bDynamic[<]Dynamic[>]/Dynamic/
+
+
+##### haxe.extern.EitherType<X, null>
+##### haxe.extern.EitherType<X, {}>
+/\bhaxe[.]extern[.]EitherType[<]\s*(TYPE_COMPLEX)\s*,\s*(?:null|[{]\s*[}])\s*[>]/$1/
+/\bEitherType[<]\s*(TYPE_COMPLEX)\s*,\s*(?:null|[{]\s*[}])\s*[>]/$1/
+
+
+##### Promise<Void>
+/\bPromise[<]Void[>]/Promise<{}>/
+
+
+/\bunknown\b/Dynamic/
+
+########################################################################
+
+/(ID) ([;,)])/$1$2/
