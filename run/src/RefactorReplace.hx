@@ -36,16 +36,22 @@ class RefactorReplace extends Refactor
 		}
 	}
 	
-	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int)
+	public function replaceInFile(inpPath:String, rules:Array<Regex>, outPath:String, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int) : Bool
 	{
 		Log.start("Replace in '" + inpPath + "'", baseLogLevel);
+
+        var r = false;
 		
-		new TextFile(inpPath, outPath, baseLogLevel + 1).process(function(text, _)
+		new TextFile(inpPath, outPath, baseLogLevel + 1).process((inpText, _) ->
 		{
-			return replaceInText(text, rules, excludeStrings, excludeComments, baseLogLevel + 1);
+			var outText = replaceInText(inpText, rules, excludeStrings, excludeComments, baseLogLevel + 1);
+            if (inpText != outText) r = true;
+            return outText;
 		});
 		
 		Log.finishSuccess();
+
+        return r;
 	}
 	
 	public function replaceInText(text:String, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int) : String

@@ -99,3 +99,11 @@ HAXE_TYPE = HAXE_LONGID(?:[<]\s*HAXE_LONGID(?:\s*,\s*HAXE_LONGID)*\s*[>])?
 /\b(implements[ \t\n]+LONGID)[ \t\n]*,[ \t\n]*/$1 implements /r
 
 /([(,]\s*)(ID)[?](\s*[),])/$1?$2$3/
+
+////////////////////////////////////////////////////////////////////////////////
+
+/\n(SPACE)readonly\s+(ID)\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1var $2(default, null) : $3;/
+/\n(SPACE)get\s+(ID)[(][)]\s*[:]\s*(TYPE_COMPLEX)\s*;/\n$1var $2(default, null) : $3;/
+/\bhaxe[.]extern[.]EitherType[<](TYPE_COMPLEX)\s*,\s*null[>]/$1/
+/(ID) ([;,)])/$1$2/
+/\n(SPACE)type\s+(ID)\s*[=]/\n$1typedef $2 =/
