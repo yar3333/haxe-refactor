@@ -4,8 +4,8 @@
   "tags": ["refactoring","refactor","haxe","utility"],
   "description": "Haxe source code refactoring and converting tool.",
   "contributors": ["yar3333"],
-  "releasenote": "Minor `fixImports` bugfix.",
-  "version": "4.4.1",
+  "releasenote": "`fixImports` bugfix. `ts_to_haxe`: auto out file name.",
+  "version": "4.4.2",
   "url": "https://github.com/yar3333/haxe-refactor",
   "dependencies": {}
 }
