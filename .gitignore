@@ -1,3 +1,4 @@
 library/library.zip
 test/bin/index.n
 tools/dts_to_haxe/node_modules
+dist/
