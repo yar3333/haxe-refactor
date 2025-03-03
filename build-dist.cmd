@@ -10,7 +10,8 @@ IF NOT EXIST "library\run.exe" (
 )
 
 mv library\run.exe dist\refactor.exe
-xcopy library\*.ndll dist
+
+xcopy library\hant-windows.ndll dist
 
 xcopy %NEKOPATH%\gcmt-dll.dll dist
 xcopy %NEKOPATH%\neko.dll dist

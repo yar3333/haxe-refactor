@@ -20,6 +20,7 @@ class Commands extends BaseCommands
 		
 		options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ], "Exclude C-like strings from search.");
 		options.add("excludeComments", false, [ "-ec", "--exclude-comments" ], "Exclude C-like comments from search.");
+        options.addRepeatable("excludePaths", String, [ "-ep", "--exclude-paths" ], "Exclude files which path starts with.");
 		options.add("baseDirs", "", "Paths to base folders. Use ';' as delimiter.\nUse '*' to specify 'any folder' in path.");
 		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
 		options.addRepeatable("regex", String, "Regex to find and replace (/search/replacement/flags).\nIn <replacement> use $1-$9 to substitute groups.\nUse '^' and 'v' between '$' and number to make uppercase/lowercase (like '$^1').");
@@ -30,6 +31,7 @@ class Commands extends BaseCommands
 			
 			var excludeStrings = options.get("excludeStrings");
 			var excludeComments = options.get("excludeComments");
+            var excludePaths : Array<String> = options.get("excludePaths");
 			var baseDirs = options.get("baseDirs");
 			var filter = filterToRegex(options.get("filter"));
 			var regexs : Array<String> = options.get("regex");
@@ -42,7 +44,7 @@ class Commands extends BaseCommands
 			var rules = Rules.fromLines(regexs);
 			if (rules.check())
 			{
-				refactor.replaceInFiles(new EReg(filter, "i"), new Regex(""), rules.regexs, excludeStrings, excludeComments, 1);
+				refactor.replaceInFiles(new EReg(filter, "i"), new Regex(""), rules.regexs, excludeStrings, excludeComments, excludePaths, 1);
 			}
 		}
 		else
@@ -255,6 +257,7 @@ class Commands extends BaseCommands
 		
 		options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ], "Exclude C-like strings from search.");
 		options.add("excludeComments", false, [ "-ec", "--exclude-comments" ], "Exclude C-like comments from search.");
+        options.addRepeatable("excludePaths", String, [ "-ep", "--exclude-paths" ], "Exclude files which path starts with.");
 		options.add("baseDir", "", "Path to source folder.");
 		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
 		options.add("outDir", "", "Output directory.");
@@ -267,6 +270,7 @@ class Commands extends BaseCommands
 			
 			var excludeStrings = options.get("excludeStrings");
 			var excludeComments = options.get("excludeComments");
+            var excludePaths : Array<String> = options.get("excludePaths");
 			var baseDir = options.get("baseDir");
 			var filter = filterToRegex(options.get("filter"));
 			var outDir = options.get("outDir");
@@ -285,7 +289,7 @@ class Commands extends BaseCommands
 				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file)).regexs);
 			}
 			var refactor = new RefactorConvert(baseDir, outDir);
-			refactor.convert(filter, convertFileName, regexs, excludeStrings, excludeComments, 1);
+			refactor.convert(filter, convertFileName, regexs, excludeStrings, excludeComments, 1, excludePaths);
 		}
 		else
 		{
@@ -361,6 +365,7 @@ class Commands extends BaseCommands
 		
 		options.add("excludeStrings", false, [ "-es", "--exclude-string-literals" ], "Exclude C-like strings from search.");
 		options.add("excludeComments", false, [ "-ec", "--exclude-comments" ], "Exclude C-like comments from search.");
+		options.addRepeatable("excludePaths", String, [ "-ep", "--exclude-paths" ], "Exclude files which path starts with.");
 		options.add("baseDir", "", "Path to folder to start search for files.");
 		options.add("filter", "", "File path's filter (regex or '*.ext;*.ext').");
 		options.addRepeatable("rulesFile", String, "Path to rules file which contains one rule per line:\nVAR = regexp\nor\n/search_can_contain_VAR/replacement/flags");
@@ -371,6 +376,7 @@ class Commands extends BaseCommands
 			
 			var excludeStrings = options.get("excludeStrings");
 			var excludeComments = options.get("excludeComments");
+            var excludePaths : Array<String> = options.get("excludePaths");
 			var baseDir = options.get("baseDir");
 			var filter = filterToRegex(options.get("filter"));
 			var rulesFile : Array<String> = options.get("rulesFile");
@@ -385,7 +391,7 @@ class Commands extends BaseCommands
 				regexs = regexs.concat(Rules.fromFile(getRulesFilePath(exeDir, file)).regexs);
 			}
 			var refactor = new RefactorConvert(baseDir, null);
-			refactor.convert(filter, new Regex(""), regexs, excludeStrings, excludeComments, 1);
+			refactor.convert(filter, new Regex(""), regexs, excludeStrings, excludeComments, 1, excludePaths);
 		}
 		else
 		{

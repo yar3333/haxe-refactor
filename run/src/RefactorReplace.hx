@@ -3,10 +3,11 @@ import hant.Log;
 import haxe.io.Path;
 import stdlib.Regex;
 using StringTools;
+using Lambda;
 
 class RefactorReplace extends Refactor
 {
-	public function replaceInFiles(filter:EReg, changeFileName:Regex, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int)
+	public function replaceInFiles(filter:EReg, changeFileName:Regex, rules:Array<Regex>, excludeStrings:Bool, excludeComments:Bool, excludePaths:Array<String>, baseLogLevel:Int)
 	{
 		for (baseDir in baseDirs)
 		{
@@ -15,7 +16,7 @@ class RefactorReplace extends Refactor
 			FileSystemTools.findFiles(baseDir, function(path)
 			{
 				var localPath = path.substr(baseDir.length + 1);
-				if (filter.match(localPath))
+				if (filter.match(localPath) && !excludePaths.exists(x -> localPath.startsWith(x)))
 				{
 					if (outDir == null)
 					{

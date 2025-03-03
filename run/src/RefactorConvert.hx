@@ -2,11 +2,11 @@ import stdlib.Regex;
 
 class RefactorConvert extends RefactorReplace
 {
-	public function convert(filter:String, changeFileName:Regex, regexs:Array<Regex>, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int)
+	public function convert(filter:String, changeFileName:Regex, regexs:Array<Regex>, excludeStrings:Bool, excludeComments:Bool, baseLogLevel:Int, excludePaths:Array<String>)
 	{
 		if (new Rules([changeFileName].concat(regexs)).check())
 		{
-			replaceInFiles(new EReg(filter, "i"), changeFileName, regexs, excludeStrings, excludeComments, baseLogLevel);
+			replaceInFiles(new EReg(filter, "i"), changeFileName, regexs, excludeStrings, excludeComments, excludePaths, baseLogLevel);
 		}
 	}
 	

@@ -2,26 +2,35 @@ import hant.Log;
 import hant.Path;
 import neko.Lib;
 import sys.FileSystem;
+using StringTools;
 
 class Main 
 {
 	static function main() : Void
 	{
         var args = Sys.args();
-		
-		var exeDir = Path.normalize(Sys.getCwd());
-		if (args.length > 0)
-		{
-			var dir = args.pop();
-			try
-			{
-				Sys.setCwd(dir);
-			}
-			catch (e:Dynamic)
-			{
-				fail("Error: could not change dir to '" + dir + "'.");
-			}
-		}
+
+        var exeDir: String;
+        if (Sys.programPath().endsWith(".exe"))
+        {
+            exeDir = Path.normalize(Path.directory(Sys.programPath()));
+        }
+        else
+        {
+		    exeDir = Path.normalize(Sys.getCwd());
+            if (args.length > 0)
+            {
+                var dir = args.pop();
+                try
+                {
+                    Sys.setCwd(dir);
+                }
+                catch (e:Dynamic)
+                {
+                    fail("Error: could not change dir to '" + dir + "'.");
+                }
+            }
+        }
         
 		var verboseLevel = 0;
 		for (i in 0...args.length)

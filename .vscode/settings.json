@@ -2,5 +2,7 @@
     "haxe.enableExtendedIndentation": true,
     "haxe.taskPresentation": {
         "clear": true
-    }
+    },
+    "haxe.executable": "auto",
+    "editor.formatOnSave": false
 }
